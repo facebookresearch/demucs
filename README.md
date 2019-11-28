@@ -52,8 +52,10 @@ This will create a `demucs` environmnent with all the dependencies installed.
 In order to try Demucs or Conv-Tasnet on your tracks, simply run from the root of this repository
 
 ```bash
-python3 -m demucs.separate --dl -n demucs PATH_TO_AUDIO_FILE [PATH_TO_AUDIO_FILE_2 ...] # for Demucs
-python3 -m demucs.separate --dl -n tasnet --shifts=0 --split PATH_TO_AUDIO_FILE_1 ... # for Conv-Tasnet
+python3 -m demucs.separate --dl -n demucs PATH_TO_AUDIO_FILE_1 [PATH_TO_AUDIO_FILE_2 ...] # for Demucs
+python3 -m demucs.separate --dl -n tasnet PATH_TO_AUDIO_FILE_1 ... # for Conv-Tasnet
+# Demucs with randomized equivariant stabilization (10x slower, suitable for GPU, 0.2 extra SDR)
+python3 -m demucs.separate --dl -n demucs --shifts=10 PATH_TO_AUDIO_FILE_1
 ```
 
 The `--dl`
@@ -74,11 +76,12 @@ The models will be stored in the `models` folder. The list of pre-trained models
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
 
 
-The `--shifts=SHIFTS` performs multiple predictions with random shifts of the input and
-average them. This makes prediction `SHIFTS` times slower but improves the accuracy of Demucs.
-It has limited impact on Conv-Tasnet and can be set to 0 (disabled). The default value is 10,
-but using 5 gives roughly the same results for Demucs.
-
+The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a randomized
+equivariant stabilization) of the input and average them. This makes prediction `SHIFTS` times
+slower but improves the accuracy of Demucs by 0.2 points of SDR.
+It has limited impact on Conv-Tasnet as the model is by nature almost time equivariant.
+The value of 10 was used on the original paper, although 5 yields mostly the same gain.
+It is deactivated by default
 
 
 ## Examining the results from the paper experiments

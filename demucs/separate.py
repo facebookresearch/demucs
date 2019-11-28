@@ -35,25 +35,32 @@ def download_file(url, target, sha256=None):
         target (Path): target path to write to
         sha256 (str or None): expected sha256 hexdigest of the file
     """
-    response = requests.get(url, stream=True)
-    total_length = int(response.headers.get('content-length', 0))
+    def _download():
+        response = requests.get(url, stream=True)
+        total_length = int(response.headers.get('content-length', 0))
 
-    if sha256 is not None:
-        hasher = hashlib.sha256()
+        if sha256 is not None:
+            hasher = hashlib.sha256()
 
-    with tqdm.tqdm(total=total_length, unit="B", unit_scale=True) as bar:
-        with open(target, "wb") as output:
-            for data in response.iter_content(chunk_size=4096):
-                output.write(data)
-                if sha256 is not None:
-                    hasher.update(data)
-                bar.update(len(data))
-    if sha256 is not None:
-        signature = hasher.hexdigest()
-        if sha256 != signature:
+        with tqdm.tqdm(total=total_length, unit="B", unit_scale=True) as bar:
+            with open(target, "wb") as output:
+                for data in response.iter_content(chunk_size=4096):
+                    output.write(data)
+                    if sha256 is not None:
+                        hasher.update(data)
+                    bar.update(len(data))
+        if sha256 is not None:
+            signature = hasher.hexdigest()
+            if sha256 != signature:
+                raise ValueError("Invalid sha256 signature when downloading {}. "
+                                 "Expected {} but got {}".format(url, sha256, signature))
+
+    try:
+        _download()
+    except:  # noqa, re-raising
+        if target.exists():
             target.unlink()
-            raise ValueError("Invalid sha256 signature when downloading {}. "
-                             "Expected {} but got {}".format(url, sha256, signature))
+        raise
 
 
 def main():
@@ -83,14 +90,18 @@ def main():
                         default="cuda" if th.cuda.is_available() else "cpu",
                         help="Device to use, default is cuda if available else cpu")
     parser.add_argument("--shifts",
-                        default=10,
+                        default=0,
                         type=int,
                         help="Number of random shifts for equivariant stabilization."
-                        "Increase separation time but improves quality for Demucs. "
-                        "Default is 10")
-    parser.add_argument("--split",
-                        action="store_true",
-                        help="Split the input in chunks of 8 seconds. Required for Tasnet")
+                        "Increase separation time but improves quality for Demucs. 10 was used "
+                        "in the original paper.")
+    parser.add_argument("--nosplit",
+                        action="store_false",
+                        default=True,
+                        dest="split",
+                        help="Apply the model to the entire input at once rather than "
+                        "first splitting it in chunks of 16 seconds. Will OOM with Tasnet "
+                        "but will work fine for Demucs if you have at least 16GB of RAM.")
 
     args = parser.parse_args()
     model_path = args.models / f"{args.name}.th"
