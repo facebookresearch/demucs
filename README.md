@@ -33,6 +33,26 @@ width="800px"></p>
 
 An audio comparison of Demucs and Conv-Tasnet with other state-of-the-art methods such as [Wave-U-Net][waveunet], [OpenUnmix][openunmix] or
 [MMDenseLSTM][mmdenselstm] is available on [the audio comparison page][audio].
+We provide hereafter a summary of the different metrics presented in the paper.
+
+### Comparison of accuracy
+
+`Overall SDR` is the mean of the SDR for each of the 4 sources, `MOS Quality` is a rating from 1 to 5
+of the naturalness and absence of artifacts given by human listeners (5 = no artifacts), `MOS Contamination`
+is a rating from 1 to 5 with 5 being zero contamination by other sources. We refer the reader to our [paper][demucs_arxiv], Section 5 and 6,
+for more details.
+
+| Model         | Domain     | Extra data?  | Overall SDR | MOS Quality | MOS Contamination |
+| ------------- |-------------| -----:|------:|----:|----:|
+| [Open-Unmix][openunmix]      | spectrogram | no | 5.3 | 3.0 | 3.3 |
+| [Wave-U-Net][waveunet]      | waveform | no | 3.2 | - | - |
+| Demucs (this)      | waveform | no | 5.6 | **3.2** | 3.3 |
+| Conv-Tasnet (this)     | waveform | no | **5.7** | 2.9 | **3.4** |
+| Demucs  (this)    | waveform | 150 songs | **6.3** | - | - |
+| Conv-Tasnet  (this)    | waveform | 150 songs | **6.3** | - | - |
+| [MMDenseLSTM][mmdenselstm]      | spectrogram | 804 songs | 6.0 | - | - |
+| [Spleeter][spleeter]  | waveform | undisclosed | 5.9 | - | - |
+
 
 
 ## Requirements
@@ -206,7 +226,15 @@ export DEMUCS_MUSDB=PATH TO MUSDB
 
 ## How to cite
 
-Coming up soon :)
+```
+@techreport{music_separation_waveform,
+  title = {{Music Source Separation in the Waveform Domain}},
+  author = {D{\'e}fossez, Alexandre and Usunier, Nicolas and Bottou, L{\'e}on and Bach, Francis},
+  year = {2019},
+  number = {02379796v1},
+  institution = {HAL},
+}
+```
 
 ## License
 
@@ -225,7 +253,8 @@ It was originally released under the MIT License updated to support multiple aud
 [museval]: https://github.com/sigsep/sigsep-mus-eval/
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
-[demucs_arxiv]: https://ai.honu.io/papers/demucs/demucs_preprint.pdf
+[demucs_arxiv]: https://hal.archives-ouvertes.fr/hal-02379796/document
 [musevalpth]: museval_torch.py
 [tasnet]: https://github.com/kaituoxu/Conv-TasNet
 [audio]: https://ai.honu.io/papers/demucs/index.html
+[spleeter]: https://github.com/deezer/spleeter
