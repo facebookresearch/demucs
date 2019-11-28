@@ -67,7 +67,10 @@ If you have anaconda installed, you can run from the root of this repository:
 
 This will create a `demucs` environmnent with all the dependencies installed.
 
+### Using Windows
 
+If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
+Parts of the code are untested on Windows (in particular, training a new model). Please open an issue in case you have a problem.
 
 ## Separating tracks
 
