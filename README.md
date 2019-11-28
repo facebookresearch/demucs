@@ -51,7 +51,7 @@ for more details.
 | Demucs  (this)    | waveform | 150 songs | **6.3** | - | - |
 | Conv-Tasnet  (this)    | waveform | 150 songs | **6.3** | - | - |
 | [MMDenseLSTM][mmdenselstm]      | spectrogram | 804 songs | 6.0 | - | - |
-| [Spleeter][spleeter]  | waveform | undisclosed | 5.9 | - | - |
+| [Spleeter][spleeter]  | spectrogram | undisclosed | 5.9 | - | - |
 
 
 
