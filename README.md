@@ -34,6 +34,8 @@ width="800px"></p>
 An audio comparison of Demucs and Conv-Tasnet with other state-of-the-art methods such as [Wave-U-Net][waveunet], [OpenUnmix][openunmix] or
 [MMDenseLSTM][mmdenselstm] is available on [the audio comparison page][audio].
 We provide hereafter a summary of the different metrics presented in the paper.
+You can also compare [Spleeter][spleeter], Open-Unmix, Demucs and Conv-Tasnet on one of my favorite
+songs on our [soundcloud playlist][soundcloud].
 
 ### Comparison of accuracy
 
@@ -101,7 +103,7 @@ equivariant stabilization) of the input and average them. This makes prediction 
 slower but improves the accuracy of Demucs by 0.2 points of SDR.
 It has limited impact on Conv-Tasnet as the model is by nature almost time equivariant.
 The value of 10 was used on the original paper, although 5 yields mostly the same gain.
-It is deactivated by default
+It is deactivated by default.
 
 
 ## Examining the results from the paper experiments
@@ -258,3 +260,4 @@ It was originally released under the MIT License updated to support multiple aud
 [tasnet]: https://github.com/kaituoxu/Conv-TasNet
 [audio]: https://ai.honu.io/papers/demucs/index.html
 [spleeter]: https://github.com/deezer/spleeter
+[soundcloud]: https://soundcloud.com/voyageri/sets/source-separation-in-the-waveform-domain
