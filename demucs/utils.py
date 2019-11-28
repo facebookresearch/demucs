@@ -5,8 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import errno
+import os
 import random
 import socket
+import tempfile
+from contextlib import contextmanager
 
 import torch as th
 from torch import distributed
@@ -129,3 +132,16 @@ def apply_model(model, mix, shifts=None, split=False):
         with th.no_grad():
             out = model(padded.unsqueeze(0))[0]
         return center_trim(out, mix)
+
+
+@contextmanager
+def temp_filenames(count, delete=True, **kwargs):
+    names = []
+    try:
+        for _ in range(count):
+            names.append(tempfile.NamedTemporaryFile(delete=False).name)
+        yield names
+    finally:
+        if delete:
+            for name in names:
+                os.unlink(name)

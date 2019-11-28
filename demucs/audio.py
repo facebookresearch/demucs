@@ -4,13 +4,13 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 import json
-import os
 import subprocess as sp
-import tempfile
 from pathlib import Path
 
 import numpy as np
 import torch
+
+from .utils import temp_filenames
 
 
 def _read_info(path):
@@ -69,7 +69,8 @@ class AudioFile:
              duration=None,
              streams=slice(None),
              samplerate=None,
-             channels=None):
+             channels=None,
+             temp_folder=None):
         """
         Slightly more efficient implementation than stempeg,
         in particular, this will extract all stems at once
@@ -90,6 +91,7 @@ class AudioFile:
                 See https://sound.stackexchange.com/a/42710.
                 Our definition of mono is simply the average of the two channels. Any other
                 value will be ignored.
+            temp_folder (str or Path or None): temporary folder to use for decoding.
 
 
         """
@@ -105,41 +107,35 @@ class AudioFile:
             target_size = int((samplerate or self.samplerate()) * duration)
             query_duration = float((target_size + 1) / (samplerate or self.samplerate()))
 
-        shm = Path("/dev/shm")
-        if shm.exists():
-            temp_folder = shm / os.environ['USER']
-            temp_folder.mkdir(exist_ok=True)
-        else:
-            temp_folder = None
-        files = [tempfile.NamedTemporaryFile(dir=temp_folder) for _ in streams]
-        command = ['ffmpeg', '-y']
-        command += ['-loglevel', 'panic']
-        if seek_time:
-            command += ['-ss', str(seek_time)]
-        command += ['-i', str(self.path)]
-        for stream, file in zip(streams, files):
-            command += ['-map', f'0:{self._audio_streams[stream]}']
-            if query_duration is not None:
-                command += ['-t', str(query_duration)]
-            command += ['-threads', '1']
-            command += ['-f', 'f32le']
-            if samplerate is not None:
-                command += ['-ar', str(samplerate)]
-            command += [file.name]
+        with temp_filenames(len(streams)) as filenames:
+            command = ['ffmpeg', '-y']
+            command += ['-loglevel', 'panic']
+            if seek_time:
+                command += ['-ss', str(seek_time)]
+            command += ['-i', str(self.path)]
+            for stream, filename in zip(streams, filenames):
+                command += ['-map', f'0:{self._audio_streams[stream]}']
+                if query_duration is not None:
+                    command += ['-t', str(query_duration)]
+                command += ['-threads', '1']
+                command += ['-f', 'f32le']
+                if samplerate is not None:
+                    command += ['-ar', str(samplerate)]
+                command += [filename]
 
-        sp.run(command, check=True)
-        wavs = []
-        for file in files:
-            wav = np.fromfile(file.name, dtype=np.float32)
-            wav = torch.from_numpy(wav)
-            wav = wav.view(-1, self.channels()).t()
-            if channels == 1:
-                # We do mono convertion here as ffmpeg mess up the volume of mono output
-                # otherwise. See https://sound.stackexchange.com/a/42710.
-                wav = wav.mean(dim=0, keepdim=True)
-            if target_size is not None:
-                wav = wav[..., :target_size]
-            wavs.append(wav)
+            sp.run(command, check=True)
+            wavs = []
+            for filename in filenames:
+                wav = np.fromfile(filename, dtype=np.float32)
+                wav = torch.from_numpy(wav)
+                wav = wav.view(-1, self.channels()).t()
+                if channels == 1:
+                    # We do mono convertion here as ffmpeg mess up the volume of mono output
+                    # otherwise. See https://sound.stackexchange.com/a/42710.
+                    wav = wav.mean(dim=0, keepdim=True)
+                if target_size is not None:
+                    wav = wav[..., :target_size]
+                wavs.append(wav)
         wav = torch.stack(wavs, dim=0)
         if single:
             wav = wav[0]
