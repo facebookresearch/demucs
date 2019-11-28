@@ -224,5 +224,5 @@ It was originally released under the MIT License updated to support multiple aud
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
 [demucs_arxiv]: https://ai.honu.io/papers/demucs/demucs_preprint.pdf
 [musevalpth]: museval_torch.py
-[tasnet]: https://github.com/fairinternal/demucs/blob/master/kaituoxu/Conv-TasNet
+[tasnet]: https://github.com/kaituoxu/Conv-TasNet
 [audio]: https://ai.honu.io/papers/demucs/index.html
