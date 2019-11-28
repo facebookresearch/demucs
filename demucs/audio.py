@@ -14,9 +14,10 @@ import torch
 
 
 def _read_info(path):
-    process = sp.run(['ffprobe', path, '-print_format', 'json', '-show_format', '-show_streams'],
-                     capture_output=True,
-                     check=True)
+    process = sp.run(
+        ['ffprobe', str(path), '-print_format', 'json', '-show_format', '-show_streams'],
+        capture_output=True,
+        check=True)
     return json.loads(process.stdout.decode('utf-8'))
 
 
