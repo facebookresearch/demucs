@@ -14,11 +14,10 @@ from .utils import temp_filenames
 
 
 def _read_info(path):
-    process = sp.run(
-        ['ffprobe', str(path), '-print_format', 'json', '-show_format', '-show_streams'],
-        capture_output=True,
-        check=True)
-    return json.loads(process.stdout.decode('utf-8'))
+    stdout_data = sp.check_output(
+        ['ffprobe', str(path), '-print_format', 'json', '-show_format', '-show_streams']
+    )
+    return json.loads(stdout_data.decode('utf-8'))
 
 
 class AudioFile:
