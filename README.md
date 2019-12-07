@@ -65,7 +65,7 @@ If you have anaconda installed, you can run from the root of this repository:
     conda env update -f environment-cuda.yml # if you have GPUs
     conda activate demucs
 
-This will create a `demucs` environmnent with all the dependencies installed.
+This will create a `demucs` environment with all the dependencies installed.
 
 ### Using Windows
 
@@ -123,7 +123,7 @@ The `std` column shows the standard deviation divided by the square root of the 
 
 ## Training Demucs and evaluating on the MusDB dataset
 
-If you want to train Demucs from scrath, you will need a copy of the MusDB dataset.
+If you want to train Demucs from scratch, you will need a copy of the MusDB dataset.
 It can be obtained on the [MusDB website][musdb].
 To start training on a single GPU or CPU, use:
 ```bash
