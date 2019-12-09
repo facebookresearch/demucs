@@ -70,7 +70,31 @@ This will create a `demucs` environmnent with all the dependencies installed.
 ### Using Windows
 
 If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
-Parts of the code are untested on Windows (in particular, training a new model). Please open an issue in case you have a problem.
+Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions:
+
+- First install Anaconda with **Python 3.7**, which you can find [here][install].
+- Start the [Anaconda prompt][prompt].
+- Type in the following commands:
+
+```bash
+cd %HOMEPATH%
+conda install git
+git clone https://github.com/facebookresearch/demucs
+cd demucs
+conda env update -f environment-cpu.yml
+conda activate demucs
+python.exe -m demucs.separate --dl PATH_TO_AUDIO_FILES
+```
+
+The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demucs\`. The next time you want to use Demucs, start again the [Anaconda prompt][prompt] and simply run
+```bash
+cd %HOMEPATH%
+cd demucs
+python.exe -m demucs.separate --dl PATH_TO_AUDIO_FILES
+```
+
+[install]: https://www.anaconda.com/distribution/#windows
+[prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
 
 ## Separating tracks
 
@@ -107,6 +131,11 @@ slower but improves the accuracy of Demucs by 0.2 points of SDR.
 It has limited impact on Conv-Tasnet as the model is by nature almost time equivariant.
 The value of 10 was used on the original paper, although 5 yields mostly the same gain.
 It is deactivated by default.
+
+
+### Memory requirements for GPU acceleration
+
+If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! I'll publish soon a lighter version of the model that should run with less RAM.
 
 
 ## Examining the results from the paper experiments
