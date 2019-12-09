@@ -14,9 +14,10 @@ from .utils import temp_filenames
 
 
 def _read_info(path):
-    stdout_data = sp.check_output(
-        ['ffprobe', str(path), '-print_format', 'json', '-show_format', '-show_streams']
-    )
+    stdout_data = sp.check_output([
+        'ffprobe', "-loglevel", "panic",
+        str(path), '-print_format', 'json', '-show_format', '-show_streams'
+    ])
     return json.loads(stdout_data.decode('utf-8'))
 
 
