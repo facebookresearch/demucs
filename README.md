@@ -107,6 +107,8 @@ python3 -m demucs.separate --dl -n tasnet PATH_TO_AUDIO_FILE_1 ... # for Conv-Ta
 python3 -m demucs.separate --dl -n demucs --shifts=10 PATH_TO_AUDIO_FILE_1
 ```
 
+If you have a GPU, but you run out of memory, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
+
 The `--dl`
 flag will automatically download a pretrained model into `./models`. There will be one folder
 per audio file, reusing the name of the track without the extension. Each folder will contain four stereo wav files sampled at 44.1 kHz: `drums.wav`, `bass.wav`,
@@ -135,7 +137,7 @@ It is deactivated by default.
 
 ### Memory requirements for GPU acceleration
 
-If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! I'll publish soon a lighter version of the model that should run with less RAM.
+If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! I'll publish soon a lighter version of the model that should run with less RAM. IF you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to the duration of the track.
 
 
 ## Examining the results from the paper experiments
