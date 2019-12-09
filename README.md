@@ -70,7 +70,7 @@ This will create a `demucs` environmnent with all the dependencies installed.
 ### Using Windows
 
 If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
-Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions:
+Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions. Note that Demucs is not supported on 32bits systems (as Pytorch is not available there).
 
 - First install Anaconda with **Python 3.7**, which you can find [here][install].
 - Start the [Anaconda prompt][prompt].
