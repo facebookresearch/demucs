@@ -118,18 +118,21 @@ def main():
             sys.exit(1)
         args.models.mkdir(exist_ok=True, parents=True)
         url = BASE_URL + f"{args.name}.th"
+        print("Downloading pre-trained model weights, this could take a while...")
         download_file(url, model_path, sha256)
     model = th.load(model_path).to(args.device)
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     source_names = ["drums", "bass", "other", "vocals"]
-    for track in tqdm.tqdm(args.tracks):
+    print(f"Separated tracks will be stored in {out.resolve()}")
+    for track in args.tracks:
+        print(f"Separating track {track}")
         wav = AudioFile(track).read(streams=0, samplerate=44100, channels=2).to(args.device)
         # Round to nearest short integer for compatibility with how MusDB load audio with stempeg.
         wav = (wav * 2**15).round() / 2**15
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav, shifts=args.shifts, split=args.split)
+        sources = apply_model(model, wav, shifts=args.shifts, split=args.split, progress=True)
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.split(".")[0]

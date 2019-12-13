@@ -12,6 +12,7 @@ import tempfile
 from contextlib import contextmanager
 
 import torch as th
+import tqdm
 from torch import distributed
 from torch.nn import functional as F
 
@@ -88,7 +89,7 @@ def human_seconds(seconds, display='.2f'):
     return f"{format(value, display)} {last}"
 
 
-def apply_model(model, mix, shifts=None, split=False):
+def apply_model(model, mix, shifts=None, split=False, progress=False):
     """
     Apply model to a given mixture.
 
@@ -100,14 +101,18 @@ def apply_model(model, mix, shifts=None, split=False):
         split (bool): if True, the input will be broken down in 8 seconds extracts
             and predictions will be performed individually on each and concatenated.
             Useful for model with large memory footprint like Tasnet.
+        progress (bool): if True, show a progress bar (requires split=True)
     """
     channels, length = mix.size()
     device = mix.device
     if split:
         out = th.zeros(4, channels, length, device=device)
-        shift = 80_000 * 8
-        offset = 0
-        while offset < length:
+        shift = 44_100 * 10
+        offsets = range(0, length, shift)
+        scale = 10
+        if progress:
+            offsets = tqdm.tqdm(offsets, unit_scale=scale, unit='seconds')
+        for offset in offsets:
             chunk = mix[..., offset:offset + shift]
             chunk_out = apply_model(model, chunk, shifts=shifts)
             out[..., offset:offset + shift] = chunk_out
