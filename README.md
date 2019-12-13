@@ -65,12 +65,39 @@ If you have anaconda installed, you can run from the root of this repository:
     conda env update -f environment-cuda.yml # if you have GPUs
     conda activate demucs
 
-This will create a `demucs` environmnent with all the dependencies installed.
+This will create a `demucs` environment with all the dependencies installed.
 
 ### Using Windows
 
 If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
-Parts of the code are untested on Windows (in particular, training a new model). Please open an issue in case you have a problem.
+Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions. Note that Demucs is not supported on 32bits systems (as Pytorch is not available there).
+
+- First install Anaconda with **Python 3.7**, which you can find [here][install].
+- Start the [Anaconda prompt][prompt].
+- Type in the following commands:
+
+```bash
+cd %HOMEPATH%
+conda install git
+git clone https://github.com/facebookresearch/demucs
+cd demucs
+conda env update -f environment-cpu.yml
+conda activate demucs
+python.exe -m demucs.separate --dl "PATH_TO_AUDIO_FILE_1" ["PATH_TO_AUDIO_FILE_2" ...]
+```
+The `"` around the filename are required if the path contains spaces.
+The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demucs\`. The next time you want to use Demucs, start again the [Anaconda prompt][prompt] and simply run
+```bash
+cd %HOMEPATH%
+cd demucs
+python.exe -m demucs.separate --dl "PATH_TO_AUDIO_FILE_1" ...
+```
+
+If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1` and hopefully it will work 🙏.
+If you get a permission error, please try starting the Anaconda Prompt as administrator.
+
+[install]: https://www.anaconda.com/distribution/#windows
+[prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
 
 ## Separating tracks
 
@@ -82,6 +109,8 @@ python3 -m demucs.separate --dl -n tasnet PATH_TO_AUDIO_FILE_1 ... # for Conv-Ta
 # Demucs with randomized equivariant stabilization (10x slower, suitable for GPU, 0.2 extra SDR)
 python3 -m demucs.separate --dl -n demucs --shifts=10 PATH_TO_AUDIO_FILE_1
 ```
+
+If you have a GPU, but you run out of memory, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
 
 The `--dl`
 flag will automatically download a pretrained model into `./models`. There will be one folder
@@ -109,6 +138,11 @@ The value of 10 was used on the original paper, although 5 yields mostly the sam
 It is deactivated by default.
 
 
+### Memory requirements for GPU acceleration
+
+If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! I'll publish soon a lighter version of the model that should run with less RAM. IF you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to the duration of the track.
+
+
 ## Examining the results from the paper experiments
 
 The metrics for our experiments are stored in the `results` folder. In particular
@@ -123,7 +157,7 @@ The `std` column shows the standard deviation divided by the square root of the 
 
 ## Training Demucs and evaluating on the MusDB dataset
 
-If you want to train Demucs from scrath, you will need a copy of the MusDB dataset.
+If you want to train Demucs from scratch, you will need a copy of the MusDB dataset.
 It can be obtained on the [MusDB website][musdb].
 To start training on a single GPU or CPU, use:
 ```bash
