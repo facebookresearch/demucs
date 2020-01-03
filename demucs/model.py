@@ -180,6 +180,7 @@ class Demucs(nn.Module):
                 length = math.ceil(length / self.stride) + self.kernel_size - 1
             else:
                 length = math.ceil((length - self.kernel_size) / self.stride) + 1
+            length = max(1, length)
             length += self.context - 1
         for _ in range(self.depth):
             if self.upsample:
