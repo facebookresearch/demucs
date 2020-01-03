@@ -99,6 +99,30 @@ If you get a permission error, please try starting the Anaconda Prompt as admini
 [install]: https://www.anaconda.com/distribution/#windows
 [prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
 
+## Using Mac OS X
+
+If you do not already have Anaconda installed or much experience with the terminal on Mac OS X here are some detailed instructions:
+
+1. Download Anaconda 3.7 64 bits for MacOS: https://www.anaconda.com/distribution/#download-section
+2. Open Anaconda Prompt in MacOSX: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-nav-mac
+3. Follow these commands:
+```bash
+cd ~
+conda install git
+git clone https://github.com/facebookresearch/demucs
+cd demucs
+conda env update -f environment-cpu.yml
+conda activate demucs
+python3 -m demucs.separate --dl -n demucs -d cpu PATH_TO_AUDIO_FILE_1
+```
+You can drag the .mp3 file to the console and it will paste the mp3 path.
+To later reuse Demucs, simply start again the Anaconda Prompt and run
+```bash
+cd ~/demucs
+python3 -m demucs.separate --dl -n demucs -d cpu PATH_TO_AUDIO_FILE_1
+```
+
+
 ## Separating tracks
 
 In order to try Demucs or Conv-Tasnet on your tracks, simply run from the root of this repository
