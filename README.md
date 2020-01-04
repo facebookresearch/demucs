@@ -1,7 +1,7 @@
 # Music Source Separation in the Waveform Domain
 
 We provide an implementation of Demucs and Conv-Tasnet for music source separation on the [MusDB][musdb] dataset.
-They can separate drums, bass and vocals from the rest with state-of-the-art results, surpassing previous waveform or spectrogram based methods.
+They can separate drums, bass, and vocals from the rest with state-of-the-art results, surpassing previous waveform or spectrogram based methods.
 The architecture and results obtained are detailed in our paper
 [Music Source Separation in the waveform domain][demucs_arxiv].
 
@@ -10,12 +10,18 @@ Demucs is based on U-Net convolutional architecture inspired by [Wave-U-Net][wav
 and transposed convolutions in the decoder.
 
 [Conv-Tasnet](https://arxiv.org/abs/1809.07454)
-is a separation model developed for speech which predicts a mask on a learnt over-complete linear representation
-using a purely convolutional model with a stride of 1 and dilated convolutional blocks.
+is a separation model developed for speech which predicts a mask on a learnt over-complete linear representation using a purely convolutional model with a stride of 1 and dilated convolutional blocks.
 We reused the code from the [kaituoxu/Conv-TasNet][tasnet]
 repository and added support for multiple audio channels.
 
-When trained only on MusDB, Conv-Tasnet achieves higher SDR than Demucs (5.7 vs 5.6).
+# When trained only on MusDB, Conv-Tasnet achieves higher SDR than Demucs (5.7 vs 5.6).
+
+using a purely convolutional model with the stride of 1 and dilated convolutional blocks.
+We reused the code from the [kaituoxu/Conv-TasNet][tasnet]
+repository and added support for multiple audio channels.
+
+When trained only on MusDB, Conv-Tasnet achieves higher SDR than Demucs (5.7 vs. 5.6).
+
 However, the audio it generates has significant artifacts as measured by human evaluations
 (MOS is 3.2 for Demucs, 2.9 for Conv-Tasnet). When trained with extra training data,
 Demucs and Conv-Tasnet obtain the same SDR. See [our paper][demucs_arxiv] Section 6 for more details or listen to our
@@ -28,11 +34,11 @@ width="800px"></p>
 
 ## Comparison with other models
 
-An audio comparison of Demucs and Conv-Tasnet with other state-of-the-art methods such as [Wave-U-Net][waveunet], [OpenUnmix][openunmix] or
+An audio comparison of Demucs and Conv-Tasnet with other state-of-the-art methods such as [Wave-U-Net][waveunet], [OpenUnmix][openunmix], or
 [MMDenseLSTM][mmdenselstm] is available on [the audio comparison page][audio].
 We provide hereafter a summary of the different metrics presented in the paper.
-You can also compare [Spleeter][spleeter], Open-Unmix, Demucs and Conv-Tasnet on one of my favorite
-songs on our [soundcloud playlist][soundcloud].
+You can also compare [Spleeter][spleeter], Open-Unmix, Demucs, and Conv-Tasnet on one of my favorite
+songs on our [SoundCloud playlist][soundcloud].
 
 ### Comparison of accuracy
 
@@ -54,22 +60,22 @@ for more details.
 
 ## Requirements
 
-If you have anaconda installed, you can run from the root of this repository:
+If you have Anaconda installed, you can run from the root of this repository:
 
     conda env update -f environment-cpu.yml # if you don't have GPUs
     conda env update -f environment-cuda.yml # if you have GPUs
     conda activate demucs
 
-This will create a `demucs` environmnent with all the dependencies installed.
+This will create a `demucs` environment with all the dependencies installed.
 
 ### Using Windows
 
 If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
-Parts of the code are untested on Windows (in particular, training a new model). Please open an issue in case you have a problem.
+Parts of the code is untested on Windows (in particular, training a new model). Please open an issue in case you have a problem.
 
 ## Separating tracks
 
-In order to try Demucs or Conv-Tasnet on your tracks, simply run from the root of this repository
+In order to try Demucs or Conv-Tasnet on your tracks, simply run from the root of this repository.
 
 ```bash
 python3 -m demucs.separate --dl -n demucs PATH_TO_AUDIO_FILE_1 [PATH_TO_AUDIO_FILE_2 ...] # for Demucs
@@ -79,12 +85,12 @@ python3 -m demucs.separate --dl -n demucs --shifts=10 PATH_TO_AUDIO_FILE_1
 ```
 
 The `--dl`
-flag will automatically download a pretrained model into `./models`. There will be one folder
+flag will automatically download a pre-trained model into `./models`. There will be one folder
 per audio file, reusing the name of the track without the extension. Each folder will contain four stereo wav files sampled at 44.1 kHz: `drums.wav`, `bass.wav`,
 `other.wav`, `vocals.wav`.
 Those folders will be placed in `./separated/MODEL_NAME`.
 
-Any stereo audio file supported by ffmpeg will work. It will be resampled to 44.1 kHz on the fly
+Any stereo audio file supported by FFmpeg will work. It will be resampled to 44.1 kHz on the fly
 if necessary. If multiple streams (i.e. a stems file) are present in the audio file,
 the first one will be used.
 
@@ -99,14 +105,14 @@ The models will be stored in the `models` folder. The list of pre-trained models
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a randomized
 equivariant stabilization) of the input and average them. This makes prediction `SHIFTS` times
 slower but improves the accuracy of Demucs by 0.2 points of SDR.
-It has limited impact on Conv-Tasnet as the model is by nature almost time equivariant.
+It has a limited impact on Conv-Tasnet as the model is, by nature, almost time equivariant.
 The value of 10 was used on the original paper, although 5 yields mostly the same gain.
 It is deactivated by default.
 
 ## Examining the results from the paper experiments
 
 The metrics for our experiments are stored in the `results` folder. In particular
-`museval` json evaluations are stored in `results/evals/EXPERIMENT NAME/results`.
+`museval` JSON evaluations are stored in `results/evals/EXPERIMENT NAME/results`.
 You can aggregate and display the results using
 
 ```bash
@@ -119,7 +125,7 @@ The `std` column shows the standard deviation divided by the square root of the 
 
 ## Training Demucs and evaluating on the MusDB dataset
 
-If you want to train Demucs from scrath, you will need a copy of the MusDB dataset.
+If you want to train Demucs from scratch, you will need a copy of the MusDB dataset.
 It can be obtained on the [MusDB website][musdb].
 To start training on a single GPU or CPU, use:
 
@@ -130,7 +136,7 @@ python3 -m demucs -b 4  --musdb MUSDB_PATH --tasnet --samples=80000 --split_vali
 
 The `-b 4` flag will set the batch size to 4. The default is 4 and will crash on a single GPU.
 Demucs was trained on 8 V100 with 32GB of RAM.
-The default parameters (batch size, number of channels etc)
+The default parameters (batch size, number of channels etc.)
 might not be suitable for 16GB GPUs.
 To train on all available GPUs, use:
 
@@ -148,21 +154,21 @@ To see all the possible options, use `python3 -m demucs --help`.
 ### About checkpointing
 
 Demucs will automatically generate an experiment name from the command line flags you provided.
-It will checkpoint after every epoch. If a checkpoint already exist for the combination of flags
+It will checkpoint after every epoch. If a checkpoint already exists for the combination of flags
 you provided, it will be automatically used. In order to ignore/delete a previous checkpoint,
 run with the `-R` flag.
-The optimizer state, the latest model and the best model on valid are stored. At the end of each
+The optimizer state, the latest model, and the best model on valid are stored. At the end of each
 epoch, the checkpoint will erase the one from the previous epoch.
 By default, checkpoints are stored in the `./checkpoints` folder. This can be changed using the
 `--checkpoints CHECKPOINT_FOLDER` flag.
 
 Not all options will impact the name of the experiment. For instance `--workers` is not
-shown in the name, therefore, changing this parameter will not impact the checkpoint file
+shown in the name; therefore, changing this parameter will not impact the checkpoint file
 used. Refer to [parser.py](demucs/parser.py) for more details.
 
 ### Test set evaluations
 
-Test set evaluations computed with [museval][museval] will be stored under
+The test set evaluations computed with [museval][museval] will be stored under
 `evals/EXPERIMENT NAME/results`. The experiment name
 is the first thing printed when running `python3 run.py` or `python3 -m demucs`. If you used
 the flag `--save`, there will also be a folder `evals/EXPERIMENT NAME/wavs` containing
@@ -176,7 +182,7 @@ create one process per GPU and run in a distributed manner. Multinode training i
 
 ### Extracting Raw audio for faster loading
 
-We observed that loading from compressed mp4 audio lead to unreliable speed, sometimes reducing by
+We observed that loading from compressed mp4 audio leads to unreliable speed, sometimes reducing by
 a factor of 2 the number of iterations per second. It is possible to extract all data
 to raw PCM f32e format. If you wish to store the raw data under `RAW_PATH`, run the following
 command first:
@@ -244,7 +250,7 @@ export DEMUCS_MUSDB=PATH TO MUSDB
 
 ## License
 
-Demucs is released under Creative Commons Attribution-NonCommercial 4.0 International
+Demucs is released under the Creative Commons Attribution-NonCommercial 4.0 International
 (CC BY-NC 4.0) license, as found in the [LICENSE](LICENSE) file.
 
 The file `demucs/tasnet.py` is adapted from the [kaituoxu/Conv-TasNet][tasnet] repository.
