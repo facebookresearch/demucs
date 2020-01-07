@@ -90,7 +90,7 @@ The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demuc
 ```bash
 cd %HOMEPATH%
 cd demucs
-python.exe -m demucs.separate --dl "PATH_TO_AUDIO_FILE_1" ...
+python.exe -m demucs.separate -d cpu --dl "PATH_TO_AUDIO_FILE_1" ...
 ```
 
 If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1` and hopefully it will work 🙏.
