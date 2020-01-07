@@ -83,7 +83,7 @@ git clone https://github.com/facebookresearch/demucs
 cd demucs
 conda env update -f environment-cpu.yml
 conda activate demucs
-python.exe -m demucs.separate --dl "PATH_TO_AUDIO_FILE_1" ["PATH_TO_AUDIO_FILE_2" ...]
+python.exe -m demucs.separate -d cpu --dl "PATH_TO_AUDIO_FILE_1" ["PATH_TO_AUDIO_FILE_2" ...]
 ```
 The `"` around the filename are required if the path contains spaces.
 The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demucs\`. The next time you want to use Demucs, start again the [Anaconda prompt][prompt] and simply run
