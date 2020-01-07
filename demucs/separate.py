@@ -7,6 +7,7 @@
 import argparse
 import hashlib
 import sys
+import warnings
 from pathlib import Path
 
 import requests
@@ -120,12 +121,20 @@ def main():
         url = BASE_URL + f"{args.name}.th"
         print("Downloading pre-trained model weights, this could take a while...")
         download_file(url, model_path, sha256)
-    model = th.load(model_path).to(args.device)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model = th.load(model_path).to(args.device)
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     source_names = ["drums", "bass", "other", "vocals"]
     print(f"Separated tracks will be stored in {out.resolve()}")
     for track in args.tracks:
+        if not track.exists():
+            print(
+                f"File {track} does not exist. If the path contains spaces, "
+                "please try again after surrounding the entire path with quotes \"\".",
+                file=sys.stderr)
+            continue
         print(f"Separating track {track}")
         wav = AudioFile(track).read(streams=0, samplerate=44100, channels=2).to(args.device)
         # Round to nearest short integer for compatibility with how MusDB load audio with stempeg.
