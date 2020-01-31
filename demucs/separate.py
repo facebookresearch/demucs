@@ -17,16 +17,18 @@ from scipy.io import wavfile
 from .audio import AudioFile
 from .utils import apply_model, load_model
 
-BASE_URL = "https://dl.fbaipublicfiles.com/demucs/"
+BASE_URL = "https://dl.fbaipublicfiles.com/demucs/v2.0/"
 PRETRAINED_MODELS = {
-    'demucs': 'b25b32a4772e43983d2e30cce17a85aaa1baf3aea0a6145eb591b0f393ac9312',
-    'demucs_extra': '099d3e7fcbb8da7484184ad6d84cd6c3820947ff0e2f52d5e622365685037cd7',
-    'tasnet': 'd037cdbad294f1a7152af8742d8419c305e244810381a795ffcd22b8593360d8',
-    'tasnet_extra': '4a91ade51439ac41bb1914753c3aebd839eed17981379e6142478bcfa3a5461f',
+    'demucs': 'f6c4148ba0dc92242d82d7b3f2af55c77bd7cb4ff1a0a3028a523986f36a3cfd',
+    'demucs_extra': '3331bcc5d09ba1d791c3cf851970242b0bb229ce81dbada557b6d39e8c6a6a87',
+    'light': '79d1ee3c1541c729c552327756954340a1a46a11ce0009dea77dc583e4b6269c',
+    'light_extra': '9e9b4af564229c80cc73c95d02d2058235bb054c6874b3cba4d5b26943a5ddcb',
+    'tasnet': 'be56693f6a5c4854b124f95bb9dd043f3167614898493738ab52e25648bec8a2',
+    'tasnet_extra': '0ccbece3acd98785a367211c9c35b1eadae8d148b0d37fe5a5494d6d335269b5',
 }
 
 
-def download_file(url, target, sha256=None):
+def download_file(url, target):
     """
     Download a file with a progress bar.
 
@@ -39,21 +41,11 @@ def download_file(url, target, sha256=None):
         response = requests.get(url, stream=True)
         total_length = int(response.headers.get('content-length', 0))
 
-        if sha256 is not None:
-            hasher = hashlib.sha256()
-
-        with tqdm.tqdm(total=total_length, unit="B", unit_scale=True) as bar:
+        with tqdm.tqdm(total=total_length, ncols=120, unit="B", unit_scale=True) as bar:
             with open(target, "wb") as output:
                 for data in response.iter_content(chunk_size=4096):
                     output.write(data)
-                    if sha256 is not None:
-                        hasher.update(data)
                     bar.update(len(data))
-        if sha256 is not None:
-            signature = hasher.hexdigest()
-            if sha256 != signature:
-                raise ValueError("Invalid sha256 signature when downloading {}. "
-                                 "Expected {} but got {}".format(url, sha256, signature))
 
     try:
         _download()
@@ -61,6 +53,26 @@ def download_file(url, target, sha256=None):
         if target.exists():
             target.unlink()
         raise
+
+
+def verify_file(target, sha256):
+    hasher = hashlib.sha256()
+    with open(target, "rb") as f:
+        while True:
+            data = f.read(65536)
+            if not data:
+                break
+            hasher.update(data)
+    signature = hasher.hexdigest()
+    if signature != sha256:
+        print(
+            f"Invalid sha256 signature for the file {target}. Expected {sha256} but got "
+            f"{signature}.\nIf you have recently updated the repo, it is possible "
+            "the checkpoints have been updated. It is also possible that a previous "
+            f"download did not run to completion.\nPlease delete the file '{target.absolute()}' "
+            "and try again.",
+            file=sys.stderr)
+        sys.exit(1)
 
 
 def main():
@@ -105,8 +117,8 @@ def main():
 
     args = parser.parse_args()
     model_path = args.models / f"{args.name}.th"
+    sha256 = PRETRAINED_MODELS.get(args.name)
     if not model_path.is_file():
-        sha256 = PRETRAINED_MODELS.get(args.name)
         if sha256 is None:
             print(f"No pretrained model {args.name}", file=sys.stderr)
             sys.exit(1)
@@ -119,7 +131,9 @@ def main():
         args.models.mkdir(exist_ok=True, parents=True)
         url = BASE_URL + f"{args.name}.th"
         print("Downloading pre-trained model weights, this could take a while...")
-        download_file(url, model_path, sha256)
+        download_file(url, model_path)
+    if sha256 is not None:
+        verify_file(model_path, sha256)
     model = load_model(model_path)
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)

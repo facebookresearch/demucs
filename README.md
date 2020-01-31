@@ -28,6 +28,19 @@ Demucs and Conv-Tasnet obtain the same SDR. See [our paper][demucs_arxiv] Sectio
 width="800px"></p>
 
 
+## Important news if you are already using Demucs
+
+- 31/01/2020: **You will need to re-download pre-trained models**. Due to an incompatiblity with Pytorch 1.4.0, the pre-trained models could not be loaded
+with it. I have replaced all the pre-trained models using a more future proof serialization. It means
+that you will get an error if you update the repo saying that the previously downloaded checkpoints
+don't have the right signature. Please delete the previously downloaded files in `models` and it will download the new ones.
+Sorry for the inconveniance.
+- 31/01/2020: **New light models**: I have added a lighter version of Demucs, trained with the option `--channels=64`.
+The overall SDR is a bit worse, but to the hear it sounds quite similar. The files are smaller to download (1GB),
+and it should run about 4x faster. I know quite a few people wanted to use Demucs on GPU, I hope this version
+can run on a wider range of hardware :) To use it simply replace `-n demucs` by `-n light` (or `-n light_extra`
+for the version trained on more data)
+in the `separate` command described hereafter.
 
 ## Comparison with other models
 
@@ -150,6 +163,8 @@ Other pre-trained models can be selected with the `-n` flag and downloaded with 
 The models will be stored in the `models` folder. The list of pre-trained models is:
 - `demucs`: Demucs trained on MusDB,
 - `demucs_extra`: Demucs trained with extra training data,
+- `light`: Demucs trained on MusDB with `--channels=64` (smaller, faster, quality might be a bit worse),
+- `light_extra`: Demucs trained with extra training data with `--channels=64`,
 - `tasnet`: Conv-Tasnet trained on MusDB,
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
 
