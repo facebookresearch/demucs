@@ -36,6 +36,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .utils import capture_init
+
 EPS = 1e-8
 
 
@@ -63,6 +65,7 @@ def overlap_and_add(signal, frame_step):
 
 
 class ConvTasNet(nn.Module):
+    @capture_init
     def __init__(self,
                  N=256,
                  L=20,

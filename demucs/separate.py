@@ -7,7 +7,6 @@
 import argparse
 import hashlib
 import sys
-import warnings
 from pathlib import Path
 
 import requests
@@ -16,7 +15,7 @@ import tqdm
 from scipy.io import wavfile
 
 from .audio import AudioFile
-from .utils import apply_model
+from .utils import apply_model, load_model
 
 BASE_URL = "https://dl.fbaipublicfiles.com/demucs/"
 PRETRAINED_MODELS = {
@@ -121,9 +120,7 @@ def main():
         url = BASE_URL + f"{args.name}.th"
         print("Downloading pre-trained model weights, this could take a while...")
         download_file(url, model_path, sha256)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        model = th.load(model_path).to(args.device)
+    model = load_model(model_path)
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     source_names = ["drums", "bass", "other", "vocals"]

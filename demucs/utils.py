@@ -5,10 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 
 import errno
+import functools
 import os
 import random
 import socket
 import tempfile
+import warnings
 from contextlib import contextmanager
 
 import torch as th
@@ -150,3 +152,28 @@ def temp_filenames(count, delete=True, **kwargs):
         if delete:
             for name in names:
                 os.unlink(name)
+
+
+def load_model(path):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        klass, args, kwargs, state = th.load(path, 'cpu')
+    model = klass(*args, **kwargs)
+    model.load_state_dict(state)
+    return model
+
+
+def save_model(model, path):
+    args, kwargs = model._init_args_kwargs
+    klass = model.__class__
+    state = {k: p.data.to('cpu') for k, p in model.state_dict().items()}
+    th.save((klass, args, kwargs, state), path)
+
+
+def capture_init(init):
+    @functools.wraps(init)
+    def __init__(self, *args, **kwargs):
+        self._init_args_kwargs = (args, kwargs)
+        init(self, *args, **kwargs)
+
+    return __init__

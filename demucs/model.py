@@ -9,7 +9,7 @@ import math
 import torch as th
 from torch import nn
 
-from .utils import center_trim
+from .utils import capture_init, center_trim
 
 
 class BLSTM(nn.Module):
@@ -59,6 +59,7 @@ def downsample(x, stride):
 
 
 class Demucs(nn.Module):
+    @capture_init
     def __init__(self,
                  sources=4,
                  audio_channels=2,

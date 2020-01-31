@@ -23,7 +23,7 @@ from .raw import Rawset
 from .tasnet import ConvTasNet
 from .test import evaluate
 from .train import train_model, validate_model
-from .utils import human_seconds, sizeof_fmt
+from .utils import human_seconds, save_model, sizeof_fmt
 
 
 @dataclass
@@ -117,8 +117,10 @@ def main():
         optimizer.load_state_dict(saved.optimizer)
 
     if args.save_model:
-        model.to("cpu")
-        th.save(model, args.models / f"{name}.th")
+        if args.rank == 0:
+            model.to("cpu")
+            model.load_state_dict(saved.best_state)
+            save_model(model, args.models / f"{name}.th")
         return
 
     if args.rank == 0:
@@ -254,7 +256,7 @@ def main():
              shifts=args.shifts,
              workers=args.eval_workers)
     model.to("cpu")
-    th.save(model, args.models / f"{name}.th")
+    save_model(model, args.models / f"{name}.th")
     if args.rank == 0:
         print("done")
         done.write_text("done")
