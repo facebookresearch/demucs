@@ -134,7 +134,7 @@ def main():
         download_file(url, model_path)
     if sha256 is not None:
         verify_file(model_path, sha256)
-    model = load_model(model_path)
+    model = load_model(model_path).to(args.device)
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     source_names = ["drums", "bass", "other", "vocals"]
