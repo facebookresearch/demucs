@@ -114,6 +114,10 @@ def main():
                         help="Apply the model to the entire input at once rather than "
                         "first splitting it in chunks of 16 seconds. Will OOM with Tasnet "
                         "but will work fine for Demucs if you have at least 16GB of RAM.")
+    parser.add_argument("--int16",
+                        action="store_true",
+                        help="Convert the output wavefile to use pcm s16 format instead of f32. "
+                        "This can solve some incompatibility with other software")
 
     args = parser.parse_args()
     model_path = args.models / f"{args.name}.th"
@@ -158,6 +162,8 @@ def main():
         track_folder = out / track.name.split(".")[0]
         track_folder.mkdir(exist_ok=True)
         for source, name in zip(sources, source_names):
+            if args.int16:
+                source = (source * 2**15).clamp_(-2**15, 2**15 - 1).short()
             source = source.cpu().transpose(0, 1).numpy()
             wavfile.write(str(track_folder / f"{name}.wav"), 44100, source)
 
