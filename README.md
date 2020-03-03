@@ -106,7 +106,8 @@ cd demucs
 python.exe -m demucs.separate -d cpu --dl "PATH_TO_AUDIO_FILE_1" ...
 ```
 
-If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1` and hopefully it will work 🙏.
+If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run
+`conda install -c defaults intel-openmp -f`. Then try again to run the `demucs.separate` command. If it still doesn't work, you can try to run first `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1`, then again the `demucs.separate` command and hopefully it will work 🙏.
 If you get a permission error, please try starting the Anaconda Prompt as administrator.
 
 [install]: https://www.anaconda.com/distribution/#windows
