@@ -306,12 +306,11 @@ export DEMUCS_MUSDB=PATH TO MUSDB
 ## How to cite
 
 ```
-@techreport{music_separation_waveform,
-  title = {{Music Source Separation in the Waveform Domain}},
-  author = {D{\'e}fossez, Alexandre and Usunier, Nicolas and Bottou, L{\'e}on and Bach, Francis},
-  year = {2019},
-  number = {02379796v1},
-  institution = {HAL},
+@article{defossez2019music,
+  title={Music Source Separation in the Waveform Domain},
+  author={D{\'e}fossez, Alexandre and Usunier, Nicolas and Bottou, L{\'e}on and Bach, Francis},
+  journal={arXiv preprint arXiv:1911.13254},
+  year={2019}
 }
 ```
 
