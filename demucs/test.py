@@ -25,7 +25,6 @@ def evaluate(model,
              device="cpu",
              rank=0,
              save=False,
-             torch_eval=False,
              shifts=0,
              split=False,
              check=True,
@@ -49,7 +48,7 @@ def evaluate(model,
         p.grad = None
 
     pendings = []
-    with futures.ProcessPoolExecutor(workers) as pool:
+    with futures.ProcessPoolExecutor(workers or 1) as pool:
         for index in tqdm.tqdm(range(rank, len(test_set), world_size), file=sys.stdout):
             track = test_set.tracks[index]
 
@@ -67,19 +66,22 @@ def evaluate(model,
             estimates = estimates.transpose(1, 2)
             references = th.stack(
                 [th.from_numpy(track.targets[name].audio) for name in source_names])
+            references = references.numpy()
+            estimates = estimates.cpu().numpy()
             if save:
                 folder = eval_folder / "wav/test" / track.name
                 folder.mkdir(exist_ok=True, parents=True)
                 for name, estimate in zip(source_names, estimates):
-                    wavfile.write(str(folder / (name + ".wav")), 44100, estimate.cpu().numpy())
+                    wavfile.write(str(folder / (name + ".wav")), 44100, estimate)
 
-            pendings.append((track.name,
-                             pool.submit(museval.evaluate, references.numpy(),
-                                         estimates.cpu().numpy())))
+            if workers:
+                pendings.append((track.name, pool.submit(museval.evaluate, references, estimates)))
+            else:
+                pendings.append((track.name, museval.evaluate(references, estimates)))
             del references, mix, estimates, track
 
         for track_name, pending in tqdm.tqdm(pendings, file=sys.stdout):
-            if not torch_eval:
+            if workers:
                 pending = pending.result()
             sdr, isr, sir, sar = pending
             track_store = museval.TrackStore(win=44100, hop=44100, track_name=track_name)
