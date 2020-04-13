@@ -6,6 +6,7 @@
 
 import errno
 import functools
+import gzip
 import os
 import random
 import socket
@@ -157,7 +158,10 @@ def temp_filenames(count, delete=True, **kwargs):
 def load_model(path):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        klass, args, kwargs, state = th.load(path, 'cpu')
+        load_from = path
+        if str(path).endswith(".gz"):
+            load_from = gzip.open(path, "rb")
+        klass, args, kwargs, state = th.load(load_from, 'cpu')
     model = klass(*args, **kwargs)
     model.load_state_dict(state)
     return model
@@ -167,7 +171,10 @@ def save_model(model, path):
     args, kwargs = model._init_args_kwargs
     klass = model.__class__
     state = {k: p.data.to('cpu') for k, p in model.state_dict().items()}
-    th.save((klass, args, kwargs, state), path)
+    save_to = path
+    if str(path).endswith(".gz"):
+        save_to = gzip.open(path, "wb", compresslevel=5)
+    th.save((klass, args, kwargs, state), save_to)
 
 
 def capture_init(init):

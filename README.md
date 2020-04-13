@@ -30,6 +30,11 @@ width="800px"></p>
 
 ## Important news if you are already using Demucs
 
+- 13/04/2020: **Demucs released under MIT**: We are happy to release Demucs under the MIT licence.
+    We hope that this will broaden the impact of this research to new applications.
+- 13/04/2020: **New quantized models**: By default, pre-trained models are now downloaded in
+    an 8 bit quantized version, 4 times smaller and with no hearable impact on quality.
+    If you want the old version, just pass `--not_quantized` to `demucs.separate`.
 - 31/01/2020: **You will need to re-download pre-trained models**. Due to an incompatiblity with Pytorch 1.4.0, the pre-trained models could not be loaded
 with it. I have replaced all the pre-trained models using a more future proof serialization. It means
 that you will get an error if you update the repo saying that the previously downloaded checkpoints
@@ -170,6 +175,13 @@ The models will be stored in the `models` folder. The list of pre-trained models
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
 
 
+For the `demucs*` and `light*` models, 8 bit quantized version are now downloaded by default.
+The model is 4 times smaller. I have not observed any change in the separation quality
+and the validation loss was not impacted by the quantization.
+In case you want to use the unquantized version, just add the `--not_quantized` flag to the
+command line.
+
+
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a randomized
 equivariant stabilization) of the input and average them. This makes prediction `SHIFTS` times
 slower but improves the accuracy of Demucs by 0.2 points of SDR.
@@ -180,7 +192,7 @@ It is deactivated by default.
 
 ### Memory requirements for GPU acceleration
 
-If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! I'll publish soon a lighter version of the model that should run with less RAM. IF you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to the duration of the track.
+If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs` and 4GB for `tasnet`. Sorry, the code for demucs is not super optimized for memory! If you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to the duration of the track.
 
 
 ## Examining the results from the paper experiments
@@ -316,8 +328,7 @@ export DEMUCS_MUSDB=PATH TO MUSDB
 
 ## License
 
-Demucs is released under Creative Commons Attribution-NonCommercial 4.0 International
-(CC BY-NC 4.0) license, as found in the [LICENSE](LICENSE) file.
+Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file.
 
 The file `demucs/tasnet.py` is adapted from the [kaituoxu/Conv-TasNet][tasnet] repository.
 It was originally released under the MIT License updated to support multiple audio channels.

@@ -19,12 +19,16 @@ from .utils import apply_model, load_model
 
 BASE_URL = "https://dl.fbaipublicfiles.com/demucs/v2.0/"
 PRETRAINED_MODELS = {
-    'demucs': 'f6c4148ba0dc92242d82d7b3f2af55c77bd7cb4ff1a0a3028a523986f36a3cfd',
-    'demucs_extra': '3331bcc5d09ba1d791c3cf851970242b0bb229ce81dbada557b6d39e8c6a6a87',
-    'light': '79d1ee3c1541c729c552327756954340a1a46a11ce0009dea77dc583e4b6269c',
-    'light_extra': '9e9b4af564229c80cc73c95d02d2058235bb054c6874b3cba4d5b26943a5ddcb',
-    'tasnet': 'be56693f6a5c4854b124f95bb9dd043f3167614898493738ab52e25648bec8a2',
-    'tasnet_extra': '0ccbece3acd98785a367211c9c35b1eadae8d148b0d37fe5a5494d6d335269b5',
+    'demucs.th': 'f6c4148ba0dc92242d82d7b3f2af55c77bd7cb4ff1a0a3028a523986f36a3cfd',
+    'demucs.th.gz': '6030f57f77560f57aaaff14c1bfcc808307224a7b2df6b1b87aaacf92f5c1884',
+    'demucs_extra.th': '3331bcc5d09ba1d791c3cf851970242b0bb229ce81dbada557b6d39e8c6a6a87',
+    'demucs_extra.th.gz': '3bd3054bdfa5c08a6ca5919b8f82f8e588cadf6e9e474fcd8b037de5f789a4a7',
+    'light.th': '79d1ee3c1541c729c552327756954340a1a46a11ce0009dea77dc583e4b6269c',
+    'light.th.gz': '98d8296d155ce117345daa5f70597ec8c9bd1ff44bd4ed403aaf5d8e805ae247',
+    'light_extra.th': '9e9b4af564229c80cc73c95d02d2058235bb054c6874b3cba4d5b26943a5ddcb',
+    'light_extra.th.gz': '7f3a163cba2332fe75178b5be81ddf26695fe5a4565f33c05e693b477f1c697d',
+    'tasnet.th': 'be56693f6a5c4854b124f95bb9dd043f3167614898493738ab52e25648bec8a2',
+    'tasnet_extra.th': '0ccbece3acd98785a367211c9c35b1eadae8d148b0d37fe5a5494d6d335269b5',
 }
 
 
@@ -82,7 +86,16 @@ def main():
     parser.add_argument("-n",
                         "--name",
                         default="demucs",
-                        help="Model name. See README.md for the list of pretrained models.")
+                        help="Model name. See README.md for the list of pretrained models. "
+                             "Default is demucs.")
+    parser.add_argument("--quantized", action="store_true", dest="quantized", default=None,
+                        help="Load the quantized model rather than the quantized version. "
+                             "Quantized model is about 4 times smaller, and performance is "
+                             "roughly equivalent. This is the default for new downloads.")
+    parser.add_argument("--not_quantized", action="store_false", dest="quantized",
+                        help="Load the unquantized model rather than the quantized version. "
+                             "Quantized model is about 4 times smaller, and performance is "
+                             "roughly equivalent.")
     parser.add_argument("-o",
                         "--out",
                         type=Path,
@@ -112,17 +125,40 @@ def main():
                         default=True,
                         dest="split",
                         help="Apply the model to the entire input at once rather than "
-                        "first splitting it in chunks of 16 seconds. Will OOM with Tasnet "
+                        "first splitting it in chunks of 10 seconds. Will OOM with Tasnet "
                         "but will work fine for Demucs if you have at least 16GB of RAM.")
-    parser.add_argument("--int16",
+    parser.add_argument("--float32",
                         action="store_true",
-                        help="Convert the output wavefile to use pcm s16 format instead of f32. "
-                        "This can solve some incompatibility with other software")
+                        help="Convert the output wavefile to use pcm f32 format instead of s16. "
+                        "This should not make a difference if you just plan on listening to the "
+                        "audio but might be needed to compute exactly metrics like SDR etc.")
+    parser.add_argument("--int16",
+                        action="store_false",
+                        dest="float32",
+                        help="Opposite of --float32, here for compatibility.")
 
     args = parser.parse_args()
-    model_path = args.models / f"{args.name}.th"
-    sha256 = PRETRAINED_MODELS.get(args.name)
+    name = args.name + ".th"
+    quant_name = name + ".gz"
+    if args.quantized is not None:
+        if args.quantized:
+            names = [quant_name]
+        else:
+            names = [name]
+    else:
+        names = [quant_name, name]
+
+    for name in names:
+        model_path = args.models / name
+        if model_path.is_file():
+            sha256 = PRETRAINED_MODELS.get(name)
+            break
     if not model_path.is_file():
+        for name in names:
+            sha256 = PRETRAINED_MODELS.get(name)
+            model_path = args.models / name
+            if sha256 is not None:
+                break
         if sha256 is None:
             print(f"No pretrained model {args.name}", file=sys.stderr)
             sys.exit(1)
@@ -133,7 +169,7 @@ def main():
                 file=sys.stderr)
             sys.exit(1)
         args.models.mkdir(exist_ok=True, parents=True)
-        url = BASE_URL + f"{args.name}.th"
+        url = BASE_URL + name
         print("Downloading pre-trained model weights, this could take a while...")
         download_file(url, model_path)
     if sha256 is not None:
@@ -162,7 +198,7 @@ def main():
         track_folder = out / track.name.split(".")[0]
         track_folder.mkdir(exist_ok=True)
         for source, name in zip(sources, source_names):
-            if args.int16:
+            if not args.float32:
                 source = (source * 2**15).clamp_(-2**15, 2**15 - 1).short()
             source = source.cpu().transpose(0, 1).numpy()
             wavfile.write(str(track_folder / f"{name}.wav"), 44100, source)
