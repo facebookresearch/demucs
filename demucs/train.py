@@ -36,6 +36,7 @@ def train_model(epoch,
         loader = DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=workers)
     else:
         loader = DataLoader(dataset, batch_size=batch_size, num_workers=workers, shuffle=True)
+    current_loss = 0
     for repetition in range(repeat):
         tq = tqdm.tqdm(loader,
                        ncols=120,

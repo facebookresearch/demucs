@@ -20,13 +20,13 @@ from .utils import apply_model, load_model
 BASE_URL = "https://dl.fbaipublicfiles.com/demucs/v2.0/"
 PRETRAINED_MODELS = {
     'demucs.th': 'f6c4148ba0dc92242d82d7b3f2af55c77bd7cb4ff1a0a3028a523986f36a3cfd',
-    'demucs.th.gz': '6030f57f77560f57aaaff14c1bfcc808307224a7b2df6b1b87aaacf92f5c1884',
+    'demucs.th.gz': 'e70767bfc9ce62c26c200477ea29a20290c708b210977e3ef2c75ace68ea4be1',
     'demucs_extra.th': '3331bcc5d09ba1d791c3cf851970242b0bb229ce81dbada557b6d39e8c6a6a87',
-    'demucs_extra.th.gz': '3bd3054bdfa5c08a6ca5919b8f82f8e588cadf6e9e474fcd8b037de5f789a4a7',
+    'demucs_extra.th.gz': 'f9edcf7fe55ea5ac9161c813511991e4ba03188112fd26a9135bc9308902a094',
     'light.th': '79d1ee3c1541c729c552327756954340a1a46a11ce0009dea77dc583e4b6269c',
-    'light.th.gz': '98d8296d155ce117345daa5f70597ec8c9bd1ff44bd4ed403aaf5d8e805ae247',
+    'light.th.gz': '94c091021d8cdee0806b6df0afbeb59e73e989dbc2c16d2c1c370b2edce774fd',
     'light_extra.th': '9e9b4af564229c80cc73c95d02d2058235bb054c6874b3cba4d5b26943a5ddcb',
-    'light_extra.th.gz': '7f3a163cba2332fe75178b5be81ddf26695fe5a4565f33c05e693b477f1c697d',
+    'light_extra.th.gz': '48bb1a85f5ad0ca400512fcd0dcf91ec94e886a1602a552ee32133f5e09aeae0',
     'tasnet.th': 'be56693f6a5c4854b124f95bb9dd043f3167614898493738ab52e25648bec8a2',
     'tasnet_extra.th': '0ccbece3acd98785a367211c9c35b1eadae8d148b0d37fe5a5494d6d335269b5',
 }
@@ -88,10 +88,10 @@ def main():
                         default="demucs",
                         help="Model name. See README.md for the list of pretrained models. "
                              "Default is demucs.")
-    parser.add_argument("--quantized", action="store_true", dest="quantized", default=False,
+    parser.add_argument("-Q", "--quantized", action="store_true", dest="quantized", default=False,
                         help="Load the quantized model rather than the quantized version. "
-                             "Quantized model is about 4 times smaller but might impact "
-                             "performance")
+                             "Quantized model is about 4 times smaller but might worsen "
+                             "slightly quality.")
     parser.add_argument("-o",
                         "--out",
                         type=Path,
@@ -157,6 +157,8 @@ def main():
     if sha256 is not None:
         verify_file(model_path, sha256)
     model = load_model(model_path).to(args.device)
+    if args.quantized:
+        args.name += "_quantized"
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     source_names = ["drums", "bass", "other", "vocals"]

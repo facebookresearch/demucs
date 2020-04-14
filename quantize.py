@@ -24,9 +24,18 @@ def quantize(p, level=256):
 
 def main():
     path = sys.argv[1]
+    level = 256
+    min_mb = 20
+    if len(sys.argv) >= 3:
+        level = int(sys.argv[2])
+    if len(sys.argv) >= 4:
+        min_mb = float(sys.argv[3])
+
+    print(path, level, min_mb)
     model = load_model(path)
     for p in model.parameters():
-        p.data[:] = quantize(p.data)
+        if p.numel() >= min_mb * 2**20 / 4:
+            p.data[:] = quantize(p.data, level)
     save_model(model, path + ".gz")
 
 

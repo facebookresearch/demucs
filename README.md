@@ -32,6 +32,8 @@ width="800px"></p>
 
 - 13/04/2020: **Demucs released under MIT**: We are happy to release Demucs under the MIT licence.
     We hope that this will broaden the impact of this research to new applications.
+- 13/04/2020: **New quantized models**: New quantized 8 bit models, 4 times smaller and with
+    limited impact on quality. To use them, pass `-Q` to the `demucs.separate` command.
 - 31/01/2020: **You will need to re-download pre-trained models**. Due to an incompatiblity with Pytorch 1.4.0, the pre-trained models could not be loaded
 with it. I have replaced all the pre-trained models using a more future proof serialization. It means
 that you will get an error if you update the repo saying that the previously downloaded checkpoints
@@ -82,6 +84,7 @@ If you have anaconda installed, you can run from the root of this repository:
 
 This will create a `demucs` environment with all the dependencies installed.
 
+
 ### Using Windows
 
 If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
@@ -115,7 +118,7 @@ If you get a permission error, please try starting the Anaconda Prompt as admini
 [install]: https://www.anaconda.com/distribution/#windows
 [prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
 
-## Using Mac OS X
+### Using Mac OS X
 
 If you do not already have Anaconda installed or much experience with the terminal on Mac OS X here are some detailed instructions:
 
@@ -170,6 +173,11 @@ The models will be stored in the `models` folder. The list of pre-trained models
 - `light_extra`: Demucs trained with extra training data with `--channels=64`,
 - `tasnet`: Conv-Tasnet trained on MusDB,
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
+
+
+For the `demucs*` and `light*` models, 8 bit quantized version are available.
+The model is 4 times smaller but quality might be a bit worse, especially for the `other`
+and `vocals` sources. Just add `-Q` to the command line to use them.
 
 
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a randomized

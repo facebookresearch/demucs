@@ -46,6 +46,8 @@ def get_parser():
                         help="Device to train on, default is cuda if available else cpu")
     parser.add_argument("--eval_cpu", action="store_true", help="Eval on test will be run on cpu.")
     parser.add_argument("--dummy", help="Dummy parameter, useful to create a new checkpoint file")
+    parser.add_argument("--test", help="Just run the test pipeline + one validation. "
+                                       "This should be a filename relative to the models/ folder.")
 
     parser.add_argument("--rank", default=0, type=int)
     parser.add_argument("--world_size", default=1, type=int)
