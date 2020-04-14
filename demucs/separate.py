@@ -90,8 +90,8 @@ def main():
                              "Default is demucs.")
     parser.add_argument("--quantized", action="store_true", dest="quantized", default=False,
                         help="Load the quantized model rather than the quantized version. "
-                             "Quantized model is about 4 times smaller, and performance is "
-                             "roughly equivalent. This is the default for new downloads.")
+                             "Quantized model is about 4 times smaller but might impact "
+                             "performance")
     parser.add_argument("-o",
                         "--out",
                         type=Path,
