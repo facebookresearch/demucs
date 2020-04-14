@@ -88,14 +88,10 @@ def main():
                         default="demucs",
                         help="Model name. See README.md for the list of pretrained models. "
                              "Default is demucs.")
-    parser.add_argument("--quantized", action="store_true", dest="quantized", default=None,
+    parser.add_argument("--quantized", action="store_true", dest="quantized", default=False,
                         help="Load the quantized model rather than the quantized version. "
                              "Quantized model is about 4 times smaller, and performance is "
                              "roughly equivalent. This is the default for new downloads.")
-    parser.add_argument("--not_quantized", action="store_false", dest="quantized",
-                        help="Load the unquantized model rather than the quantized version. "
-                             "Quantized model is about 4 times smaller, and performance is "
-                             "roughly equivalent.")
     parser.add_argument("-o",
                         "--out",
                         type=Path,
@@ -139,26 +135,12 @@ def main():
 
     args = parser.parse_args()
     name = args.name + ".th"
-    quant_name = name + ".gz"
-    if args.quantized is not None:
-        if args.quantized:
-            names = [quant_name]
-        else:
-            names = [name]
-    else:
-        names = [quant_name, name]
+    if args.quantized:
+        name += ".gz"
 
-    for name in names:
-        model_path = args.models / name
-        if model_path.is_file():
-            sha256 = PRETRAINED_MODELS.get(name)
-            break
+    model_path = args.models / name
+    sha256 = PRETRAINED_MODELS.get(name)
     if not model_path.is_file():
-        for name in names:
-            sha256 = PRETRAINED_MODELS.get(name)
-            model_path = args.models / name
-            if sha256 is not None:
-                break
         if sha256 is None:
             print(f"No pretrained model {args.name}", file=sys.stderr)
             sys.exit(1)

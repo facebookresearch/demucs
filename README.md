@@ -32,9 +32,6 @@ width="800px"></p>
 
 - 13/04/2020: **Demucs released under MIT**: We are happy to release Demucs under the MIT licence.
     We hope that this will broaden the impact of this research to new applications.
-- 13/04/2020: **New quantized models**: By default, pre-trained models are now downloaded in
-    an 8 bit quantized version, 4 times smaller and with no hearable impact on quality.
-    If you want the old version, just pass `--not_quantized` to `demucs.separate`.
 - 31/01/2020: **You will need to re-download pre-trained models**. Due to an incompatiblity with Pytorch 1.4.0, the pre-trained models could not be loaded
 with it. I have replaced all the pre-trained models using a more future proof serialization. It means
 that you will get an error if you update the repo saying that the previously downloaded checkpoints
@@ -173,13 +170,6 @@ The models will be stored in the `models` folder. The list of pre-trained models
 - `light_extra`: Demucs trained with extra training data with `--channels=64`,
 - `tasnet`: Conv-Tasnet trained on MusDB,
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
-
-
-For the `demucs*` and `light*` models, 8 bit quantized version are now downloaded by default.
-The model is 4 times smaller. I have not observed any change in the separation quality
-and the validation loss was not impacted by the quantization.
-In case you want to use the unquantized version, just add the `--not_quantized` flag to the
-command line.
 
 
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a randomized
