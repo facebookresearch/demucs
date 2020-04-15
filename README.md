@@ -148,6 +148,8 @@ In order to try Demucs or Conv-Tasnet on your tracks, simply run from the root o
 
 ```bash
 python3 -m demucs.separate --dl -n demucs PATH_TO_AUDIO_FILE_1 [PATH_TO_AUDIO_FILE_2 ...] # for Demucs
+python3 -m demucs.separate --dl -n demucs --mp3 PATH_TO_AUDIO_FILE_1 # Save as MP3, requires lame installed
+python3 -m demucs.separate --dl -n demucs -Q PATH_TO_AUDIO_FILE_1 # Use quantized models (smaller download, slightly worse quality)
 python3 -m demucs.separate --dl -n tasnet PATH_TO_AUDIO_FILE_1 ... # for Conv-Tasnet
 # Demucs with randomized equivariant stabilization (10x slower, suitable for GPU, 0.2 extra SDR)
 python3 -m demucs.separate --dl -n demucs --shifts=10 PATH_TO_AUDIO_FILE_1
@@ -164,6 +166,8 @@ Those folders will be placed in `./separated/MODEL_NAME`.
 Any stereo audio file supported by ffmpeg will work. It will be resampled to 44.1 kHz on the fly
 if necessary. If multiple streams (i.e. a stems file) are present in the audio file,
 the first one will be used.
+The output will be a wave file, either in int16 format or float32 (if `--float32` is passed).
+If you want to export as MP3 (at 320 kb/s), first run `conda install lame`, and add the `--mp3` flag.
 
 Other pre-trained models can be selected with the `-n` flag and downloaded with the `--dl` flag.
 The models will be stored in the `models` folder. The list of pre-trained models is:
