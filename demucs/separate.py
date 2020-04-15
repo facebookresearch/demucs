@@ -6,8 +6,10 @@
 
 import argparse
 import hashlib
+import os
 import sys
 from pathlib import Path
+import subprocess as sp
 
 import requests
 import torch as th
@@ -92,6 +94,7 @@ def main():
                         help="Load the quantized model rather than the quantized version. "
                              "Quantized model is about 4 times smaller but might worsen "
                              "slightly quality.")
+    parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-o",
                         "--out",
                         type=Path,
@@ -132,6 +135,8 @@ def main():
                         action="store_false",
                         dest="float32",
                         help="Opposite of --float32, here for compatibility.")
+    parser.add_argument("--mp3", action="store_true",
+                        help="Convert the output wavs to mp3 with 320 kb/s rate.")
 
     args = parser.parse_args()
     name = args.name + ".th"
@@ -185,7 +190,17 @@ def main():
             if not args.float32:
                 source = (source * 2**15).clamp_(-2**15, 2**15 - 1).short()
             source = source.cpu().transpose(0, 1).numpy()
-            wavfile.write(str(track_folder / f"{name}.wav"), 44100, source)
+            wavname = str(track_folder / f"{name}.wav")
+            wavfile.write(wavname, 44100, source)
+            if args.mp3:
+                out = None if args.verbose else sp.DEVNULL
+                if sp.call(["lame", "-b320", wavname], stdout=out, stderr=out):
+                    print("Failed to call lame encoder. Maybe it is not installed? "
+                          "You can install it by running `conda install lame` in "
+                          "the Conda Prompt.", file=sys.stderr)
+                    sys.exit(1)
+                else:
+                    os.unlink(wavname)
 
 
 if __name__ == "__main__":
