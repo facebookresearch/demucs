@@ -6,10 +6,8 @@
 
 import argparse
 import hashlib
-import os
 import sys
 from pathlib import Path
-import subprocess as sp
 
 import requests
 import torch as th
@@ -79,6 +77,28 @@ def verify_file(target, sha256):
             "and try again.",
             file=sys.stderr)
         sys.exit(1)
+
+
+def encode_mp3(wav, path, verbose=False):
+    try:
+        import lameenc
+    except ImportError:
+        print("Failed to call lame encoder. Maybe it is not installed? "
+              "On windows, run `python.exe -m pip install -U lameenc`, "
+              "on OSX/Linux, run `python3 -m pip install -U lameenc`, "
+              "then try again.", file=sys.stderr)
+        sys.exit(1)
+    encoder = lameenc.Encoder()
+    encoder.set_bit_rate(320)
+    encoder.set_in_sample_rate(44100)
+    encoder.set_channels(2)
+    encoder.set_quality(2)  # 2-highest, 7-fastest
+    if not verbose:
+        encoder.silence()
+    mp3_data = encoder.encode(wav.tostring())
+    mp3_data += encoder.flush()
+    with open(path, "wb") as f:
+        f.write(mp3_data)
 
 
 def main():
@@ -187,20 +207,15 @@ def main():
         track_folder = out / track.name.split(".")[0]
         track_folder.mkdir(exist_ok=True)
         for source, name in zip(sources, source_names):
-            if not args.float32:
+            if args.mp3 or not args.float32:
                 source = (source * 2**15).clamp_(-2**15, 2**15 - 1).short()
             source = source.cpu().transpose(0, 1).numpy()
-            wavname = str(track_folder / f"{name}.wav")
-            wavfile.write(wavname, 44100, source)
+            stem = str(track_folder / name)
             if args.mp3:
-                out = None if args.verbose else sp.DEVNULL
-                if sp.call(["lame", "-b320", wavname], stdout=out, stderr=out):
-                    print("Failed to call lame encoder. Maybe it is not installed? "
-                          "You can install it by running `conda install lame` in "
-                          "the Conda Prompt.", file=sys.stderr)
-                    sys.exit(1)
-                else:
-                    os.unlink(wavname)
+                encode_mp3(source, stem + ".mp3", verbose=args.verbose)
+            else:
+                wavname = str(track_folder / f"{name}.wav")
+                wavfile.write(wavname, 44100, source)
 
 
 if __name__ == "__main__":
