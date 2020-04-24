@@ -108,6 +108,7 @@ The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demuc
 ```bash
 cd %HOMEPATH%
 cd demucs
+conda activate demucs
 python.exe -m demucs.separate -d cpu --dl "PATH_TO_AUDIO_FILE_1" ...
 ```
 
