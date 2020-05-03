@@ -139,6 +139,7 @@ You can drag the .mp3 file to the console and it will paste the mp3 path.
 To later reuse Demucs, simply start again the Anaconda Prompt and run
 ```bash
 cd ~/demucs
+conda activate demucs
 python3 -m demucs.separate --dl -n demucs -d cpu PATH_TO_AUDIO_FILE_1
 ```
 
