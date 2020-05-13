@@ -142,7 +142,7 @@ cd ~/demucs
 conda activate demucs
 python3 -m demucs.separate --dl -n demucs -d cpu PATH_TO_AUDIO_FILE_1
 ```
-
+**If thats fails:**, replace `python3` by `python`.
 
 ## Separating tracks
 
