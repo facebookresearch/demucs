@@ -79,7 +79,7 @@ def verify_file(target, sha256):
         sys.exit(1)
 
 
-def encode_mp3(wav, path, verbose=False):
+def encode_mp3(wav, path, bitrate=320, verbose=False):
     try:
         import lameenc
     except ImportError:
@@ -89,7 +89,7 @@ def encode_mp3(wav, path, verbose=False):
               "then try again.", file=sys.stderr)
         sys.exit(1)
     encoder = lameenc.Encoder()
-    encoder.set_bit_rate(320)
+    encoder.set_bit_rate(bitrate)
     encoder.set_in_sample_rate(44100)
     encoder.set_channels(2)
     encoder.set_quality(2)  # 2-highest, 7-fastest
