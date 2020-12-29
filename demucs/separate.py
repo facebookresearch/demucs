@@ -79,7 +79,7 @@ def verify_file(target, sha256):
         sys.exit(1)
 
 
-def encode_mp3(wav, path, verbose=False):
+def encode_mp3(wav, path, bitrate=320, verbose=False):
     try:
         import lameenc
     except ImportError:
@@ -89,7 +89,7 @@ def encode_mp3(wav, path, verbose=False):
               "then try again.", file=sys.stderr)
         sys.exit(1)
     encoder = lameenc.Encoder()
-    encoder.set_bit_rate(320)
+    encoder.set_bit_rate(bitrate)
     encoder.set_in_sample_rate(44100)
     encoder.set_channels(2)
     encoder.set_quality(2)  # 2-highest, 7-fastest
@@ -156,7 +156,11 @@ def main():
                         dest="float32",
                         help="Opposite of --float32, here for compatibility.")
     parser.add_argument("--mp3", action="store_true",
-                        help="Convert the output wavs to mp3 with 320 kb/s rate.")
+                        help="Convert the output wavs to mp3.")
+    parser.add_argument("--mp3-bitrate",
+                        default=320,
+                        type=int,
+                        help="Bitrate of converted mp3.")
 
     args = parser.parse_args()
     name = args.name + ".th"
@@ -212,7 +216,7 @@ def main():
             source = source.cpu().transpose(0, 1).numpy()
             stem = str(track_folder / name)
             if args.mp3:
-                encode_mp3(source, stem + ".mp3", verbose=args.verbose)
+                encode_mp3(source, stem + ".mp3", args.mp3_bitrate, verbose=args.verbose)
             else:
                 wavname = str(track_folder / f"{name}.wav")
                 wavfile.write(wavname, 44100, source)
