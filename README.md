@@ -84,6 +84,9 @@ If you have anaconda installed, you can run from the root of this repository:
 
 This will create a `demucs` environment with all the dependencies installed.
 
+### Running in Docker
+
+Thanks to @xserrat, there is now a Docker image definition ready for using Demucs. This can ensure all libraries are correctly installed without interfering with the host OS. See his repo [Docker Facebook Demucs](https://github.com/xserrat/docker-facebook-demucs) for more information.
 
 ### Using Windows
 
