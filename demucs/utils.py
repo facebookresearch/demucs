@@ -92,7 +92,7 @@ def human_seconds(seconds, display='.2f'):
     return f"{format(value, display)} {last}"
 
 
-def apply_model(model, mix, shifts=None, split=False, progress=False):
+def apply_model(model, mix, samplerate=44100, shifts=None, split=False, progress=False):
     """
     Apply model to a given mixture.
 
@@ -110,26 +110,26 @@ def apply_model(model, mix, shifts=None, split=False, progress=False):
     device = mix.device
     if split:
         out = th.zeros(4, channels, length, device=device)
-        shift = 44_100 * 10
+        shift = samplerate * 10
         offsets = range(0, length, shift)
         scale = 10
         if progress:
             offsets = tqdm.tqdm(offsets, unit_scale=scale, ncols=120, unit='seconds')
         for offset in offsets:
             chunk = mix[..., offset:offset + shift]
-            chunk_out = apply_model(model, chunk, shifts=shifts)
+            chunk_out = apply_model(model, chunk, samplerate=samplerate, shifts=shifts)
             out[..., offset:offset + shift] = chunk_out
             offset += shift
         return out
     elif shifts:
-        max_shift = 22050
+        max_shift = int(samplerate / 2)
         mix = F.pad(mix, (max_shift, max_shift))
         offsets = list(range(max_shift))
         random.shuffle(offsets)
         out = 0
         for offset in offsets[:shifts]:
             shifted = mix[..., offset:offset + length + max_shift]
-            shifted_out = apply_model(model, shifted)
+            shifted_out = apply_model(model, shifted, samplerate=samplerate)
             out += shifted_out[..., max_shift - offset:max_shift - offset + length]
         out /= shifts
         return out

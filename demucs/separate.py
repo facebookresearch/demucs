@@ -79,7 +79,7 @@ def verify_file(target, sha256):
         sys.exit(1)
 
 
-def encode_mp3(wav, path, bitrate=320, verbose=False):
+def encode_mp3(wav, path, bitrate=320, samplerate=44100, channels=2, verbose=False):
     try:
         import lameenc
     except ImportError:
@@ -90,8 +90,8 @@ def encode_mp3(wav, path, bitrate=320, verbose=False):
         sys.exit(1)
     encoder = lameenc.Encoder()
     encoder.set_bit_rate(bitrate)
-    encoder.set_in_sample_rate(44100)
-    encoder.set_channels(2)
+    encoder.set_in_sample_rate(samplerate)
+    encoder.set_channels(channels)
     encoder.set_quality(2)  # 2-highest, 7-fastest
     if not verbose:
         encoder.silence()
@@ -161,6 +161,14 @@ def main():
                         default=320,
                         type=int,
                         help="Bitrate of converted mp3.")
+    parser.add_argument("--samplerate",
+                        default=44100,
+                        type=int,
+                        help="Sampling rate of trained model and input tracks.")
+    parser.add_argument("--audio_channels",
+                        default=2,
+                        type=int,
+                        help="Number of audio channels of trained model and input tracks.")
 
     args = parser.parse_args()
     name = args.name + ".th"
@@ -200,12 +208,12 @@ def main():
                 file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        wav = AudioFile(track).read(streams=0, samplerate=44100, channels=2).to(args.device)
+        wav = AudioFile(track).read(streams=0, samplerate=args.samplerate, channels=args.audio_channels).to(args.device)
         # Round to nearest short integer for compatibility with how MusDB load audio with stempeg.
         wav = (wav * 2**15).round() / 2**15
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav, shifts=args.shifts, split=args.split, progress=True)
+        sources = apply_model(model, wav, samplerate=args.samplerate, shifts=args.shifts, split=args.split, progress=True)
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.split(".")[0]
@@ -216,10 +224,10 @@ def main():
             source = source.cpu().transpose(0, 1).numpy()
             stem = str(track_folder / name)
             if args.mp3:
-                encode_mp3(source, stem + ".mp3", args.mp3_bitrate, verbose=args.verbose)
+                encode_mp3(source, stem + ".mp3", bitrate=args.mp3_bitrate, samplerate=args.samplerate, channels=args.audio_channels, verbose=args.verbose)
             else:
                 wavname = str(track_folder / f"{name}.wav")
-                wavfile.write(wavname, 44100, source)
+                wavfile.write(wavname, args.samplerate, source)
 
 
 if __name__ == "__main__":
