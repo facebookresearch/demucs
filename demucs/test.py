@@ -28,7 +28,8 @@ def evaluate(model,
              shifts=0,
              split=False,
              check=True,
-             world_size=1):
+             world_size=1,
+             samplerate=44100):
     """
     Evaluate model using museval. Run the model
     on a single GPU, the bottleneck being the call to museval.
@@ -60,7 +61,7 @@ def evaluate(model,
             ref = mix.mean(dim=0)  # mono mixture
             mix = (mix - ref.mean()) / ref.std()
 
-            estimates = apply_model(model, mix.to(device), shifts=shifts, split=split)
+            estimates = apply_model(model, mix.to(device), samplerate=samplerate, shifts=shifts, split=split)
             estimates = estimates * ref.std() + ref.mean()
 
             estimates = estimates.transpose(1, 2)

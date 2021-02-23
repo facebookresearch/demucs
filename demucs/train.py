@@ -84,7 +84,8 @@ def validate_model(epoch,
                    rank=0,
                    world_size=1,
                    shifts=0,
-                   split=False):
+                   split=False,
+                   samplerate=44100):
     indexes = range(rank, len(dataset), world_size)
     tq = tqdm.tqdm(indexes,
                    ncols=120,
@@ -100,7 +101,7 @@ def validate_model(epoch,
         streams = streams.to(device)
         sources = streams[1:]
         mix = streams[0]
-        estimates = apply_model(model, mix, shifts=shifts, split=split)
+        estimates = apply_model(model, mix, samplerate=samplerate, shifts=shifts, split=split)
         loss = criterion(estimates, sources)
         current_loss += loss.item() / len(indexes)
         del estimates, streams, sources

@@ -216,7 +216,8 @@ def main():
                                     device=device,
                                     rank=args.rank,
                                     split=args.split_valid,
-                                    world_size=args.world_size)
+                                    world_size=args.world_size,
+                                    samplerate=args.samplerate)
 
         duration = time.time() - begin
         if valid_loss < best_loss:
@@ -259,7 +260,8 @@ def main():
              save=args.save,
              split=args.split_valid,
              shifts=args.shifts,
-             workers=args.eval_workers)
+             workers=args.eval_workers,
+             samplerate=args.samplerate)
     model.to("cpu")
     save_model(model, args.models / f"{name}.th")
     if args.rank == 0:
