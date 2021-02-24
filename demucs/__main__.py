@@ -103,6 +103,7 @@ def main():
             sources=4,
             stride=args.conv_stride,
             upsample=args.upsample,
+            samplerate=args.samplerate
         )
     model.to(device)
     if args.show:
@@ -216,8 +217,7 @@ def main():
                                     device=device,
                                     rank=args.rank,
                                     split=args.split_valid,
-                                    world_size=args.world_size,
-                                    samplerate=args.samplerate)
+                                    world_size=args.world_size)
 
         duration = time.time() - begin
         if valid_loss < best_loss:
@@ -260,8 +260,7 @@ def main():
              save=args.save,
              split=args.split_valid,
              shifts=args.shifts,
-             workers=args.eval_workers,
-             samplerate=args.samplerate)
+             workers=args.eval_workers)
     model.to("cpu")
     save_model(model, args.models / f"{name}.th")
     if args.rank == 0:
