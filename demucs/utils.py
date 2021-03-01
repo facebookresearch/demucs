@@ -110,7 +110,7 @@ def apply_model(model, mix, shifts=None, split=False, progress=False):
     device = mix.device
     if split:
         out = th.zeros(4, channels, length, device=device)
-        shift = 44_100 * 10
+        shift = model.samplerate * 10
         offsets = range(0, length, shift)
         scale = 10
         if progress:
@@ -122,7 +122,7 @@ def apply_model(model, mix, shifts=None, split=False, progress=False):
             offset += shift
         return out
     elif shifts:
-        max_shift = 22050
+        max_shift = int(model.samplerate / 2)
         mix = F.pad(mix, (max_shift, max_shift))
         offsets = list(range(max_shift))
         random.shuffle(offsets)

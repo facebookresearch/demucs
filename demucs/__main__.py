@@ -103,6 +103,7 @@ def main():
             sources=4,
             stride=args.conv_stride,
             upsample=args.upsample,
+            samplerate=args.samplerate
         )
     model.to(device)
     if args.show:

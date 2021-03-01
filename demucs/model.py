@@ -73,7 +73,8 @@ class Demucs(nn.Module):
                  stride=4,
                  growth=2.,
                  lstm_layers=2,
-                 context=3):
+                 context=3,
+                 samplerate=44100):
         """
         Args:
             sources (int): number of sources to separate
@@ -108,6 +109,7 @@ class Demucs(nn.Module):
         self.depth = depth
         self.upsample = upsample
         self.channels = channels
+        self.samplerate = samplerate
 
         self.encoder = nn.ModuleList()
         self.decoder = nn.ModuleList()
