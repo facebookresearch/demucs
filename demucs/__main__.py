@@ -87,7 +87,7 @@ def main():
         args.repeat = 0
         model = load_model(args.models / args.test)
     elif args.tasnet:
-        model = ConvTasNet(audio_channels=args.audio_channels, X=args.X)
+        model = ConvTasNet(audio_channels=args.audio_channels, samplerate=args.samplerate, X=args.X)
     else:
         model = Demucs(
             audio_channels=args.audio_channels,
