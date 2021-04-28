@@ -75,11 +75,12 @@ class ConvTasNet(nn.Module):
                  X=8,
                  R=4,
                  C=4,
-                 audio_channels=1,
-                 samplerate=44100,
+                 audio_channels=2,
                  norm_type="gLN",
                  causal=False,
-                 mask_nonlinear='relu'):
+                 mask_nonlinear='relu',
+                 samplerate=44100,
+                 segment_length=44100 * 2 * 4):
         """
         Args:
             N: Number of filters in autoencoder
@@ -102,6 +103,7 @@ class ConvTasNet(nn.Module):
         self.mask_nonlinear = mask_nonlinear
         self.audio_channels = audio_channels
         self.samplerate = samplerate
+        self.segment_length = segment_length
         # Components
         self.encoder = Encoder(L, N, audio_channels)
         self.separator = TemporalConvNet(N, B, H, P, X, R, C, norm_type, causal, mask_nonlinear)

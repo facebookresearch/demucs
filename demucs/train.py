@@ -7,6 +7,7 @@
 import sys
 
 import tqdm
+import torch as th
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
@@ -19,6 +20,8 @@ def train_model(epoch,
                 criterion,
                 optimizer,
                 augment,
+                quantizer=None,
+                diffq=0,
                 repeat=1,
                 device="cpu",
                 seed=None,
@@ -37,6 +40,7 @@ def train_model(epoch,
     else:
         loader = DataLoader(dataset, batch_size=batch_size, num_workers=workers, shuffle=True)
     current_loss = 0
+    model_size = 0
     for repetition in range(repeat):
         tq = tqdm.tqdm(loader,
                        ncols=120,
@@ -45,35 +49,52 @@ def train_model(epoch,
                        file=sys.stdout,
                        unit=" batch")
         total_loss = 0
-        for idx, streams in enumerate(tq):
-            if len(streams) < batch_size:
+        for idx, sources in enumerate(tq):
+            if len(sources) < batch_size:
                 # skip uncomplete batch for augment.Remix to work properly
                 continue
-            streams = streams.to(device)
-            sources = streams[:, 1:]
+            sources = sources.to(device)
             sources = augment(sources)
             mix = sources.sum(dim=1)
 
-            estimates = model(mix)
-            sources = center_trim(sources, estimates)
-            loss = criterion(estimates, sources)
-            loss.backward()
+            if quantizer is not None:
+                quantizer.last_example = sources
+            with th.autograd.set_detect_anomaly(False):
+                estimates = model(mix)
+                sources = center_trim(sources, estimates)
+
+                loss = criterion(estimates, sources)
+                model_size = 0
+                if quantizer is not None:
+                    model_size = quantizer.model_size()
+
+                train_loss = loss + diffq * model_size
+                train_loss.backward()
+            grad_norm = 0
+            for p in model.parameters():
+                if p.grad is not None:
+                    grad_norm += p.grad.data.norm()**2
+            grad_norm = grad_norm**0.5
             optimizer.step()
             optimizer.zero_grad()
 
+            if quantizer is not None:
+                model_size = model_size.item()
+
             total_loss += loss.item()
             current_loss = total_loss / (1 + idx)
-            tq.set_postfix(loss=f"{current_loss:.4f}")
+            tq.set_postfix(loss=f"{current_loss:.4f}", ms=f"{model_size:.2f}",
+                           grad=f"{grad_norm:.5f}")
 
             # free some space before next round
-            del streams, sources, mix, estimates, loss
+            del sources, mix, estimates, loss
 
         if world_size > 1:
             sampler.epoch += 1
 
     if world_size > 1:
         current_loss = average_metric(current_loss)
-    return current_loss
+    return current_loss, model_size
 
 
 def validate_model(epoch,
@@ -84,6 +105,7 @@ def validate_model(epoch,
                    rank=0,
                    world_size=1,
                    shifts=0,
+                   overlap=0.25,
                    split=False):
     indexes = range(rank, len(dataset), world_size)
     tq = tqdm.tqdm(indexes,
@@ -100,7 +122,7 @@ def validate_model(epoch,
         streams = streams.to(device)
         sources = streams[1:]
         mix = streams[0]
-        estimates = apply_model(model, mix, shifts=shifts, split=split)
+        estimates = apply_model(model, mix, shifts=shifts, split=split, overlap=overlap)
         loss = criterion(estimates, sources)
         current_loss += loss.item() / len(indexes)
         del estimates, streams, sources

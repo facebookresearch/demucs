@@ -6,7 +6,7 @@
 
 import math
 
-import torch as th
+import julius
 from torch import nn
 
 from .utils import capture_init, center_trim
@@ -40,24 +40,6 @@ def rescale_module(module, reference):
             rescale_conv(sub, reference)
 
 
-def upsample(x, stride):
-    """
-    Linear upsampling, the output will be `stride` times longer.
-    """
-    batch, channels, time = x.size()
-    weight = th.arange(stride, device=x.device, dtype=th.float) / stride
-    x = x.view(batch, channels, time, 1)
-    out = x[..., :-1, :] * (1 - weight) + x[..., 1:, :] * weight
-    return out.reshape(batch, channels, -1)
-
-
-def downsample(x, stride):
-    """
-    Downsample x by decimation.
-    """
-    return x[:, :, ::stride]
-
-
 class Demucs(nn.Module):
     @capture_init
     def __init__(self,
@@ -67,14 +49,15 @@ class Demucs(nn.Module):
                  depth=6,
                  rewrite=True,
                  glu=True,
-                 upsample=False,
                  rescale=0.1,
+                 resample=True,
                  kernel_size=8,
                  stride=4,
                  growth=2.,
                  lstm_layers=2,
                  context=3,
-                 samplerate=44100):
+                 samplerate=44100,
+                 segment_length=4 * 10 * 44100):
         """
         Args:
             sources (int): number of sources to separate
@@ -85,8 +68,7 @@ class Demucs(nn.Module):
                 and a convolution to each decoder layer.
                 For the decoder layer, `context` gives the kernel size.
             glu (bool): use glu instead of ReLU
-            upsample (bool): use linear upsampling with convolutions
-                Wave-U-Net style, instead of transposed convolutions
+            resample_input (bool): upsample x2 the input and downsample /2 the output.
             rescale (int): rescale initial weights of convolutions
                 to get their standard deviation closer to `rescale`
             kernel_size (int): kernel size for convolutions
@@ -98,6 +80,11 @@ class Demucs(nn.Module):
                 decoder before the transposed convolution. If > 1,
                 will provide some context from neighboring time
                 steps.
+            samplerate (int): stored as meta information for easing
+                future evaluations of the model.
+            segment_length (int): stored as meta information for easing
+                future evaluations of the model. Length of the segments on which
+                the model was trained.
         """
 
         super().__init__()
@@ -107,17 +94,13 @@ class Demucs(nn.Module):
         self.context = context
         self.stride = stride
         self.depth = depth
-        self.upsample = upsample
+        self.resample = resample
         self.channels = channels
         self.samplerate = samplerate
+        self.segment_length = segment_length
 
         self.encoder = nn.ModuleList()
         self.decoder = nn.ModuleList()
-
-        self.final = None
-        if upsample:
-            self.final = nn.Conv1d(channels + audio_channels, sources * audio_channels, 1)
-            stride = 1
 
         if glu:
             activation = nn.GLU(dim=1)
@@ -137,18 +120,10 @@ class Demucs(nn.Module):
             if index > 0:
                 out_channels = in_channels
             else:
-                if upsample:
-                    out_channels = channels
-                else:
-                    out_channels = sources * audio_channels
+                out_channels = sources * audio_channels
             if rewrite:
                 decode += [nn.Conv1d(channels, ch_scale * channels, context), activation]
-            if upsample:
-                decode += [
-                    nn.Conv1d(channels, out_channels, kernel_size, stride=1),
-                ]
-            else:
-                decode += [nn.ConvTranspose1d(channels, out_channels, kernel_size, stride)]
+            decode += [nn.ConvTranspose1d(channels, out_channels, kernel_size, stride)]
             if index > 0:
                 decode.append(nn.ReLU())
             self.decoder.insert(0, nn.Sequential(*decode))
@@ -178,41 +153,36 @@ class Demucs(nn.Module):
         For training, extracts should have a valid length.For evaluation
         on full tracks we recommend passing `pad = True` to :method:`forward`.
         """
+        if self.resample:
+            length *= 2
         for _ in range(self.depth):
-            if self.upsample:
-                length = math.ceil(length / self.stride) + self.kernel_size - 1
-            else:
-                length = math.ceil((length - self.kernel_size) / self.stride) + 1
+            length = math.ceil((length - self.kernel_size) / self.stride) + 1
             length = max(1, length)
             length += self.context - 1
         for _ in range(self.depth):
-            if self.upsample:
-                length = length * self.stride + self.kernel_size - 1
-            else:
-                length = (length - 1) * self.stride + self.kernel_size
+            length = (length - 1) * self.stride + self.kernel_size
 
+        if self.resample:
+            length = math.ceil(length / 2)
         return int(length)
 
     def forward(self, mix):
         x = mix
-        saved = [x]
+
+        if self.resample:
+            x = julius.resample_frac(x, 1, 2)
+        saved = []
         for encode in self.encoder:
             x = encode(x)
             saved.append(x)
-            if self.upsample:
-                x = downsample(x, self.stride)
         if self.lstm:
             x = self.lstm(x)
         for decode in self.decoder:
-            if self.upsample:
-                x = upsample(x, stride=self.stride)
             skip = center_trim(saved.pop(-1), x)
             x = x + skip
             x = decode(x)
-        if self.final:
-            skip = center_trim(saved.pop(-1), x)
-            x = th.cat([x, skip], dim=1)
-            x = self.final(x)
 
+        if self.resample:
+            x = julius.resample_frac(x, 2, 1)
         x = x.view(x.size(0), self.sources, self.audio_channels, x.size(-1))
         return x

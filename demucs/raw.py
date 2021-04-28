@@ -103,6 +103,7 @@ class Rawset:
             content = file.read(to_read)
             assert len(content) == to_read
             content = np.frombuffer(content, dtype=np.float32)
+            content = content.copy()  # make writable
             streams.append(th.from_numpy(content).view(length, self.channels).t())
         return th.stack(streams, dim=0)
 

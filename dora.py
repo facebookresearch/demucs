@@ -64,18 +64,20 @@ def get_metrics(name):
         return []
 
 
-def schedule(name, args, nodes=2, partition="learnfair", time=2 * 24 * 60, large=True, gpus=8):
+def schedule(name, args, nodes=1, partition="priority", time=2 * 24 * 60, large=True, gpus=8):
     log = fname(name, "log")
     command = [
         "sbatch",
         f"--job-name={name}",
         f"--output={log}.%t",
-        "--mem=500G",
-        "--cpus-per-task=40",
-        f"--gres=gpu:{gpus}",
+        "--mem=460G",
+        f"--cpus-per-task={8*gpus}",
+        f"--gpus={gpus}",
         f"--nodes={nodes}",
         "--tasks-per-node=1",
         f"--partition={partition}",
+        # "--exclude=learnfair0748,learnfair0821",
+        "--comment=Old codebase, not requeue, very few jobs",
         f"--time={time}",
     ]
     if large:
@@ -181,9 +183,11 @@ class Monitor:
                                  tt.leaf("train", ".2%"),
                                  tt.leaf("valid", ".2%"),
                                  tt.leaf("best", ".2%"),
+                                 tt.leaf("true_model_size", ".2f"),
+                                 tt.leaf("compressed_model_size", ".2f"),
                              ])
                          ])
-        print(tt.treetable(lines, table, colors=["30", "39"]))
+        print(tt.treetable(lines, table, colors=["0", "38;5;245"]))
 
 
 def main():
@@ -200,25 +204,29 @@ def main():
     monitor = Monitor(base=[], cancel=args.cancel)
     sched = partial(monitor.schedule, nodes=1)
 
-    tasnet = ["--tasnet", "--split_valid", "--samples=80000", "--X=10"]
+    tasnet = ["--tasnet", "--split_valid", "--samples=80000", "--X=10", "-b", "32"]
     extra_path = Path.home() / "musdb_raw_44_allstems"
     extra = [f"--raw={extra_path}"]
 
+    sched([])
+    sched(extra)
+    sched(tasnet)
+    sched(tasnet + ["--repitch=0"])
+    sched(tasnet + extra + ["--repitch=0"])
+
+    ch48 = ["--channels=48"]
+    sched(ch48)
+
+    ch32 = ["--channels=32"]
+    sched(ch32)
+
     # Main models
-    for seed in [42, 43, 44, 45, 46]:
+    for seed in [43, 44]:
         base = [f"--seed={seed}"]
         sched(base)
         sched(base + extra)
-        sched(base + tasnet + ["-e", "180"])
+        sched(base + tasnet)
         sched(base + tasnet + extra)
-
-    # Optimality of parameters
-    for channels, lr, seed in product([64, 80, 100], [3e-4, 5e-4], [42, 43, 44]):
-        cmd = [f"--channels={channels}", f"--lr={lr}", f"--seed={seed}"]
-        sched(cmd)
-
-    for rescale in [0.01, 0.05, 0.1]:
-        sched([f"--rescale={rescale}"])
 
     # Ablation study
 
@@ -228,7 +236,12 @@ def main():
     sched(["--rescale=0"])
     sched(["--mse"])
     sched(["--lstm_layers=0"])
-    sched(["--no_glu", "--rescale=0"])
+    sched(["--lstm_layers=0", "--depth=7"])
+    sched(["--no_resample"])
+    sched(["--repitch=0"])
+
+    # Quantization
+    sched(["--diffq=0.0003"])
 
     if args.cancel:
         for job in monitor.jobs:

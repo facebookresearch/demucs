@@ -1,0 +1,6 @@
+include *.md
+include LICENSE
+include setup.cfg
+incude demucs.png
+include requirements.txt
+recursive-include docs *.md

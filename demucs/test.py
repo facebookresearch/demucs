@@ -27,6 +27,7 @@ def evaluate(model,
              save=False,
              shifts=0,
              split=False,
+             overlap=0.25,
              check=True,
              world_size=1):
     """
@@ -60,7 +61,8 @@ def evaluate(model,
             ref = mix.mean(dim=0)  # mono mixture
             mix = (mix - ref.mean()) / ref.std()
 
-            estimates = apply_model(model, mix.to(device), shifts=shifts, split=split)
+            estimates = apply_model(model, mix.to(device),
+                                    shifts=shifts, split=split, overlap=overlap)
             estimates = estimates * ref.std() + ref.mean()
 
             estimates = estimates.transpose(1, 2)

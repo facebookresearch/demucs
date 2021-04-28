@@ -129,26 +129,7 @@ class AudioFile:
                 wav = np.fromfile(filename, dtype=np.float32)
                 wav = torch.from_numpy(wav)
                 wav = wav.view(-1, self.channels()).t()
-                if channels == 1:
-                    # Case 1:
-                    # The caller asked 1-channel audio, but the stream have multiple
-                    # channels, downmix all channels.
-                    # We do mono convertion here as ffmpeg mess up the volume of mono output
-                    # otherwise. See https://sound.stackexchange.com/a/42710.
-                    wav = wav.mean(dim=0, keepdim=True)
-                elif self.channels() == 1 and channels != 1:
-                    # Case 2:
-                    # The caller asked for multiple channels, but the input file have
-                    # one single channel, replicate the audio over all channels.
-                    wav = wav.as_strided(size=(channels, wav.shape[1]), stride=(0, 1))
-                elif self.channels() >= channels:
-                    # Case 3:
-                    # The caller asked for multiple channels, and the input file have
-                    # more channels than requested. In that case return the first channels.
-                    wav = wav[:channels, :]
-                else:
-                    # Case 4: What is a reasonable choice here?
-                    raise ValueError('The input file has less channels than requested')
+                wav = convert_audio_channels(wav, channels)
                 if target_size is not None:
                     wav = wav[..., :target_size]
                 wavs.append(wav)
@@ -156,3 +137,29 @@ class AudioFile:
         if single:
             wav = wav[0]
         return wav
+
+
+def convert_audio_channels(wav, channels=2):
+    """Convert audio to the given number of channels."""
+    src_channels = wav.shape[0]
+    if src_channels == channels:
+        pass
+    elif channels == 1:
+        # Case 1:
+        # The caller asked 1-channel audio, but the stream have multiple
+        # channels, downmix all channels.
+        wav = wav.mean(dim=0, keepdim=True)
+    elif src_channels == 1:
+        # Case 2:
+        # The caller asked for multiple channels, but the input file have
+        # one single channel, replicate the audio over all channels.
+        wav = wav.as_strided(size=(channels, wav.shape[1]), stride=(0, 1))
+    elif src_channels >= channels:
+        # Case 3:
+        # The caller asked for multiple channels, and the input file have
+        # more channels than requested. In that case return the first channels.
+        wav = wav[:channels, :]
+    else:
+        # Case 4: What is a reasonable choice here?
+        raise ValueError('The audio file has less channels than requested but is not mono.')
+    return wav

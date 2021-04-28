@@ -4,6 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import random
 import torch as th
 from torch import nn
 
@@ -86,4 +87,20 @@ class Remix(nn.Module):
                                       dim=1)
             wav = wav.gather(1, permutations.expand(-1, -1, -1, channels, time))
             wav = wav.view(batch, streams, channels, time)
+        return wav
+
+
+class Scale(nn.Module):
+    def __init__(self, proba=1., min=0.25, max=1.25):
+        super().__init__()
+        self.proba = proba
+        self.min = min
+        self.max = max
+
+    def forward(self, wav):
+        batch, streams, channels, time = wav.size()
+        device = wav.device
+        if self.training and random.random() < self.proba:
+            scales = th.empty(batch, streams, 1, 1, device=device).uniform_(self.min, self.max)
+            wav *= scales
         return wav
