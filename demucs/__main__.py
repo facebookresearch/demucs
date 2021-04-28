@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import json
+import math
 import os
 import sys
 import time
@@ -15,15 +16,18 @@ import torch as th
 from torch import distributed, nn
 from torch.nn.parallel.distributed import DistributedDataParallel
 
-from .augment import FlipChannels, FlipSign, Remix, Shift
+from .augment import FlipChannels, FlipSign, Remix, Scale, Shift
 from .compressed import StemsSet, build_musdb_metadata, get_musdb_tracks
 from .model import Demucs
 from .parser import get_name, get_parser
 from .raw import Rawset
+from .repitch import RepitchedWrapper
+from .pretrained import load_pretrained
 from .tasnet import ConvTasNet
 from .test import evaluate
 from .train import train_model, validate_model
-from .utils import human_seconds, load_model, save_model, sizeof_fmt
+from .utils import (human_seconds, load_model, save_model, get_state,
+                    save_state, sizeof_fmt, get_quantizer)
 
 
 @dataclass
@@ -66,6 +70,7 @@ def main():
     # Prevents too many threads to be started when running `museval` as it can be quite
     # inefficient on NUMA architectures.
     os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
 
     if args.world_size > 1:
         if device != "cuda" and args.rank == 0:
@@ -79,15 +84,20 @@ def main():
 
     checkpoint = args.checkpoints / f"{name}.th"
     checkpoint_tmp = args.checkpoints / f"{name}.th.tmp"
-    if args.restart and checkpoint.exists():
+    if args.restart and checkpoint.exists() and args.rank == 0:
         checkpoint.unlink()
 
-    if args.test:
+    if args.test or args.test_pretrained:
         args.epochs = 1
         args.repeat = 0
-        model = load_model(args.models / args.test)
+        if args.test:
+            model = load_model(args.models / args.test)
+        else:
+            model = load_pretrained(args.test_pretrained)
     elif args.tasnet:
-        model = ConvTasNet(audio_channels=args.audio_channels, samplerate=args.samplerate, X=args.X)
+        model = ConvTasNet(audio_channels=args.audio_channels,
+                           samplerate=args.samplerate, X=args.X,
+                           segment_length=4 * args.samples)
     else:
         model = Demucs(
             audio_channels=args.audio_channels,
@@ -100,33 +110,50 @@ def main():
             lstm_layers=args.lstm_layers,
             rescale=args.rescale,
             rewrite=args.rewrite,
-            sources=4,
             stride=args.conv_stride,
-            upsample=args.upsample,
-            samplerate=args.samplerate
+            resample=args.resample,
+            samplerate=args.samplerate,
+            segment_length=4 * args.samples,
         )
     model.to(device)
+    if args.init:
+        model.load_state_dict(load_pretrained(args.init).state_dict())
+
     if args.show:
         print(model)
         size = sizeof_fmt(4 * sum(p.numel() for p in model.parameters()))
         print(f"Model size {size}")
         return
 
-    optimizer = th.optim.Adam(model.parameters(), lr=args.lr)
-
     try:
         saved = th.load(checkpoint, map_location='cpu')
     except IOError:
         saved = SavedState()
-    else:
-        model.load_state_dict(saved.last_state)
+
+    optimizer = th.optim.Adam(model.parameters(), lr=args.lr)
+
+    quantizer = None
+    quantizer = get_quantizer(model, args, optimizer)
+
+    if saved.last_state is not None:
+        model.load_state_dict(saved.last_state, strict=False)
+    if saved.optimizer is not None:
         optimizer.load_state_dict(saved.optimizer)
 
+    model_name = f"{name}.th"
     if args.save_model:
         if args.rank == 0:
             model.to("cpu")
             model.load_state_dict(saved.best_state)
-            save_model(model, args.models / f"{name}.th")
+            save_model(model, quantizer, args, args.models / model_name)
+        return
+    elif args.save_state:
+        model_name = f"{args.save_state}.th"
+        if args.rank == 0:
+            model.to("cpu")
+            model.load_state_dict(saved.best_state)
+            state = get_state(model, quantizer)
+            save_state(state, args.models / model_name)
         return
 
     if args.rank == 0:
@@ -134,11 +161,12 @@ def main():
         if done.exists():
             done.unlink()
 
+    augment = [Shift(args.data_stride)]
     if args.augment:
-        augment = nn.Sequential(FlipSign(), FlipChannels(), Shift(args.data_stride),
-                                Remix(group_size=args.remix_group_size)).to(device)
-    else:
-        augment = Shift(args.data_stride)
+        augment += [FlipSign(), FlipChannels(), Scale(),
+                    Remix(group_size=args.remix_group_size)]
+    augment = nn.Sequential(*augment).to(device)
+    print("Agumentation pipeline:", augment)
 
     if args.mse:
         criterion = nn.MSELoss()
@@ -150,12 +178,18 @@ def main():
     # to the input mixture.
     samples = model.valid_length(args.samples)
     print(f"Number of training samples adjusted to {samples}")
+    samples = samples + args.data_stride
+    if args.repitch:
+        # We need a bit more audio samples, to account for potential
+        # tempo change.
+        samples = math.ceil(samples / (1 - 0.01 * args.max_tempo))
 
+    sources = 4
     if args.raw:
         train_set = Rawset(args.raw / "train",
-                           samples=samples + args.data_stride,
+                           samples=samples,
                            channels=args.audio_channels,
-                           streams=[0, 1, 2, 3, 4],
+                           streams=range(1, sources + 1),
                            stride=args.data_stride)
 
         valid_set = Rawset(args.raw / "valid", channels=args.audio_channels)
@@ -165,18 +199,24 @@ def main():
         if args.world_size > 1:
             distributed.barrier()
         metadata = json.load(open(args.metadata))
-        duration = Fraction(samples + args.data_stride, args.samplerate)
+        duration = Fraction(samples, args.samplerate)
         stride = Fraction(args.data_stride, args.samplerate)
         train_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="train"),
                              metadata,
                              duration=duration,
                              stride=stride,
+                             streams=range(1, sources + 1),
                              samplerate=args.samplerate,
                              channels=args.audio_channels)
         valid_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="valid"),
                              metadata,
                              samplerate=args.samplerate,
                              channels=args.audio_channels)
+    if args.repitch:
+        train_set = RepitchedWrapper(
+            train_set,
+            proba=args.repitch,
+            max_tempo=args.max_tempo)
 
     best_loss = float("inf")
     for epoch, metrics in enumerate(saved.metrics):
@@ -184,6 +224,8 @@ def main():
               f"train={metrics['train']:.8f} "
               f"valid={metrics['valid']:.8f} "
               f"best={metrics['best']:.4f} "
+              f"ms={metrics.get('true_model_size', 0):.2f}MB "
+              f"cms={metrics.get('compressed_model_size', 0):.2f}MB "
               f"duration={human_seconds(metrics['duration'])}")
         best_loss = metrics['best']
 
@@ -197,40 +239,47 @@ def main():
     for epoch in range(len(saved.metrics), args.epochs):
         begin = time.time()
         model.train()
-        train_loss = train_model(epoch,
-                                 train_set,
-                                 dmodel,
-                                 criterion,
-                                 optimizer,
-                                 augment,
-                                 batch_size=args.batch_size,
-                                 device=device,
-                                 repeat=args.repeat,
-                                 seed=args.seed,
-                                 workers=args.workers,
-                                 world_size=args.world_size)
+        train_loss, model_size = train_model(
+            epoch, train_set, dmodel, criterion, optimizer, augment,
+            quantizer=quantizer,
+            batch_size=args.batch_size,
+            device=device,
+            repeat=args.repeat,
+            seed=args.seed,
+            diffq=args.diffq,
+            workers=args.workers,
+            world_size=args.world_size)
         model.eval()
-        valid_loss = validate_model(epoch,
-                                    valid_set,
-                                    model,
-                                    criterion,
-                                    device=device,
-                                    rank=args.rank,
-                                    split=args.split_valid,
-                                    world_size=args.world_size)
+        valid_loss = validate_model(
+            epoch, valid_set, model, criterion,
+            device=device,
+            rank=args.rank,
+            split=args.split_valid,
+            overlap=args.overlap,
+            world_size=args.world_size)
+
+        ms = 0
+        cms = 0
+        if quantizer and args.rank == 0:
+            ms = quantizer.true_model_size()
+            cms = quantizer.compressed_model_size(num_workers=min(40, args.world_size * 10))
 
         duration = time.time() - begin
-        if valid_loss < best_loss:
+        if valid_loss < best_loss and ms <= args.ms_target:
             best_loss = valid_loss
             saved.best_state = {
                 key: value.to("cpu").clone()
                 for key, value in model.state_dict().items()
             }
+
         saved.metrics.append({
             "train": train_loss,
             "valid": valid_loss,
             "best": best_loss,
-            "duration": duration
+            "duration": duration,
+            "model_size": model_size,
+            "true_model_size": ms,
+            "compressed_model_size": cms,
         })
         if args.rank == 0:
             json.dump(saved.metrics, open(metrics_path, "w"))
@@ -242,7 +291,8 @@ def main():
             checkpoint_tmp.rename(checkpoint)
 
         print(f"Epoch {epoch:03d}: "
-              f"train={train_loss:.8f} valid={valid_loss:.8f} best={best_loss:.4f} "
+              f"train={train_loss:.8f} valid={valid_loss:.8f} best={best_loss:.4f} ms={ms:.2f}MB "
+              f"cms={cms:.2f}MB "
               f"duration={human_seconds(duration)}")
 
     del dmodel
@@ -251,19 +301,19 @@ def main():
         device = "cpu"
         model.to(device)
     model.eval()
-    evaluate(model,
-             args.musdb,
-             eval_folder,
+    evaluate(model, args.musdb, eval_folder,
              rank=args.rank,
              world_size=args.world_size,
              device=device,
              save=args.save,
              split=args.split_valid,
              shifts=args.shifts,
+             overlap=args.overlap,
              workers=args.eval_workers)
     model.to("cpu")
-    save_model(model, args.models / f"{name}.th")
     if args.rank == 0:
+        if not (args.test or args.test_pretrained):
+            save_model(model, quantizer, args, args.models / model_name)
         print("done")
         done.write_text("done")
 

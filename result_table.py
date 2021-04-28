@@ -78,7 +78,7 @@ for path in EVALS.iterdir():
     if name == "default":
         parts = []
     else:
-        parts = [p.split("=") for p in name.split(" ") if "tasnet" not in p]
+        parts = [p.split("=") for p in name.split(" ") if p != '--tasnet']
     if not args.individual:
         parts = [(k, v) for k, v in parts if k != STD_KEY]
     name = model + " " + " ".join(f"{k}={v}" for k, v in parts)

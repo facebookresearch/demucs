@@ -48,6 +48,8 @@ def get_parser():
     parser.add_argument("--dummy", help="Dummy parameter, useful to create a new checkpoint file")
     parser.add_argument("--test", help="Just run the test pipeline + one validation. "
                                        "This should be a filename relative to the models/ folder.")
+    parser.add_argument("--test_pretrained", help="Just run the test pipeline + one validation, "
+                                                  "on a pretrained model. ")
 
     parser.add_argument("--rank", default=0, type=int)
     parser.add_argument("--world_size", default=1, type=int)
@@ -78,7 +80,7 @@ def get_parser():
                         help='Restart training, ignoring previous run')
 
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("-e", "--epochs", type=int, default=120, help="Number of epochs")
+    parser.add_argument("-e", "--epochs", type=int, default=180, help="Number of epochs")
     parser.add_argument("-r",
                         "--repeat",
                         type=int,
@@ -87,11 +89,19 @@ def get_parser():
     parser.add_argument("-b", "--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--mse", action="store_true", help="Use MSE instead of L1")
+    parser.add_argument("--init", help="Initialize from a pre-trained model.")
+
+    # Augmentation options
     parser.add_argument("--no_augment",
                         action="store_false",
                         dest="augment",
                         default=True,
-                        help="No data augmentation")
+                        help="No basic data augmentation.")
+    parser.add_argument("--repitch", type=float, default=0.2,
+                        help="Probability to do tempo/pitch change")
+    parser.add_argument("--max_tempo", type=float, default=12,
+                        help="Maximum relative tempo change in %% when using repitch.")
+
     parser.add_argument("--remix_group_size",
                         type=int,
                         default=4,
@@ -101,7 +111,11 @@ def get_parser():
     parser.add_argument("--shifts",
                         type=int,
                         default=10,
-                        help="Number of random shifts used for random equivariant stabilization.")
+                        help="Number of random shifts used for the shift trick.")
+    parser.add_argument("--overlap",
+                        type=float,
+                        default=0.25,
+                        help="Overlap when --split_valid is passed.")
 
     # See model.py for doc
     parser.add_argument("--growth",
@@ -115,7 +129,7 @@ def get_parser():
     parser.add_argument("--lstm_layers", type=int, default=2, help="Number of layers for the LSTM")
     parser.add_argument("--channels",
                         type=int,
-                        default=100,
+                        default=64,
                         help="Number of channels for the first encoder layer")
     parser.add_argument("--kernel_size",
                         type=int,
@@ -134,6 +148,9 @@ def get_parser():
                         type=float,
                         default=0.1,
                         help="Initial weight rescale reference")
+    parser.add_argument("--no_resample", action="store_false",
+                        default=True, dest="resample",
+                        help="No Resampling of the input/output x2")
     parser.add_argument("--no_glu",
                         action="store_false",
                         default=True,
@@ -144,10 +161,6 @@ def get_parser():
                         default=True,
                         dest="rewrite",
                         help="No 1x1 rewrite convolutions")
-    parser.add_argument("--upsample",
-                        action="store_true",
-                        help="Use linear upsampling + convolution "
-                        "instead of transposed convolutions")
 
     # Tasnet options
     parser.add_argument("--tasnet", action="store_true")
@@ -156,10 +169,29 @@ def get_parser():
                         help="Predict chunks by chunks for valid and test. Required for tasnet")
     parser.add_argument("--X", type=int, default=8)
 
+    # Other options
     parser.add_argument("--show",
                         action="store_true",
                         help="Show model architecture, size and exit")
-    parser.add_argument("--save_model", action="store_true")
+    parser.add_argument("--save_model", action="store_true",
+                        help="Skip traning, just save final model "
+                             "for the current checkpoint value.")
+    parser.add_argument("--save_state",
+                        help="Skip training, just save state "
+                             "for the current checkpoint value. You should "
+                             "provide a model name as argument.")
+
+    # Quantization options
+    parser.add_argument("--q-min-size", type=float, default=1,
+                        help="Only quantize layers over this size (in MB)")
+    parser.add_argument(
+        "--qat", type=int, help="If provided, use QAT training with that many bits.")
+
+    parser.add_argument("--diffq", type=float, default=0)
+    parser.add_argument(
+        "--ms-target", type=float, default=162,
+        help="Model size target in MB, when using DiffQ. Best model will be kept "
+             "only if it is smaller than this target.")
 
     return parser
 
@@ -182,8 +214,8 @@ def get_name(parser, args):
         "restart",
         "save",
         "save_model",
+        "save_state",
         "show",
-        "valid",
         "workers",
         "world_size",
     ])

@@ -18,7 +18,8 @@ def get_musdb_tracks(root, *args, **kwargs):
 
 
 class StemsSet:
-    def __init__(self, tracks, metadata, duration=None, stride=1, samplerate=44100, channels=2):
+    def __init__(self, tracks, metadata, duration=None, stride=1,
+                 samplerate=44100, channels=2, streams=slice(None)):
 
         self.metadata = []
         for name, path in tracks.items():
@@ -33,6 +34,7 @@ class StemsSet:
         self.stride = stride
         self.channels = channels
         self.samplerate = samplerate
+        self.streams = streams
 
     def __len__(self):
         return sum(self._examples_count(m) for m in self.metadata)
@@ -60,7 +62,8 @@ class StemsSet:
             streams = AudioFile(meta["path"]).read(seek_time=index * self.stride,
                                                    duration=self.duration,
                                                    channels=self.channels,
-                                                   samplerate=self.samplerate)
+                                                   samplerate=self.samplerate,
+                                                   streams=self.streams)
             return (streams - meta["mean"]) / meta["std"]
 
 
@@ -82,6 +85,6 @@ def build_metadata(tracks, workers=10):
 
 def build_musdb_metadata(path, musdb, workers):
     tracks = get_musdb_tracks(musdb)
-    metadata = build_metadata(tracks)
+    metadata = build_metadata(tracks, workers)
     path.parent.mkdir(exist_ok=True, parents=True)
     json.dump(metadata, open(path, "w"))

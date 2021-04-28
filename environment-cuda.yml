@@ -5,16 +5,17 @@ channels:
   - pytorch
 
 dependencies:
-  - python=3.7
-  - cudatoolkit=10
-  - ffmpeg==4.2
-  - pytorch=1.4.0
-  - scipy==1.3.1
-  - tqdm==4.36.1
+  - python>=3.7
+  - ffmpeg>=4.2
+  - pytorch>=1.8.1
+  - cudatoolkit>=10
+  - torchaudio>=0.8
+  - tqdm>=4.36
   - pip
   - pip:
-    - lameenc==1.2.2
-    - musdb==0.3.1
-    - museval==0.3.0
-    - requests==2.22
-    - treetable==0.2.3
+    - diffq>=0.1
+    - julius>=0.2.3
+    - lameenc>=1.2
+    - musdb>=0.4.0
+    - museval>=0.4.0
+    - treetable>=0.2.3
