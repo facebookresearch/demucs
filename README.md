@@ -1,5 +1,8 @@
 # Music Source Separation in the Waveform Domain
 
+**This is old version of Demucs**: this is kept for compatibility, as well as providing the initial code and data for the first version of the paper.
+To get to the new Demucs, go to [the master branch](https://github.com/facebookresearch/demucs/).
+
 We provide an implementation of Demucs and Conv-Tasnet for music source separation on the [MusDB][musdb] dataset.
 They can separate drums, bass and vocals from the rest with state-of-the-art results, surpassing previous waveform or spectrogram based methods.
 The architecture and results obtained are detailed in our paper
@@ -350,7 +353,7 @@ It was originally released under the MIT License updated to support multiple aud
 [museval]: https://github.com/sigsep/sigsep-mus-eval/
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
-[demucs_arxiv]: https://hal.archives-ouvertes.fr/hal-02379796/document
+[demucs_arxiv]: https://hal.archives-ouvertes.fr/hal-02379796v1/document
 [musevalpth]: museval_torch.py
 [tasnet]: https://github.com/kaituoxu/Conv-TasNet
 [audio]: https://ai.honu.io/papers/demucs/index.html
