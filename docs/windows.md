@@ -26,7 +26,5 @@ If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can
 If you get a permission error, please try starting the Anaconda Prompt as administrator.
 
 
-**If you are running a 32bit version of Windows**: PyTorch won't be supported, so you cannot run Demucs.
-
 [install]: https://www.anaconda.com/distribution/#windows
 [prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
