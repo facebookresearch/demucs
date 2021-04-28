@@ -4,6 +4,8 @@
 ![linter badge](https://github.com/facebookresearch/demucs/workflows/linter/badge.svg)
 
 **For the initial version of Demucs:** [Go this commit][original_demucs].
+If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v1 with
+`git checkout v1`.
 
 We provide an implementation of Demucs and Conv-Tasnet for music source separation on the [MusDB][musdb] dataset.
 They can separate drums, bass and vocals from the rest with state-of-the-art results, surpassing previous waveform or spectrogram based methods.
