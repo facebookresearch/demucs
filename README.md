@@ -1,5 +1,8 @@
 # Music Source Separation in the Waveform Domain
 
+![tests badge](https://github.com/facebookresearch/demucs/workflows/tests/badge.svg)
+![linter badge](https://github.com/facebookresearch/demucs/workflows/linter/badge.svg)
+
 **For the initial version of Demucs:** [Go this commit][original_demucs].
 
 We provide an implementation of Demucs and Conv-Tasnet for music source separation on the [MusDB][musdb] dataset.
