@@ -7,14 +7,45 @@
 import argparse
 import sys
 from pathlib import Path
+import subprocess
 
 import julius
 import torch as th
 import torchaudio as ta
 
-from .audio import convert_audio_channels
+from .audio import AudioFile, convert_audio_channels
 from .pretrained import is_pretrained, load_pretrained
 from .utils import apply_model, load_model
+
+
+def load_track(track, device, audio_channels, samplerate):
+    errors = {}
+    wav = None
+    try:
+        wav, sr = ta.load(str(track))
+    except RuntimeError as err:
+        errors['torchaudio'] = err.args[0]
+        try:
+            wav = AudioFile(track).read(
+                streams=0,
+                samplerate=samplerate,
+                channels=audio_channels).to(device)
+        except FileNotFoundError:
+            errors['ffmpeg'] = 'Ffmpeg is not installed.'
+        except subprocess.CalledProcessError:
+            errors['ffmpeg'] = 'FFmpeg could not read the file.'
+    else:
+        wav = convert_audio_channels(wav, audio_channels)
+        wav = wav.to(device)
+        wav = julius.resample_frac(wav, sr, samplerate)
+
+    if wav is None:
+        print(f"Could not load file {track}. "
+              "Maybe it is not a supported file format? ")
+        for backend, error in errors.items():
+            print(f"When trying to load using {backend}, got the following error: {error}")
+        sys.exit(1)
+    return wav
 
 
 def encode_mp3(wav, path, bitrate=320, samplerate=44100, channels=2, verbose=False):
@@ -121,16 +152,7 @@ def main():
                 file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        try:
-            wav, sr = ta.load(str(track))
-        except RuntimeError as err:
-            print(f"Could not load file {track}. "
-                  "Maybe it is not a supported file format? "
-                  f"Error is {err.args[0]}.")
-            sys.exit(1)
-        wav = convert_audio_channels(wav, model.audio_channels)
-        wav = wav.to(args.device)
-        wav = julius.resample_frac(wav, sr, model.samplerate)
+        wav = load_track(track, args.device, model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
