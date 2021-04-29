@@ -6,6 +6,8 @@
 
 **Demucs was just updated!**: much better SDR, smaller models, more data augmentation and PyPI support.
 
+**Windows users**: for the moment things will be a bit broken, please stick with the old version for a bit (`git checkout v1`), while I try to find various fixes.
+
 **For the initial version of Demucs:** [Go this commit][original_demucs].
 If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v1 with
 `git checkout v1`.
