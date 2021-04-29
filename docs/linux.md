@@ -20,5 +20,4 @@ python3 -m demucs.separate -d cpu PATH_TO_AUDIO_FILE_1
 
 Of course, you can also use a specific env for Demucs.
 
-
 [miniconda]: https://docs.conda.io/en/latest/miniconda.html#linux-installers
