@@ -33,6 +33,7 @@ In order to update Demucs, simply run the following from the Anaconda Prompt:
 cd %HOMEPATH%
 cd demucs
 git pull
+conda env update -f environment-cpu.yml
 ```
 
 ## Potential errors

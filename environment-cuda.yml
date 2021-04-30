@@ -5,7 +5,7 @@ channels:
   - pytorch
 
 dependencies:
-  - python>=3.7
+  - python>=3.7,<3.9
   - ffmpeg>=4.2
   - pytorch>=1.8.1
   - cudatoolkit>=10
@@ -18,4 +18,5 @@ dependencies:
     - lameenc>=1.2
     - musdb>=0.4.0
     - museval>=0.4.0
+    - soundfile
     - treetable>=0.2.3
