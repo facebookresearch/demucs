@@ -36,7 +36,6 @@ def evaluate(model,
     on a single GPU, the bottleneck being the call to museval.
     """
 
-    source_names = ["drums", "bass", "other", "vocals"]
     output_dir = eval_folder / "results"
     output_dir.mkdir(exist_ok=True, parents=True)
     json_folder = eval_folder / "results/test"
@@ -68,13 +67,13 @@ def evaluate(model,
 
             estimates = estimates.transpose(1, 2)
             references = th.stack(
-                [th.from_numpy(track.targets[name].audio) for name in source_names])
+                [th.from_numpy(track.targets[name].audio) for name in model.sources])
             references = references.numpy()
             estimates = estimates.cpu().numpy()
             if save:
                 folder = eval_folder / "wav/test" / track.name
                 folder.mkdir(exist_ok=True, parents=True)
-                for name, estimate in zip(source_names, estimates):
+                for name, estimate in zip(model.sources, estimates):
                     wavfile.write(str(folder / (name + ".wav")), 44100, estimate)
 
             if workers:
@@ -88,7 +87,7 @@ def evaluate(model,
                 pending = pending.result()
             sdr, isr, sir, sar = pending
             track_store = museval.TrackStore(win=44100, hop=44100, track_name=track_name)
-            for idx, target in enumerate(source_names):
+            for idx, target in enumerate(model.sources):
                 values = {
                     "SDR": sdr[idx].tolist(),
                     "SIR": sir[idx].tolist(),
