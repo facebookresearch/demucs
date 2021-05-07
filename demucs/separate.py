@@ -142,7 +142,6 @@ def main():
 
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
-    source_names = ["drums", "bass", "other", "vocals"]
     print(f"Separated tracks will be stored in {out.resolve()}")
     for track in args.tracks:
         if not track.exists():
@@ -162,7 +161,7 @@ def main():
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
-        for source, name in zip(sources, source_names):
+        for source, name in zip(sources, model.sources):
             source = source / max(1.01 * source.abs().max(), 1)
             if args.mp3 or not args.float32:
                 source = (source * 2**15).clamp_(-2**15, 2**15 - 1).short()

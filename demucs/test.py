@@ -29,6 +29,7 @@ def evaluate(model,
              split=False,
              overlap=0.25,
              check=True,
+             is_wav=False,
              world_size=1):
     """
     Evaluate model using museval. Run the model
@@ -42,7 +43,7 @@ def evaluate(model,
     json_folder.mkdir(exist_ok=True, parents=True)
 
     # we load tracks from the original musdb set
-    test_set = musdb.DB(musdb_path, subsets=["test"])
+    test_set = musdb.DB(musdb_path, subsets=["test"], is_wav=is_wav)
 
     for p in model.parameters():
         p.requires_grad = False

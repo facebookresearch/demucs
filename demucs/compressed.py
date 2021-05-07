@@ -5,9 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import json
+from fractions import Fraction
 from concurrent import futures
 
 import musdb
+from torch import distributed
 
 from .audio import AudioFile
 
@@ -75,7 +77,7 @@ def _get_track_metadata(path):
     return {"duration": audio.duration, "std": mix.std().item(), "mean": mix.mean().item()}
 
 
-def build_metadata(tracks, workers=10):
+def _build_metadata(tracks, workers=10):
     pendings = []
     with futures.ProcessPoolExecutor(workers) as pool:
         for name, path in tracks.items():
@@ -83,8 +85,31 @@ def build_metadata(tracks, workers=10):
     return {name: p.result() for name, p in pendings}
 
 
-def build_musdb_metadata(path, musdb, workers):
+def _build_musdb_metadata(path, musdb, workers):
     tracks = get_musdb_tracks(musdb)
-    metadata = build_metadata(tracks, workers)
+    metadata = _build_metadata(tracks, workers)
     path.parent.mkdir(exist_ok=True, parents=True)
     json.dump(metadata, open(path, "w"))
+
+
+def get_compressed_datasets(args, samples):
+    metadata_file = args.metadata / "musdb.json"
+    if not metadata_file.is_file() and args.rank == 0:
+        build_musdb_metadata(metadata_file, args.musdb, args.workers)
+    if args.world_size > 1:
+        distributed.barrier()
+    metadata = json.load(open(metadata_file))
+    duration = Fraction(samples, args.samplerate)
+    stride = Fraction(args.data_stride, args.samplerate)
+    train_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="train"),
+                         metadata,
+                         duration=duration,
+                         stride=stride,
+                         streams=slice(1, None),
+                         samplerate=args.samplerate,
+                         channels=args.audio_channels)
+    valid_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="valid"),
+                         metadata,
+                         samplerate=args.samplerate,
+                         channels=args.audio_channels)
+    return train_set, valid_set

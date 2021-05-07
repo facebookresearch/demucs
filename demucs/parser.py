@@ -28,7 +28,13 @@ def get_parser():
                         type=Path,
                         default=default_musdb,
                         help="Path to musdb root")
-    parser.add_argument("--metadata", type=Path, default=Path("metadata/musdb.json"))
+    parser.add_argument("--is_wav", action="store_true",
+                        help="Indicate that the MusDB dataset is in wav format (i.e. MusDB-HQ).")
+    parser.add_argument("--metadata", type=Path, default=Path("metadata/"),
+                        help="Folder where metadata information is stored.")
+    parser.add_argument("--wav", type=Path,
+                        help="Path to a wav dataset. This should contain a 'train' and a 'valid' "
+                             "subfolder.")
     parser.add_argument("--samplerate", type=int, default=44100)
     parser.add_argument("--audio_channels", type=int, default=2)
     parser.add_argument("--samples",
