@@ -104,25 +104,25 @@ class Wavset:
             if self.length is not None:
                 offset = self.stride * index
                 num_frames = int(math.ceil(
-                    self.samplerate * self.length / meta['samplerate']))
+                    meta['samplerate'] * self.length / self.samplerate))
             wavs = []
             for source in self.sources:
                 file = self.get_file(name, source)
                 wav, _ = ta.load(str(file), frame_offset=offset, num_frames=num_frames)
-                convert_audio_channels(wav, self.channels)
-                wav = julius.resample_frac(wav, meta['samplerate'], self.samplerate)
+                wav = convert_audio_channels(wav, self.channels)
                 wavs.append(wav)
 
             example = th.stack(wavs)
-            example = (example - meta['mean']) / example['std']
-            if num_frames:
-                example = example[..., :num_frames]
-                example = F.pad(example, (0, num_frames - example.shape[-1]))
+            example = julius.resample_frac(example, meta['samplerate'], self.samplerate)
+            example = (example - meta['mean']) / meta['std']
+            if self.length:
+                example = example[..., :self.length]
+                example = F.pad(example, (0, self.length - example.shape[-1]))
             return example
 
 
 def get_wav_datasets(args, samples, sources):
-    sig = hashlib.sha1(str(args.wav)).hexdigest()[:8]
+    sig = hashlib.sha1(str(args.wav).encode()).hexdigest()[:8]
     metadata_file = args.metadata / (sig + ".json")
     train_path = args.wav / "train"
     valid_path = args.wav / "valid"

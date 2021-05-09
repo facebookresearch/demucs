@@ -197,11 +197,11 @@ def main():
 
         valid_set = Rawset(args.raw / "valid", channels=args.audio_channels)
     elif args.wav:
-        train, valid = get_wav_datasets(args, samples, sources)
+        train_set, valid_set = get_wav_datasets(args, samples, sources)
     elif args.is_wav:
-        train, valid = get_musdb_wav_datasets(args, samples, sources)
+        train_set, valid_set = get_musdb_wav_datasets(args, samples, sources)
     else:
-        train, valid = get_compressed_datasets(args, samples, sources)
+        train_set, valid_set = get_compressed_datasets(args, samples, sources)
 
     if args.repitch:
         train_set = RepitchedWrapper(

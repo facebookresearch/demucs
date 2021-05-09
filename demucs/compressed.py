@@ -95,7 +95,7 @@ def _build_musdb_metadata(path, musdb, workers):
 def get_compressed_datasets(args, samples):
     metadata_file = args.metadata / "musdb.json"
     if not metadata_file.is_file() and args.rank == 0:
-        build_musdb_metadata(metadata_file, args.musdb, args.workers)
+        _build_musdb_metadata(metadata_file, args.musdb, args.workers)
     if args.world_size > 1:
         distributed.barrier()
     metadata = json.load(open(metadata_file))
