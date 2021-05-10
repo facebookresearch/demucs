@@ -7,7 +7,6 @@
 import sys
 
 import tqdm
-import torch as th
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
@@ -57,19 +56,15 @@ def train_model(epoch,
             sources = augment(sources)
             mix = sources.sum(dim=1)
 
+            estimates = model(mix)
+            sources = center_trim(sources, estimates)
+            loss = criterion(estimates, sources)
+            model_size = 0
             if quantizer is not None:
-                quantizer.last_example = sources
-            with th.autograd.set_detect_anomaly(False):
-                estimates = model(mix)
-                sources = center_trim(sources, estimates)
+                model_size = quantizer.model_size()
 
-                loss = criterion(estimates, sources)
-                model_size = 0
-                if quantizer is not None:
-                    model_size = quantizer.model_size()
-
-                train_loss = loss + diffq * model_size
-                train_loss.backward()
+            train_loss = loss + diffq * model_size
+            train_loss.backward()
             grad_norm = 0
             for p in model.parameters():
                 if p.grad is not None:
@@ -87,7 +82,7 @@ def train_model(epoch,
                            grad=f"{grad_norm:.5f}")
 
             # free some space before next round
-            del sources, mix, estimates, loss
+            del sources, mix, estimates, loss, train_loss
 
         if world_size > 1:
             sampler.epoch += 1

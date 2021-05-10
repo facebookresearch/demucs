@@ -286,6 +286,9 @@ def main():
               f"cms={cms:.2f}MB "
               f"duration={human_seconds(duration)}")
 
+    if args.world_size > 1:
+        distributed.barrier()
+
     del dmodel
     model.load_state_dict(saved.best_state)
     if args.eval_cpu:
