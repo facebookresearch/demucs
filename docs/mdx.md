@@ -24,6 +24,18 @@ and less memory demanding.
 Once the training is completed, a new model file will be exported in `models/`.
 You can look at the SDR on the MusDB dataset using `python result_table.py`.
 
+
+### Evaluate and export a model before training is over
+
+If you want to export a model before training is complete, use the following command:
+```bash
+python -m demucs [ALL EXACT TRAINING FLAGS] --save_model
+```
+Once this is done, you can partially evaluate a model with
+```bash
+./run.py --test models/NAME_OF_MODEL.th --musdb=PATH_TO_MUSDB --is_wav
+```
+
 ## Submitting your model
 
 Git clone [the Music Demixing Challenge - Starter Kit](https://github.com/AIcrowd/music-demixing-challenge-starter-kit).
