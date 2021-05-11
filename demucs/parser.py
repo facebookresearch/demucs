@@ -28,7 +28,13 @@ def get_parser():
                         type=Path,
                         default=default_musdb,
                         help="Path to musdb root")
-    parser.add_argument("--metadata", type=Path, default=Path("metadata/musdb.json"))
+    parser.add_argument("--is_wav", action="store_true",
+                        help="Indicate that the MusDB dataset is in wav format (i.e. MusDB-HQ).")
+    parser.add_argument("--metadata", type=Path, default=Path("metadata/"),
+                        help="Folder where metadata information is stored.")
+    parser.add_argument("--wav", type=Path,
+                        help="Path to a wav dataset. This should contain a 'train' and a 'valid' "
+                             "subfolder.")
     parser.add_argument("--samplerate", type=int, default=44100)
     parser.add_argument("--audio_channels", type=int, default=2)
     parser.add_argument("--samples",
@@ -161,6 +167,8 @@ def get_parser():
                         default=True,
                         dest="rewrite",
                         help="No 1x1 rewrite convolutions")
+    parser.add_argument("--normalize", action="store_true")
+    parser.add_argument("--no_norm_wav", action="store_false", dest='norm_wav', default=True)
 
     # Tasnet options
     parser.add_argument("--tasnet", action="store_true")

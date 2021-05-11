@@ -10,24 +10,24 @@ import os
 import sys
 import time
 from dataclasses import dataclass, field
-from fractions import Fraction
 
 import torch as th
 from torch import distributed, nn
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 from .augment import FlipChannels, FlipSign, Remix, Scale, Shift
-from .compressed import StemsSet, build_musdb_metadata, get_musdb_tracks
+from .compressed import get_compressed_datasets
 from .model import Demucs
 from .parser import get_name, get_parser
 from .raw import Rawset
 from .repitch import RepitchedWrapper
-from .pretrained import load_pretrained
+from .pretrained import load_pretrained, SOURCES
 from .tasnet import ConvTasNet
 from .test import evaluate
 from .train import train_model, validate_model
 from .utils import (human_seconds, load_model, save_model, get_state,
                     save_state, sizeof_fmt, get_quantizer)
+from .wav import get_wav_datasets, get_musdb_wav_datasets
 
 
 @dataclass
@@ -97,7 +97,8 @@ def main():
     elif args.tasnet:
         model = ConvTasNet(audio_channels=args.audio_channels,
                            samplerate=args.samplerate, X=args.X,
-                           segment_length=4 * args.samples)
+                           segment_length=4 * args.samples,
+                           sources=SOURCES)
     else:
         model = Demucs(
             audio_channels=args.audio_channels,
@@ -112,8 +113,10 @@ def main():
             rewrite=args.rewrite,
             stride=args.conv_stride,
             resample=args.resample,
+            normalize=args.normalize,
             samplerate=args.samplerate,
             segment_length=4 * args.samples,
+            sources=SOURCES,
         )
     model.to(device)
     if args.init:
@@ -184,34 +187,22 @@ def main():
         # tempo change.
         samples = math.ceil(samples / (1 - 0.01 * args.max_tempo))
 
-    sources = 4
+    args.metadata.mkdir(exist_ok=True, parents=True)
     if args.raw:
         train_set = Rawset(args.raw / "train",
                            samples=samples,
                            channels=args.audio_channels,
-                           streams=range(1, sources + 1),
+                           streams=range(1, len(model.sources) + 1),
                            stride=args.data_stride)
 
         valid_set = Rawset(args.raw / "valid", channels=args.audio_channels)
+    elif args.wav:
+        train_set, valid_set = get_wav_datasets(args, samples, model.sources)
+    elif args.is_wav:
+        train_set, valid_set = get_musdb_wav_datasets(args, samples, model.sources)
     else:
-        if not args.metadata.is_file() and args.rank == 0:
-            build_musdb_metadata(args.metadata, args.musdb, args.workers)
-        if args.world_size > 1:
-            distributed.barrier()
-        metadata = json.load(open(args.metadata))
-        duration = Fraction(samples, args.samplerate)
-        stride = Fraction(args.data_stride, args.samplerate)
-        train_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="train"),
-                             metadata,
-                             duration=duration,
-                             stride=stride,
-                             streams=range(1, sources + 1),
-                             samplerate=args.samplerate,
-                             channels=args.audio_channels)
-        valid_set = StemsSet(get_musdb_tracks(args.musdb, subsets=["train"], split="valid"),
-                             metadata,
-                             samplerate=args.samplerate,
-                             channels=args.audio_channels)
+        train_set, valid_set = get_compressed_datasets(args, samples, model.sources)
+
     if args.repitch:
         train_set = RepitchedWrapper(
             train_set,
@@ -295,6 +286,9 @@ def main():
               f"cms={cms:.2f}MB "
               f"duration={human_seconds(duration)}")
 
+    if args.world_size > 1:
+        distributed.barrier()
+
     del dmodel
     model.load_state_dict(saved.best_state)
     if args.eval_cpu:
@@ -302,6 +296,7 @@ def main():
         model.to(device)
     model.eval()
     evaluate(model, args.musdb, eval_folder,
+             is_wav=args.is_wav,
              rank=args.rank,
              world_size=args.world_size,
              device=device,

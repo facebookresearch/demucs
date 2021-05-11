@@ -19,12 +19,15 @@ ROOT = "https://dl.fbaipublicfiles.com/demucs/v3.0/"
 
 PRETRAINED_MODELS = {
     'demucs': 'e07c671f',
+    'demucs48_hq': '28a1282c',
     'demucs_extra': '3646af93',
     'demucs_quantized': '07afea75',
     'tasnet': 'beb46fac',
     'tasnet_extra': 'df3777b2',
     'demucs_unittest': '09ebc15f',
 }
+
+SOURCES = ["drums", "bass", "other", "vocals"]
 
 
 def get_url(name):
@@ -39,6 +42,8 @@ def is_pretrained(name):
 def load_pretrained(name):
     if name == "demucs":
         return demucs(pretrained=True)
+    elif name == "demucs48_hq":
+        return demucs(pretrained=True, hq=True, channels=48)
     elif name == "demucs_extra":
         return demucs(pretrained=True, extra=True)
     elif name == "demucs_quantized":
@@ -62,26 +67,30 @@ def _load_state(name, model, quantizer=None):
 
 
 def demucs_unittest(pretrained=True):
-    model = Demucs(channels=4)
+    model = Demucs(channels=4, sources=SOURCES)
     if pretrained:
         _load_state('demucs_unittest', model)
     return model
 
 
-def demucs(pretrained=True, extra=False, quantized=False):
-    if not pretrained and (extra or quantized):
+def demucs(pretrained=True, extra=False, quantized=False, hq=False, channels=64):
+    if not pretrained and (extra or quantized or hq):
         raise ValueError("if extra or quantized is True, pretrained must be True.")
-    model = Demucs()
+    model = Demucs(sources=SOURCES, channels=channels)
     if pretrained:
         name = 'demucs'
+        if channels != 64:
+            name += str(channels)
         quantizer = None
-        if extra and quantized:
-            raise ValueError("Only one of extra or quantized can be True.")
+        if sum([extra, quantized, hq]) > 1:
+            raise ValueError("Only one of extra, quantized, hq, can be True.")
         if quantized:
             quantizer = DiffQuantizer(model, group_size=8, min_size=1)
-            name = 'demucs_quantized'
+            name += '_quantized'
         if extra:
-            name = 'demucs_extra'
+            name += '_extra'
+        if hq:
+            name += '_hq'
         _load_state(name, model, quantizer)
     return model
 
@@ -89,7 +98,7 @@ def demucs(pretrained=True, extra=False, quantized=False):
 def tasnet(pretrained=True, extra=False):
     if not pretrained and extra:
         raise ValueError("if extra is True, pretrained must be True.")
-    model = ConvTasNet(X=10)
+    model = ConvTasNet(X=10, sources=SOURCES)
     if pretrained:
         name = 'tasnet'
         if extra:
