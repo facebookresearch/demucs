@@ -64,7 +64,7 @@ def get_metrics(name):
         return []
 
 
-def schedule(name, args, nodes=1, partition="learnlab", time=2 * 24 * 60, large=True, gpus=8):
+def schedule(name, args, nodes=1, partition="priority", time=2 * 24 * 60, large=True, gpus=8):
     log = fname(name, "log")
     command = [
         "sbatch",
@@ -77,7 +77,7 @@ def schedule(name, args, nodes=1, partition="learnlab", time=2 * 24 * 60, large=
         "--tasks-per-node=1",
         f"--partition={partition}",
         # "--exclude=learnfair0748,learnfair0821",
-        # "--comment=Old codebase, not requeue, very few jobs",
+        "--comment=Old codebase, not requeue, very few jobs",
         f"--time={time}",
     ]
     if large:
@@ -208,44 +208,40 @@ def main():
     extra_path = Path.home() / "musdb_raw_44_allstems"
     extra = [f"--raw={extra_path}"]
 
+    sched([])
+    sched(extra)
+    sched(tasnet)
+    sched(tasnet + ["--repitch=0"])
+    sched(tasnet + extra + ["--repitch=0"])
 
-    hq = ['--musdb=/checkpoint/defossez/datasets/musdbhq', '--is_wav', '--no_raw']
-    sched(hq + ['--diffq=0.0003'], nodes=2)
+    ch48 = ["--channels=48"]
+    sched(ch48)
 
-    # sched([])
-    # sched(extra)
-    # sched(tasnet)
-    # sched(tasnet + ["--repitch=0"])
-    # sched(tasnet + extra + ["--repitch=0"])
-    #
-    # ch48 = ["--channels=48"]
-    # sched(ch48)
-    #
-    # ch32 = ["--channels=32"]
-    # sched(ch32)
-    #
-    # # Main models
-    # for seed in [43, 44]:
-    #     base = [f"--seed={seed}"]
-    #     sched(base)
-    #     sched(base + extra)
-    #     sched(base + tasnet)
-    #     sched(base + tasnet + extra)
-    #
-    # # Ablation study
-    #
-    # sched(["--no_glu"])
-    # sched(["--no_rewrite"])
-    # sched(["--context=1"])
-    # sched(["--rescale=0"])
-    # sched(["--mse"])
-    # sched(["--lstm_layers=0"])
-    # sched(["--lstm_layers=0", "--depth=7"])
-    # sched(["--no_resample"])
-    # sched(["--repitch=0"])
-    #
-    # # Quantization
-    # sched(["--diffq=0.0003"])
+    ch32 = ["--channels=32"]
+    sched(ch32)
+
+    # Main models
+    for seed in [43, 44]:
+        base = [f"--seed={seed}"]
+        sched(base)
+        sched(base + extra)
+        sched(base + tasnet)
+        sched(base + tasnet + extra)
+
+    # Ablation study
+
+    sched(["--no_glu"])
+    sched(["--no_rewrite"])
+    sched(["--context=1"])
+    sched(["--rescale=0"])
+    sched(["--mse"])
+    sched(["--lstm_layers=0"])
+    sched(["--lstm_layers=0", "--depth=7"])
+    sched(["--no_resample"])
+    sched(["--repitch=0"])
+
+    # Quantization
+    sched(["--diffq=0.0003"])
 
     if args.cancel:
         for job in monitor.jobs:

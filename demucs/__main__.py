@@ -21,7 +21,7 @@ from .model import Demucs
 from .parser import get_name, get_parser
 from .raw import Rawset
 from .repitch import RepitchedWrapper
-from .pretrained import load_pretrained
+from .pretrained import load_pretrained, SOURCES
 from .tasnet import ConvTasNet
 from .test import evaluate
 from .train import train_model, validate_model
@@ -87,7 +87,6 @@ def main():
     if args.restart and checkpoint.exists() and args.rank == 0:
         checkpoint.unlink()
 
-    sources = ["drums", "bass", "other", "vocals"]
     if args.test or args.test_pretrained:
         args.epochs = 1
         args.repeat = 0
@@ -99,7 +98,7 @@ def main():
         model = ConvTasNet(audio_channels=args.audio_channels,
                            samplerate=args.samplerate, X=args.X,
                            segment_length=4 * args.samples,
-                           sources=sources)
+                           sources=SOURCES)
     else:
         model = Demucs(
             audio_channels=args.audio_channels,
@@ -117,7 +116,7 @@ def main():
             normalize=args.normalize,
             samplerate=args.samplerate,
             segment_length=4 * args.samples,
-            sources=sources,
+            sources=SOURCES,
         )
     model.to(device)
     if args.init:
@@ -193,16 +192,16 @@ def main():
         train_set = Rawset(args.raw / "train",
                            samples=samples,
                            channels=args.audio_channels,
-                           streams=range(1, len(sources) + 1),
+                           streams=range(1, len(model.sources) + 1),
                            stride=args.data_stride)
 
         valid_set = Rawset(args.raw / "valid", channels=args.audio_channels)
     elif args.wav:
-        train_set, valid_set = get_wav_datasets(args, samples, sources)
+        train_set, valid_set = get_wav_datasets(args, samples, model.sources)
     elif args.is_wav:
-        train_set, valid_set = get_musdb_wav_datasets(args, samples, sources)
+        train_set, valid_set = get_musdb_wav_datasets(args, samples, model.sources)
     else:
-        train_set, valid_set = get_compressed_datasets(args, samples, sources)
+        train_set, valid_set = get_compressed_datasets(args, samples, model.sources)
 
     if args.repitch:
         train_set = RepitchedWrapper(
