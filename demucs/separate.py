@@ -21,23 +21,26 @@ from .utils import apply_model, load_model
 def load_track(track, device, audio_channels, samplerate):
     errors = {}
     wav = None
+
     try:
-        wav, sr = ta.load(str(track))
-    except RuntimeError as err:
-        errors['torchaudio'] = err.args[0]
+        wav = AudioFile(track).read(
+            streams=0,
+            samplerate=samplerate,
+            channels=audio_channels).to(device)
+    except FileNotFoundError:
+        errors['ffmpeg'] = 'Ffmpeg is not installed.'
+    except subprocess.CalledProcessError:
+        errors['ffmpeg'] = 'FFmpeg could not read the file.'
+
+    if wav is None:
         try:
-            wav = AudioFile(track).read(
-                streams=0,
-                samplerate=samplerate,
-                channels=audio_channels).to(device)
-        except FileNotFoundError:
-            errors['ffmpeg'] = 'Ffmpeg is not installed.'
-        except subprocess.CalledProcessError:
-            errors['ffmpeg'] = 'FFmpeg could not read the file.'
-    else:
-        wav = convert_audio_channels(wav, audio_channels)
-        wav = wav.to(device)
-        wav = julius.resample_frac(wav, sr, samplerate)
+            wav, sr = ta.load(str(track))
+        except RuntimeError as err:
+            errors['torchaudio'] = err.args[0]
+        else:
+            wav = convert_audio_channels(wav, audio_channels)
+            wav = wav.to(device)
+            wav = julius.resample_frac(wav, sr, samplerate)
 
     if wav is None:
         print(f"Could not load file {track}. "
