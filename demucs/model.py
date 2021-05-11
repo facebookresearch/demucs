@@ -56,6 +56,7 @@ class Demucs(nn.Module):
                  growth=2.,
                  lstm_layers=2,
                  context=3,
+                 normalize=False,
                  samplerate=44100,
                  segment_length=4 * 10 * 44100):
         """
@@ -96,6 +97,7 @@ class Demucs(nn.Module):
         self.depth = depth
         self.resample = resample
         self.channels = channels
+        self.normalize = normalize
         self.samplerate = samplerate
         self.segment_length = segment_length
 
@@ -169,8 +171,19 @@ class Demucs(nn.Module):
     def forward(self, mix):
         x = mix
 
+        if self.normalize:
+            mono = mix.mean(dim=1, keepdim=True)
+            mean = mono.mean(dim=-1, keepdim=True)
+            std = mono.std(dim=-1, keepdim=True)
+        else:
+            mean = 0
+            std = 1
+
+        x = (x - mean) / (1e-5 + std)
+
         if self.resample:
             x = julius.resample_frac(x, 1, 2)
+
         saved = []
         for encode in self.encoder:
             x = encode(x)
@@ -184,5 +197,6 @@ class Demucs(nn.Module):
 
         if self.resample:
             x = julius.resample_frac(x, 2, 1)
+        x = x * std + mean
         x = x.view(x.size(0), len(self.sources), self.audio_channels, x.size(-1))
         return x

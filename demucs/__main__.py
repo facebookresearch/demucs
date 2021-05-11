@@ -114,6 +114,7 @@ def main():
             rewrite=args.rewrite,
             stride=args.conv_stride,
             resample=args.resample,
+            normalize=args.normalize,
             samplerate=args.samplerate,
             segment_length=4 * args.samples,
             sources=sources,

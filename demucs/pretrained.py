@@ -26,6 +26,8 @@ PRETRAINED_MODELS = {
     'demucs_unittest': '09ebc15f',
 }
 
+SOURCES = ["drums", "bass", "other", "vocals"]
+
 
 def get_url(name):
     sig = PRETRAINED_MODELS[name]
@@ -71,7 +73,7 @@ def demucs_unittest(pretrained=True):
 def demucs(pretrained=True, extra=False, quantized=False):
     if not pretrained and (extra or quantized):
         raise ValueError("if extra or quantized is True, pretrained must be True.")
-    model = Demucs()
+    model = Demucs(sources=SOURCES)
     if pretrained:
         name = 'demucs'
         quantizer = None
@@ -89,7 +91,7 @@ def demucs(pretrained=True, extra=False, quantized=False):
 def tasnet(pretrained=True, extra=False):
     if not pretrained and extra:
         raise ValueError("if extra is True, pretrained must be True.")
-    model = ConvTasNet(X=10)
+    model = ConvTasNet(X=10, sources=SOURCES)
     if pretrained:
         name = 'tasnet'
         if extra:

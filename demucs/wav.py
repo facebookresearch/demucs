@@ -56,7 +56,7 @@ class Wavset:
     def __init__(
             self,
             root, metadata, sources,
-            length=None, stride=None,
+            length=None, stride=None, normalize=True,
             samplerate=44100, channels=2):
         """
         Waveset (or mp3 set for that matter). Can be used to train
@@ -75,6 +75,7 @@ class Wavset:
         self.metadata = OrderedDict(metadata)
         self.length = length
         self.stride = stride or length
+        self.normalize = normalize
         self.sources = sources
         self.channels = channels
         self.samplerate = samplerate
@@ -114,7 +115,8 @@ class Wavset:
 
             example = th.stack(wavs)
             example = julius.resample_frac(example, meta['samplerate'], self.samplerate)
-            example = (example - meta['mean']) / meta['std']
+            if self.normalize:
+                example = (example - meta['mean']) / meta['std']
             if self.length:
                 example = example[..., :self.length]
                 example = F.pad(example, (0, self.length - example.shape[-1]))
@@ -135,9 +137,11 @@ def get_wav_datasets(args, samples, sources):
     train, valid = json.load(open(metadata_file))
     train_set = Wavset(train_path, train, sources,
                        length=samples, stride=args.data_stride,
-                       samplerate=args.samplerate, channels=args.audio_channels)
+                       samplerate=args.samplerate, channels=args.audio_channels,
+                       normalize=args.norm_wav)
     valid_set = Wavset(valid_path, valid, [MIXTURE] + sources,
-                       samplerate=args.samplerate, channels=args.audio_channels)
+                       samplerate=args.samplerate, channels=args.audio_channels,
+                       normalize=args.norm_wav)
     return train_set, valid_set
 
 
@@ -156,7 +160,9 @@ def get_musdb_wav_datasets(args, samples, sources):
     metadata_valid = {name: meta for name, meta in metadata.items() if name not in train_tracks}
     train_set = Wavset(root, metadata_train, sources,
                        length=samples, stride=args.data_stride,
-                       samplerate=args.samplerate, channels=args.audio_channels)
+                       samplerate=args.samplerate, channels=args.audio_channels,
+                       normalize=args.norm_wav)
     valid_set = Wavset(root, metadata_valid, [MIXTURE] + sources,
-                       samplerate=args.samplerate, channels=args.audio_channels)
+                       samplerate=args.samplerate, channels=args.audio_channels,
+                       normalize=args.norm_wav)
     return train_set, valid_set

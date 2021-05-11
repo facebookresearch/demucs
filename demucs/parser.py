@@ -167,6 +167,8 @@ def get_parser():
                         default=True,
                         dest="rewrite",
                         help="No 1x1 rewrite convolutions")
+    parser.add_argument("--normalize", action="store_true")
+    parser.add_argument("--no_norm_wav", action="store_false", dest='norm_wav', default=True)
 
     # Tasnet options
     parser.add_argument("--tasnet", action="store_true")
