@@ -67,7 +67,7 @@ def _load_state(name, model, quantizer=None):
 
 
 def demucs_unittest(pretrained=True):
-    model = Demucs(channels=4)
+    model = Demucs(channels=4, sources=SOURCES)
     if pretrained:
         _load_state('demucs_unittest', model)
     return model
