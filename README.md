@@ -48,7 +48,9 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
-- 28/04/2020: **Demucs v2**, with extra augmentation and DiffQ based quantization.
+- 11/05/2021: Adding support for MusDB-HQ and arbitrary wav set, for the MDX challenge. For more information
+on joining the challenge with Demucs see [the Demucs MDX instructions](docs/mdx.md)
+- 28/04/2021: **Demucs v2**, with extra augmentation and DiffQ based quantization.
   **EVERYTHING WILL BREAK**, please restart from scratch following the instructions hereafter.
   This version also adds overlap between prediction frames, with linear transition from one to the next,
   which should prevent sudden changes at frame boundaries. Also, Demucs is now on PyPI, so for separation
