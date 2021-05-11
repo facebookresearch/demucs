@@ -19,6 +19,7 @@ ROOT = "https://dl.fbaipublicfiles.com/demucs/v3.0/"
 
 PRETRAINED_MODELS = {
     'demucs': 'e07c671f',
+    'demucs48_hq': '28a1282c',
     'demucs_extra': '3646af93',
     'demucs_quantized': '07afea75',
     'tasnet': 'beb46fac',
@@ -41,6 +42,8 @@ def is_pretrained(name):
 def load_pretrained(name):
     if name == "demucs":
         return demucs(pretrained=True)
+    elif name == "demucs48_hq":
+        return demucs(pretrained=True, hq=True, channels=48)
     elif name == "demucs_extra":
         return demucs(pretrained=True, extra=True)
     elif name == "demucs_quantized":
@@ -70,20 +73,24 @@ def demucs_unittest(pretrained=True):
     return model
 
 
-def demucs(pretrained=True, extra=False, quantized=False):
-    if not pretrained and (extra or quantized):
+def demucs(pretrained=True, extra=False, quantized=False, hq=False, channels=64):
+    if not pretrained and (extra or quantized or hq):
         raise ValueError("if extra or quantized is True, pretrained must be True.")
-    model = Demucs(sources=SOURCES)
+    model = Demucs(sources=SOURCES, channels=channels)
     if pretrained:
         name = 'demucs'
+        if channels != 64:
+            name += str(channels)
         quantizer = None
-        if extra and quantized:
-            raise ValueError("Only one of extra or quantized can be True.")
+        if sum([extra, quantized, hq]) > 1:
+            raise ValueError("Only one of extra, quantized, hq, can be True.")
         if quantized:
             quantizer = DiffQuantizer(model, group_size=8, min_size=1)
-            name = 'demucs_quantized'
+            name += '_quantized'
         if extra:
-            name = 'demucs_extra'
+            name += '_extra'
+        if hq:
+            name += '_hq'
         _load_state(name, model, quantizer)
     return model
 

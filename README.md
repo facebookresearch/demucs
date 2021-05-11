@@ -164,6 +164,8 @@ The list of pre-trained models is:
     this is much smaller (150MB instead of 1GB) and quality should be exactly the same. Let me know if you disagree.
     As a result, this is the one used by default.
 - `demucs_extra`: Demucs trained with extra training data,
+- `demucs48_hq`: Demucs with 48 initial hidden channels, trained on [MusDB-HQ](https://zenodo.org/record/3338373),
+ used as a baseline for the [Music Demixing Challenge 2021](https://www.aicrowd.com/challenges/music-demixing-challenge-ismir-2021),
 - `tasnet`: Conv-Tasnet trained on MusDB,
 - `tasnet_extra`: Conv-Tasnet trained with extra training data.
 
@@ -219,6 +221,29 @@ If you want to use only some of the available GPUs, export the `CUDA_VISIBLE_DEV
 select those.
 
 To see all the possible options, use `python3 -m demucs --help`.
+
+
+### MusDB HQ
+
+To train on MusDB HQ, use the following flags:
+
+```bash
+python3 -m demucs -b 4 --musdb MUSDB_HQ_PATH --is_wav [...]
+```
+
+### Custom wav dataset
+
+You can trained on a custom wav dataset using the following command.
+At the moment, you still need to pass the MusDB path for evaluation, and the model
+must use the standard sources (bass, drums, other, vocals). However, it should be relatively
+easy to fork the code to support different patterns.
+
+```bash
+python3 -m demucs -b 4 --wav PATH_TO_WAV_DATASET [...]
+```
+
+The folder `PATH_TO_WAV_DATASET` should contain two sub-directories : `train` and `valid`. Each of those
+should contain one folder per track. Each track folder must contain one file for each source (`drums.wav`, `bass.wav`, `other.wav`, `vocals.wav`) and one file for the mixture (`mixture.wav`).
 
 
 ### Fine tuning
