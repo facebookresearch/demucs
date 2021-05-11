@@ -309,7 +309,7 @@ def save_model(model, quantizer, training_args, path):
         'args': args,
         'kwargs': kwargs,
         'state': state,
-        'training_args': args,
+        'training_args': training_args,
     }
     th.save(package, save_to)
 
