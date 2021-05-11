@@ -3,6 +3,9 @@
 ## v2.0.1, 11th of May 2021
 
 MusDB HQ support added. Custom wav dataset support added.
+Minor changes: issue with padding of mp3 and torchaudio reading, in order to limit that,
+Demucs now uses ffmpeg in priority and fallback to torchaudio.
+Replaced pre-trained demucs model with one trained on more recent codebase.
 
 ## v2.0.0, 28th of April 2021
 
