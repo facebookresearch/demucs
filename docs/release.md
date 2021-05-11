@@ -1,5 +1,9 @@
 # Release notes for Demucs
 
+## v2.0.1, 11th of May 2021
+
+MusDB HQ support added. Custom wav dataset support added.
+
 ## v2.0.0, 28th of April 2021
 
 This is a big release, with at lof of breaking changes. You will likely
