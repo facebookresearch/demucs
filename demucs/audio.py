@@ -130,7 +130,8 @@ class AudioFile:
                 wav = np.fromfile(filename, dtype=np.float32)
                 wav = torch.from_numpy(wav)
                 wav = wav.view(-1, self.channels()).t()
-                wav = convert_audio_channels(wav, channels)
+                if channels is not None:
+                    wav = convert_audio_channels(wav, channels)
                 if target_size is not None:
                     wav = wav[..., :target_size]
                 wavs.append(wav)
