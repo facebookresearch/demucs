@@ -38,8 +38,7 @@ Once this is done, you can partially evaluate a model with
 
 ## Submitting your model
 
-Git clone [the Music Demixing Challenge - Starter Kit](https://github.com/AIcrowd/music-demixing-challenge-starter-kit).
-In this repository, change the `predict.py` to use the `DemucsSeparator`.
+Git clone [the Music Demixing Challenge - Starter Kit - Demucs Edition](https://github.com/adefossez/music-demixing-challenge-starter-kit).
 Inside the starter kit, create a `models/` folder and copy over the trained model from the Demucs repo (renaming
 it for instance `my_model.th`)
 Inside the `test_demuc.py` file, change the function `prediction_setup`: comment the loading
@@ -50,7 +49,7 @@ Install [git-lfs](https://git-lfs.github.com/). Then run
 
 ```bash
 git lfs install
-git lfs track models/my_model.th
+git lfs track *.th
 git add .gitattributes
 git add models/
 git add -u .
