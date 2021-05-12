@@ -54,16 +54,15 @@ If you want to quickly test idea, I would recommend training a 16 kHz model, and
 it for instance `my_model.th`)
 3. Inside the `test_demuc.py` file, change the function `prediction_setup`: comment the loading
 of the pre-trained model, and uncomment the code to load your own model.
-4. Install [git-lfs](https://git-lfs.github.com/). Then run
+4. Edit the file `aicrowd.json` with your username.
+5. Install [git-lfs](https://git-lfs.github.com/). Then run
 
 ```bash
 git lfs install
-git lfs track *.th
-git add .gitattributes
 git add models/
 git add -u .
 git commit -m "My Demucs submission"
 ```
-5. Follow the [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
+6. Follow the [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
 
 Best of luck 🤞
