@@ -21,7 +21,10 @@ and less memory demanding. In any case, the 64 channels versions is timing out o
 ./run.py --channels=48 --batch_size 64 --musdb=PATH_TO_MUSDB --is_wav [EXTRA_FLAGS]
 ```
 
+### Post training
+
 Once the training is completed, a new model file will be exported in `models/`.
+
 You can look at the SDR on the MusDB dataset using `python result_table.py`.
 
 
