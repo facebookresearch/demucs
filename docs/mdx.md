@@ -41,14 +41,12 @@ Once this is done, you can partially evaluate a model with
 
 ## Submitting your model
 
-Git clone [the Music Demixing Challenge - Starter Kit - Demucs Edition](https://github.com/adefossez/music-demixing-challenge-starter-kit).
-Inside the starter kit, create a `models/` folder and copy over the trained model from the Demucs repo (renaming
+1. Git clone [the Music Demixing Challenge - Starter Kit - Demucs Edition](https://github.com/adefossez/music-demixing-challenge-starter-kit).
+2. Inside the starter kit, create a `models/` folder and copy over the trained model from the Demucs repo (renaming
 it for instance `my_model.th`)
-Inside the `test_demuc.py` file, change the function `prediction_setup`: comment the loading
+3. Inside the `test_demuc.py` file, change the function `prediction_setup`: comment the loading
 of the pre-trained model, and uncomment the code to load your own model.
-
-
-Install [git-lfs](https://git-lfs.github.com/). Then run
+4. Install [git-lfs](https://git-lfs.github.com/). Then run
 
 ```bash
 git lfs install
@@ -58,6 +56,6 @@ git add models/
 git add -u .
 git commit -m "My Demucs submission"
 ```
-and then follow the [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
+5. Follow [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
 
-Best of luck!
+Best of luck 🤞
