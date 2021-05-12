@@ -16,7 +16,7 @@ Download [MusDB-HQ](https://zenodo.org/record/3338373) to some folder and unzip 
 
 Train Demucs (you might need to change the batch size depending on the number of GPUs available).
 It seems 48 channels is enough to get the best performance on MusDB-HQ, and training will faster
-and less memory demanding.
+and less memory demanding. In any case, the 64 channels versions is timing out on the challenge.
 ```bash
 ./run.py --channels=48 --batch_size 64 --musdb=PATH_TO_MUSDB --is_wav [EXTRA_FLAGS]
 ```
