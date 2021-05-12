@@ -39,6 +39,14 @@ Once this is done, you can partially evaluate a model with
 ./run.py --test models/NAME_OF_MODEL.th --musdb=PATH_TO_MUSDB --is_wav
 ```
 
+### Training smaller models
+
+If you want to quickly test idea, I would recommend training a 16 kHz model, and testing if things work there or not, before training the full 44kHz model. You can train one of those with
+```bash
+./run.py --channels=32 --samplerate 16000 --batch_size 64 --repitch=0 --musdb=PATH_TO_MUSDB --is_wav [EXTRA_FLAGS]
+```
+(repitch must be turned off, because things will break at 16kHz).
+
 ## Submitting your model
 
 1. Git clone [the Music Demixing Challenge - Starter Kit - Demucs Edition](https://github.com/adefossez/music-demixing-challenge-starter-kit).
@@ -56,6 +64,6 @@ git add models/
 git add -u .
 git commit -m "My Demucs submission"
 ```
-5. Follow [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
+5. Follow the [submission instructions](https://github.com/AIcrowd/music-demixing-challenge-starter-kit/blob/master/docs/SUBMISSION.md).
 
 Best of luck 🤞
