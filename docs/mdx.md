@@ -43,7 +43,7 @@ Once this is done, you can partially evaluate a model with
 
 If you want to quickly test idea, I would recommend training a 16 kHz model, and testing if things work there or not, before training the full 44kHz model. You can train one of those with
 ```bash
-./run.py --channels=32 --samplerate 16000 --depth=5 --batch_size 64 --repitch=0 --musdb=PATH_TO_MUSDB --is_wav [EXTRA_FLAGS]
+./run.py --channels=32 --samplerate 16000 --samples 160000 --data_stride 16000 --depth=5 --batch_size 64 --repitch=0 --musdb=PATH_TO_MUSDB --is_wav [EXTRA_FLAGS]
 ```
 (repitch must be turned off, because things will break at 16kHz).
 
