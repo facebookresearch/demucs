@@ -71,8 +71,7 @@ class Wavset:
         Files will be grouped according to `sources` (each source is a list of
         filenames).
 
-        No sample rate or channels convertion is done, but the value provided
-        will be checked.
+        Sample rate and channels will be converted on the fly.
 
         `length` is the sample size to extract (in samples, not duration).
         `stride` is how many samples to move by between each example.
