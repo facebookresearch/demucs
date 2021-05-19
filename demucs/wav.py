@@ -108,7 +108,8 @@ class Wavset:
             num_frames = -1
             offset = 0
             if self.length is not None:
-                offset = self.stride * index
+                offset = int(math.ceil(
+                    meta['samplerate'] * self.stride * index / self.samplerate))
                 num_frames = int(math.ceil(
                     meta['samplerate'] * self.length / self.samplerate))
             wavs = []
