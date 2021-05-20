@@ -108,7 +108,7 @@ class ConvTasNet(nn.Module):
         self.segment_length = segment_length
         # Components
         self.encoder = Encoder(L, N, audio_channels)
-        self.separator = TemporalConvNet(N, B, H, P, X, R, C, norm_type, causal, mask_nonlinear)
+        self.separator = TemporalConvNet(N, B, H, P, X, R, self.C, norm_type, causal, mask_nonlinear)
         self.decoder = Decoder(N, L, audio_channels)
         # init
         for p in self.parameters():
