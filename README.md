@@ -108,7 +108,7 @@ If you just want to use Demucs to separate tracks, you can install it with
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
 - **If you are using Windows:** [Windows support](docs/windows.md).
 - **If you are using MAC OS X:** [Mac OS X support](docs/mac.md).
-- **If you are using Linux:** [Linux support](docs/mac.md).
+- **If you are using Linux:** [Linux support](docs/linux.md).
 
 ### For machine learning scientists
 
