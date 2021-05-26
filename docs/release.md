@@ -1,5 +1,11 @@
 # Release notes for Demucs
 
+## V2.0.2, 26th of May 2021
+
+- Fix in Tasnet (PR #178)
+- Use ffmpeg in priority when available instead of torchaudio to avoid small shift in MP3 data.
+- other minor fixes
+
 ## v2.0.1, 11th of May 2021
 
 MusDB HQ support added. Custom wav dataset support added.
