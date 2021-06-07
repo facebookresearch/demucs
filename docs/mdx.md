@@ -36,8 +36,10 @@ python -m demucs [ALL EXACT TRAINING FLAGS] --save_model
 ```
 Once this is done, you can partially evaluate a model with
 ```bash
-./run.py --test models/NAME_OF_MODEL.th --musdb=PATH_TO_MUSDB --is_wav
+./run.py --test NAME_OF_MODEL.th --musdb=PATH_TO_MUSDB --is_wav
 ```
+
+**Note:** `NAME_OF_MODEL.th` is given relative to the models folder (given by `--models`, defaults to `models/`), so don't include it in the name.
 
 ### Training smaller models
 
