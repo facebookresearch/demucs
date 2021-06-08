@@ -164,7 +164,7 @@ def apply_model(model, mix, shifts=None, split=False,
     device = mix.device
     channels, length = mix.shape
     if split:
-        out = th.zeros(4, channels, length, device=device)
+        out = th.zeros(len(model.sources), channels, length, device=device)
         sum_weight = th.zeros(length, device=device)
         segment = model.segment_length
         stride = int((1 - overlap) * segment)
