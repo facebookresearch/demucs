@@ -201,7 +201,7 @@ def main():
     elif args.is_wav:
         train_set, valid_set = get_musdb_wav_datasets(args, samples, model.sources)
     else:
-        train_set, valid_set = get_compressed_datasets(args, samples, model.sources)
+        train_set, valid_set = get_compressed_datasets(args, samples)
 
     if args.repitch:
         train_set = RepitchedWrapper(
