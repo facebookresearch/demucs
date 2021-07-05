@@ -266,9 +266,10 @@ def load_model(path, strict=False):
     return model
 
 
-def get_state(model, quantizer):
+def get_state(model, quantizer, half=False):
     if quantizer is None:
-        state = {k: p.data.to('cpu') for k, p in model.state_dict().items()}
+        dtype = th.half if half else None
+        state = {k: p.data.to(device='cpu', dtype=dtype) for k, p in model.state_dict().items()}
     else:
         state = quantizer.get_quantized_state()
         buf = io.BytesIO()
@@ -301,7 +302,7 @@ def save_model(model, quantizer, training_args, path):
     args, kwargs = model._init_args_kwargs
     klass = model.__class__
 
-    state = get_state(model, quantizer)
+    state = get_state(model, quantizer, half=training_args.half)
 
     save_to = path
     package = {

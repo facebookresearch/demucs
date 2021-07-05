@@ -35,6 +35,8 @@ def get_parser():
     parser.add_argument("--wav", type=Path,
                         help="Path to a wav dataset. This should contain a 'train' and a 'valid' "
                              "subfolder.")
+    parser.add_argument("--concat", action='store_true',
+                        help="Concat MusDB and wav dataset when provided.")
     parser.add_argument("--samplerate", type=int, default=44100)
     parser.add_argument("--audio_channels", type=int, default=2)
     parser.add_argument("--samples",
@@ -188,6 +190,8 @@ def get_parser():
                         help="Skip training, just save state "
                              "for the current checkpoint value. You should "
                              "provide a model name as argument.")
+    parser.add_argument("--half", action="store_true",
+                        help="When saving the model, uses half precision.")
 
     # Quantization options
     parser.add_argument("--q-min-size", type=float, default=1,

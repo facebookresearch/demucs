@@ -9,6 +9,7 @@ import hashlib
 import math
 import json
 from pathlib import Path
+import os
 
 import julius
 import torch as th
@@ -53,8 +54,12 @@ def _track_metadata(track, sources):
 def _build_metadata(path, sources):
     meta = {}
     path = Path(path)
-    for file in path.iterdir():
-        meta[file.name] = _track_metadata(file, sources)
+    for root, folders, files in os.walk(path, followlinks=True):
+        root = Path(root)
+        if root.name.startswith('.') or folders or root == path:
+            continue
+        name = str(root.relative_to(path))
+        meta[name] = _track_metadata(root, sources)
     return meta
 
 

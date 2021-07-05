@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 import torch as th
 from torch import distributed, nn
+from torch.utils.data import ConcatDataset
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 from .augment import FlipChannels, FlipSign, Remix, Scale, Shift
@@ -147,6 +148,7 @@ def main():
     if args.save_model:
         if args.rank == 0:
             model.to("cpu")
+            assert saved.best_state is not None, "model needs to train for 1 epoch at least."
             model.load_state_dict(saved.best_state)
             save_model(model, quantizer, args, args.models / model_name)
         return
@@ -198,10 +200,19 @@ def main():
         valid_set = Rawset(args.raw / "valid", channels=args.audio_channels)
     elif args.wav:
         train_set, valid_set = get_wav_datasets(args, samples, model.sources)
+
+        if args.concat:
+            if args.is_wav:
+                mus_train, mus_valid = get_musdb_wav_datasets(args, samples, model.sources)
+            else:
+                mus_train, mus_valid = get_compressed_datasets(args, samples)
+            train_set = ConcatDataset([train_set, mus_train])
+            valid_set = ConcatDataset([valid_set, mus_valid])
     elif args.is_wav:
         train_set, valid_set = get_musdb_wav_datasets(args, samples, model.sources)
     else:
         train_set, valid_set = get_compressed_datasets(args, samples)
+    print("Train set and valid set sizes", len(train_set), len(valid_set))
 
     if args.repitch:
         train_set = RepitchedWrapper(
