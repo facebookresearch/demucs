@@ -245,6 +245,7 @@ python3 -m demucs -b 4 --wav PATH_TO_WAV_DATASET [...]
 The folder `PATH_TO_WAV_DATASET` should contain two sub-directories : `train` and `valid`. Each of those
 should contain one folder per track. Each track folder must contain one file for each source (`drums.wav`, `bass.wav`, `other.wav`, `vocals.wav`) and one file for the mixture (`mixture.wav`).
 
+By default, the custom wav dataset will replace MusDB. To concatenate it with MusDB, pass `--concat` (if you are using musdbhq, dont forget to pass `--is_wav`).
 
 ### Fine tuning
 
