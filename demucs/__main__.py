@@ -207,7 +207,8 @@ def main():
             else:
                 mus_train, mus_valid = get_compressed_datasets(args, samples)
             train_set = ConcatDataset([train_set, mus_train])
-            valid_set = ConcatDataset([valid_set, mus_valid])
+            if not args.plop:
+                valid_set = ConcatDataset([valid_set, mus_valid])
     elif args.is_wav:
         train_set, valid_set = get_musdb_wav_datasets(args, samples, model.sources)
     else:
