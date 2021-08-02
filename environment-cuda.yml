@@ -1,8 +1,8 @@
 name: demucs
 
 channels:
-  - conda-forge
   - pytorch
+  - conda-forge
 
 dependencies:
   - python>=3.7,<3.9
