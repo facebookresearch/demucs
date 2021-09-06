@@ -34,12 +34,15 @@ If you want to export a model before training is complete, use the following com
 ```bash
 python -m demucs [ALL EXACT TRAINING FLAGS] --save_model
 ```
+You can also pass the `--half` flag, in order to save weights in half precision. This will divide the model size by 2 and won't impact SDR.
+
 Once this is done, you can partially evaluate a model with
 ```bash
 ./run.py --test NAME_OF_MODEL.th --musdb=PATH_TO_MUSDB --is_wav
 ```
 
 **Note:** `NAME_OF_MODEL.th` is given relative to the models folder (given by `--models`, defaults to `models/`), so don't include it in the name.
+
 
 ### Training smaller models
 

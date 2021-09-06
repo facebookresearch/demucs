@@ -6,4 +6,4 @@
 
 dependencies = ['diffq', 'julius', 'torch', 'tqdm']
 
-from denoiser.pretrained import demucs, tasnet  # noqa
+from demucs.pretrained import demucs, tasnet  # noqa
