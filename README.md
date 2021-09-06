@@ -3,6 +3,7 @@
 ![tests badge](https://github.com/facebookresearch/demucs/workflows/tests/badge.svg)
 ![linter badge](https://github.com/facebookresearch/demucs/workflows/linter/badge.svg)
 
+**Branch was rename to main**: Run `git pull && git checkout main` to switch to the new branch.
 
 **Demucs was just updated!**: much better SDR, smaller models, more data augmentation and PyPI support.
 
