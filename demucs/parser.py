@@ -37,8 +37,6 @@ def get_parser():
                              "subfolder.")
     parser.add_argument("--concat", action='store_true',
                         help="Concat MusDB and wav dataset when provided.")
-    parser.add_argument("--plop", action='store_true',
-                        help="Concat MusDB and wav dataset when provided.")
     parser.add_argument("--samplerate", type=int, default=44100)
     parser.add_argument("--audio_channels", type=int, default=2)
     parser.add_argument("--samples",
