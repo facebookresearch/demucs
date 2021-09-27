@@ -10,7 +10,7 @@ Parts of the code are untested on Windows (in particular, training a new model).
 
 ```bash
 cd %HOMEPATH%
-git clone -b master --single-branch https://github.com/facebookresearch/demucs ./demucs
+git clone -b main --single-branch https://github.com/facebookresearch/demucs ./demucs
 cd ./demucs
 conda env update -f environment-cpu.yml
 conda activate demucs
