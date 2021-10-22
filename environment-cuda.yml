@@ -13,7 +13,7 @@ dependencies:
   - tqdm>=4.36
   - pip
   - pip:
-    - diffq>=0.1
+    - diffq<0.2.0
     - julius>=0.2.3
     - lameenc>=1.2
     - musdb>=0.4.0
