@@ -93,6 +93,10 @@ for more details.
 You will need at least Python 3.7. See `requirements.txt` for requirements for separation only,
 and `environment-[cpu|cuda].yml` if you want to train a new model.
 
+## Web Demo
+
+Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/demucs)
+
 ### For Windows users
 
 Everytime you see `python3`, replace it with `python.exe`. You should always run commands from the
