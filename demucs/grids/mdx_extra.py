@@ -34,9 +34,3 @@ def explorer(launcher):
             if dset == 'extra_test':
                 sub({'quant.diffq': 1e-4})
                 sub({'quant.diffq': 3e-4})
-            if xp.cfg.model == 'hdemucs':
-                sub = sub.bind({'dummy': 'repro2'})
-                sub()
-                if dset == 'extra_test':
-                    sub({'quant.diffq': 1e-4})
-                    sub({'quant.diffq': 3e-4})

@@ -134,6 +134,11 @@ but it will allow you to use Demucs without installing anything.
 
 [Demucs on Google Colab](https://colab.research.google.com/drive/1dC9nVxk3V_VPjUADsnFu8EiT-xnU1tGH?usp=sharing)
 
+## Web Demo
+
+Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/demucs)
+
+
 ## Separating tracks
 
 In order to try Demucs, you can just run from any folder (as long as you properly installed it)

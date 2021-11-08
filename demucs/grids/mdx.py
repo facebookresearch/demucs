@@ -31,10 +31,3 @@ def explorer(launcher):
         launcher(xp.argv)
         launcher(xp.argv, {'quant.diffq': 1e-4})
         launcher(xp.argv, {'quant.diffq': 3e-4})
-        if xp.cfg.model == 'hdemucs':
-            sub = launcher.bind({'dummy': 'repro2'})
-            sub(xp.argv)
-            sub(xp.argv, {'quant.diffq': 1e-4})
-            sub(xp.argv, {'quant.diffq': 3e-4})
-        else:
-            launcher(xp.argv, {'dummy': 'std'})
