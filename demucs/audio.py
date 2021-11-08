@@ -7,9 +7,11 @@ import json
 import subprocess as sp
 from pathlib import Path
 
+import lameenc
 import julius
 import numpy as np
 import torch
+import torchaudio as ta
 
 from .utils import temp_filenames
 
@@ -168,5 +170,80 @@ def convert_audio_channels(wav, channels=2):
 
 
 def convert_audio(wav, from_samplerate, to_samplerate, channels):
+    """Convert audio from a given samplerate to a target one and target number of channels."""
     wav = convert_audio_channels(wav, channels)
     return julius.resample_frac(wav, from_samplerate, to_samplerate)
+
+
+def i16_pcm(wav):
+    """Convert audio to 16 bits integer PCM format."""
+    if wav.dtype.is_floating_point:
+        return (wav.clamp_(-1, 1) * (2**15 - 1)).short()
+    else:
+        return wav
+
+
+def f32_pcm(wav):
+    """Convert audio to float 32 bits PCM format."""
+    if wav.dtype.is_floating_point:
+        return wav
+    else:
+        return wav.float() / (2**15 - 1)
+
+
+def as_dtype_pcm(wav, dtype):
+    """Convert audio to either f32 pcm or i16 pcm depending on the given dtype."""
+    if wav.dtype.is_floating_point:
+        return f32_pcm(wav)
+    else:
+        return i16_pcm(wav)
+
+
+def encode_mp3(wav, path, samplerate=44100, bitrate=320, verbose=False):
+    """Save given audio as mp3. This should work on all OSes."""
+    C, T = wav.shape
+    wav = i16_pcm(wav)
+    encoder = lameenc.Encoder()
+    encoder.set_bit_rate(bitrate)
+    encoder.set_in_sample_rate(samplerate)
+    encoder.set_channels(C)
+    encoder.set_quality(2)  # 2-highest, 7-fastest
+    if not verbose:
+        encoder.silence()
+    wav = wav.transpose(0, 1).numpy()
+    mp3_data = encoder.encode(wav.tobytes())
+    mp3_data += encoder.flush()
+    with open(path, "wb") as f:
+        f.write(mp3_data)
+
+
+def prevent_clip(wav, mode='rescale'):
+    """
+    different strategies for avoiding raw clipping.
+    """
+    assert wav.dtype.is_floating_point, "too late for clipping"
+    if mode == 'rescale':
+        wav = wav / max(1.01 * wav.abs().max(), 1)
+    elif mode == 'clamp':
+        wav = wav.clamp(-0.99, 0.99)
+    elif mode == 'tanh':
+        wav = torch.tanh(wav)
+    else:
+        raise ValueError(f"Invalid mode {mode}")
+    return wav
+
+
+def save_audio(wav, path, samplerate, bitrate=320, clip='rescale'):
+    """Save audio file, automatically preventing clipping if necessary
+    based on the given `clip` strategy. If the path ends in `.mp3`, this
+    will save as mp3 with the given `bitrate`.
+    """
+    wav = i16_pcm(prevent_clip(wav, mode=clip))
+    path = Path(path)
+    suffix = path.suffix.lower()
+    if suffix == ".mp3":
+        encode_mp3(wav, path, samplerate, bitrate)
+    elif suffix == ".wav":
+        ta.save(str(path), wav, sample_rate=samplerate)
+    else:
+        raise ValueError(f"Invalid suffix for path: {suffix}")

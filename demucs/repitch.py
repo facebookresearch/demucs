@@ -3,39 +3,30 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
+"""Utility for on the fly pitch/tempo change for data augmentation."""
 
-import io
 import random
 import subprocess as sp
 import tempfile
 
-import numpy as np
 import torch
-from scipy.io import wavfile
+import torchaudio as ta
 
-
-def i16_pcm(wav):
-    if wav.dtype == np.int16:
-        return wav
-    return (wav * 2**15).clamp_(-2**15, 2**15 - 1).short()
-
-
-def f32_pcm(wav):
-    if wav.dtype == np.float:
-        return wav
-    return wav.float() / 2**15
+from .audio import save_audio
 
 
 class RepitchedWrapper:
     """
     Wrap a dataset to apply online change of pitch / tempo.
     """
-    def __init__(self, dataset, proba=0.2, max_pitch=2, max_tempo=12, tempo_std=5, vocals=[3]):
+    def __init__(self, dataset, proba=0.2, max_pitch=2, max_tempo=12,
+                 tempo_std=5, vocals=[3], same=True):
         self.dataset = dataset
         self.proba = proba
         self.max_pitch = max_pitch
         self.max_tempo = max_tempo
         self.tempo_std = tempo_std
+        self.same = same
         self.vocals = vocals
 
     def __len__(self):
@@ -47,11 +38,12 @@ class RepitchedWrapper:
         out_length = int((1 - 0.01 * self.max_tempo) * in_length)
 
         if random.random() < self.proba:
-            delta_pitch = random.randint(-self.max_pitch, self.max_pitch)
-            delta_tempo = random.gauss(0, self.tempo_std)
-            delta_tempo = min(max(-self.max_tempo, delta_tempo), self.max_tempo)
             outs = []
             for idx, stream in enumerate(streams):
+                if idx == 0 or not self.same:
+                    delta_pitch = random.randint(-self.max_pitch, self.max_pitch)
+                    delta_tempo = random.gauss(0, self.tempo_std)
+                    delta_tempo = min(max(-self.max_tempo, delta_tempo), self.max_tempo)
                 stream = repitch(
                     stream,
                     delta_pitch,
@@ -71,12 +63,12 @@ def repitch(wav, pitch, tempo, voice=False, quick=False, samplerate=44100):
     Requires `soundstretch` to be installed, see
     https://www.surina.net/soundtouch/soundstretch.html
     """
+    infile = tempfile.NamedTemporaryFile(suffix=".wav")
     outfile = tempfile.NamedTemporaryFile(suffix=".wav")
-    in_ = io.BytesIO()
-    wavfile.write(in_, samplerate, i16_pcm(wav).t().numpy())
+    save_audio(wav, infile.name, samplerate, clip='clamp')
     command = [
         "soundstretch",
-        "stdin",
+        infile.name,
         outfile.name,
         f"-pitch={pitch}",
         f"-tempo={tempo:.6f}",
@@ -86,11 +78,9 @@ def repitch(wav, pitch, tempo, voice=False, quick=False, samplerate=44100):
     if voice:
         command += ["-speech"]
     try:
-        sp.run(command, capture_output=True, input=in_.getvalue(), check=True)
+        sp.run(command, capture_output=True, check=True)
     except sp.CalledProcessError as error:
         raise RuntimeError(f"Could not change bpm because {error.stderr.decode('utf-8')}")
-    sr, wav = wavfile.read(outfile.name)
-    wav = wav.copy()
-    wav = f32_pcm(torch.from_numpy(wav).t())
+    wav, sr = ta.load(outfile.name)
     assert sr == samplerate
     return wav

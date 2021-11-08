@@ -1,5 +1,10 @@
 # Release notes for Demucs
 
+## V3.0.0, 12th of November 2021
+
+Release of Demucs v3, featuring hybrid domain separation and much more.
+This drops support for Conv-Tasnet and training on the non HQ MusDB dataset.
+
 ## V2.0.2, 26th of May 2021
 
 - Fix in Tasnet (PR #178)

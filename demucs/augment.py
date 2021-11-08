@@ -3,6 +3,8 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
+"""Data augmentations.
+"""
 
 import random
 import torch as th
@@ -13,9 +15,10 @@ class Shift(nn.Module):
     """
     Randomly shift audio in time by up to `shift` samples.
     """
-    def __init__(self, shift=8192):
+    def __init__(self, shift=8192, same=False):
         super().__init__()
         self.shift = shift
+        self.same = same
 
     def forward(self, wav):
         batch, sources, channels, time = wav.size()
@@ -24,8 +27,9 @@ class Shift(nn.Module):
             if not self.training:
                 wav = wav[..., :length]
             else:
-                offsets = th.randint(self.shift, [batch, sources, 1, 1], device=wav.device)
-                offsets = offsets.expand(-1, -1, channels, -1)
+                srcs = 1 if self.same else sources
+                offsets = th.randint(self.shift, [batch, srcs, 1, 1], device=wav.device)
+                offsets = offsets.expand(-1, sources, channels, -1)
                 indexes = th.arange(length, device=wav.device)
                 wav = wav.gather(3, indexes + offsets)
         return wav
@@ -61,7 +65,7 @@ class Remix(nn.Module):
     """
     Shuffle sources to make new mixes.
     """
-    def __init__(self, group_size=4):
+    def __init__(self, proba=1, group_size=4):
         """
         Shuffle sources within one batch.
         Each batch is divided into groups of size `group_size` and shuffling is done within
@@ -71,13 +75,14 @@ class Remix(nn.Module):
         performance.
         """
         super().__init__()
+        self.proba = proba
         self.group_size = group_size
 
     def forward(self, wav):
         batch, streams, channels, time = wav.size()
         device = wav.device
 
-        if self.training:
+        if self.training and random.random() < self.proba:
             group_size = self.group_size or batch
             if batch % group_size != 0:
                 raise ValueError(f"Batch size {batch} must be divisible by group size {group_size}")
