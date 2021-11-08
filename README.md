@@ -132,7 +132,7 @@ I made a Colab to easily separate track with Demucs. Note that
 transfer speeds with Colab are a bit slow for large media files,
 but it will allow you to use Demucs without installing anything.
 
-[Demucs on Google Colab](https://colab.research.google.com/drive/1jCegIzLIuqqcM85uVs3WCeAJiSoYq3oh?usp=sharing)
+[Demucs on Google Colab](https://colab.research.google.com/drive/1dC9nVxk3V_VPjUADsnFu8EiT-xnU1tGH?usp=sharing)
 
 ## Separating tracks
 
@@ -192,14 +192,19 @@ In order to reproduce the results from the Track A and Track B submissions, chec
 ## How to cite
 
 ```
-COMING SOON
+@inproceedings{defossez2021hybrid,
+  title={Hybrid Spectrogram and Waveform Source Separation},
+  author={D{\'e}fossez, Alexandre},
+  booktitle={Proceedings of the ISMIR 2021 Workshop on Music Source Separation},
+  year={2021}
+}
 ```
 
 ## License
 
 Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file.
 
-
+[hybrid_paper]: https://arxiv.org/abs/2111.03600
 [waveunet]: https://github.com/f90/Wave-U-Net
 [musdb]: https://sigsep.github.io/datasets/musdb.html
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
