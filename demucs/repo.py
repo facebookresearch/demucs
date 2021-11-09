@@ -54,7 +54,7 @@ class RemoteRepo(ModelOnlyRepo):
     def __init__(self, root_url: str, remote_files: tp.List[str]):
         if not root_url.endswith('/'):
             root_url += '/'
-        self._models = {}
+        self._models: tp.Dict[str, str] = {}
         for file in remote_files:
             sig, checksum = file.split('.')[0].split('-')
             assert sig not in self._models
