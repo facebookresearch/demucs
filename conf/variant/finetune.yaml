@@ -15,3 +15,5 @@ augment:
   scale:
     proba: 0
   shift_same: true
+  remix:
+    proba: 0

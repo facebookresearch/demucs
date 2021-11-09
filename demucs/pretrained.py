@@ -30,18 +30,17 @@ def demucs_unittest():
 def add_model_flags(parser):
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument("-s", "--sig", help="Locally trained XP signature.")
-    group.add_argument("-n", "--name", default="mdx_extra",
-                       help="Pretrained model name or signature. Default is mdx_extra.")
+    group.add_argument("-n", "--name", default="mdx_extra_q",
+                       help="Pretrained model name or signature. Default is mdx_extra_q.")
     parser.add_argument("--repo", type=Path,
                         help="Folder containing all pre-trained models for use with -n.")
 
 
-def get_model(name: tp.Optional[str] = None,
+def get_model(name: str,
               repo: tp.Optional[Path] = None):
     """`name` must be a bag of models name or a pretrained signature
     from the remote AWS model repo or the specified local repo if `repo` is not None.
     """
-    assert name is not None
     if name == 'demucs_unittest':
         return demucs_unittest()
     model_repo: ModelOnlyRepo

@@ -167,9 +167,9 @@ Other pre-trained models can be selected with the `-n` flag.
 The list of pre-trained models is:
 - `mdx`: trained only on MusDB HQ, winning model on track A at the [MDX][mdx] challenge.
 - `mdx_extra`: trained with extra training data (including MusDB test set), ranked 2nd on the track B
-    of the [MDX][mdx] challenge. This is the default one.
-- `mdx_q, mdx_extra_q`: quantized version of the previous models. Smaller download and storage
-    but quality can be slightly worse.
+    of the [MDX][mdx] challenge.
+- `mdx_q`, `mdx_extra_q`: quantized version of the previous models. Smaller download and storage
+    but quality can be slightly worse. `mdx_extra_q` is the default model used.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
 
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a the *shift trick*) of the input and average them. This makes prediction `SHIFTS` times
