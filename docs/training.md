@@ -72,7 +72,7 @@ dora run -d -f 81de367c hdemucs.channels=32  # start from the config of XP 81de3
 An XP runs from a specific folder based on its signature, by default under the `outputs/` folder.
 You can safely interrupt a training and resume it, it will reuse any existing checkpoint, as it will
 reuse the same folder.
-If you made some change to the code and need to ignore a previous checkpoint you can use `dora run --clean`.
+If you made some change to the code and need to ignore a previous checkpoint you can use `dora run --clear [RUN ARGS]`.
 
 If you have a Slurm cluster, you can also use the `dora grid` command, e.g. `dora grid mdx`.
 Please refer to the [Dora documentation][dora] for more information.
