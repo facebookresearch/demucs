@@ -216,7 +216,7 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
 [demucs_v2]: https://github.com/facebookresearch/demucs/tree/v2
 [spleeter]: https://github.com/deezer/spleeter
-[soundcloud]: https://soundcloud.com/voyageri/sets/source-separation-in-the-waveform-domain
+[soundcloud]: https://soundcloud.com/voyageuri/sets/source-separation-in-the-waveform-domain
 [d3net]: https://arxiv.org/abs/2010.01733
 [mdx]: https://www.aicrowd.com/challenges/music-demixing-challenge-ismir-2021
 [kuielab]: https://github.com/kuielab/mdx-net-submission
