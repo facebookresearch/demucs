@@ -14,11 +14,19 @@ jobs:
       with:
         python-version: 3.7
 
+    - uses: actions/cache@v2
+      with:
+        path: env
+        key: env-${{ hashFiles('**/requirements.txt') }}
+
     - name: Install dependencies
       run: |
+        python3 -m venv env
+        . env/bin/activate
         python -m pip install --upgrade pip
-        pip install .
+        pip install -r requirements.txt
 
-    - name: Run tests
+    - name: Run separation test
       run: |
-        make tests
+        . env/bin/activate
+        make test_eval
