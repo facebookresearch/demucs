@@ -6,6 +6,7 @@ include demucs.png
 include outputs.tar.gz
 include test.mp3
 include requirements.txt
+include requirements_minimal.txt
 include mypy.ini
 include demucs/py.typed
 include demucs/remote/*.txt
