@@ -145,7 +145,8 @@ In order to try Demucs, you can just run from any folder (as long as you properl
 
 ```bash
 demucs PATH_TO_AUDIO_FILE_1 [PATH_TO_AUDIO_FILE_2 ...]   # for Demucs
-demucs --mp3 --mp3-bitrate BITRATE PATH_TO_AUDIO_FILE_1  # output files saved as MP3
+# If you used `pip install --user` you might need to replace demucs with python3 -m demucs
+python3 -m demucs --mp3 --mp3-bitrate BITRATE PATH_TO_AUDIO_FILE_1  # output files saved as MP3
 # If your filename contain spaces don't forget to quote it !!!
 demucs "my music/my favorite track.mp3"
 # You can select different models with `-n` mdx_q is the quantized model, smaller but maybe a bit less accurate.
