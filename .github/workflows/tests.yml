@@ -30,8 +30,3 @@ jobs:
       run: |
         . env/bin/activate
         make test_eval
-
-    - name: Run train test
-      run: |
-        . env/bin/activate
-        make test_train
