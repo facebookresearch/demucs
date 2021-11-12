@@ -145,6 +145,9 @@ python3 -m tools.test_pretrained --repo ./release_models -n my_bag
 
 ## Model Zoo
 
+  
+ **About Wiener filtering**: It came to my attention that in fact none of the model were trained with Wiener filtering. In particular, using Wiener filtering at train time was too slow, while using it only at test time led to worse performance, as this would change the output of the spectrogram prediction without giving a chance to the waveform one to adapt. I will update the paper and code documentation to make that clear.
+
 Here is a short descriptions of the models used for the MDX submission, either Track A (MusDB HQ only)
 or Track B (extra training data allowed). Training happen in two stage, with the second stage
 being the fine tunining on the automix generated dataset.
@@ -174,10 +177,11 @@ The 4 initial models (before fine tuning are):
 The hybrid models are combined with equal weights for all sources except for the bass.
 `0d19c1c6` (time domain) is used for both drums and bass. `7ecf8ec1` is used only for the bass.
 
-You can see all the hyper parameters at once with (one common line for all common hyper params, and 
+You can see all the hyper parameters at once with (one common line for all common hyper params, and then only shows
+the hyper parameters that differs), along with the DiffQ variants that are used for the `mdx_q` models:
 ```
-dora grid mdx --dry_run --init mdx
-dora grid mdx --dry_run --init mdx_refine
+dora grid mdx --dry_run --init
+dora grid mdx --dry_run --init
 ```
 
 ### Track B
@@ -195,7 +199,10 @@ Things are a bit messy for Track B, there was a lot of fine tuning
 over different datasets. I won't describe the entire genealogy of models here,
 but all the information can be accessed with the `dora info -f SIG` command.
 
-
+Similarly you can do (those will contain a few extra lines, for training without the MusDB test set as training, and extra DiffQ XPs):
+```
+dora grid mdx_extra --dry_run --init
+```
 
 
 [dora]: https://github.com/facebookresearch/dora
