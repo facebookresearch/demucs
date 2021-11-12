@@ -167,12 +167,18 @@ The 4 initial models (before fine tuning are):
 - `e312f349`: 64ch time domain only improved, with new residual branches, group norm,
   and singular value penalty, trained with a loss that focus only on drums and bass.
 - `81de367c`: 48ch hybrid model , with residual branches, group norm,
-  singular value penalty penalty and Wiener filtering.
-- `80a68df8`: same as b5559babb but using CaC instead of Wiener filtering and different
+  singular value penalty penalty and amplitude spectrogram.
+- `80a68df8`: same as b5559babb but using CaC and different
   random seed, as well different weigths per frequency bands in outermost layers.
 
 The hybrid models are combined with equal weights for all sources except for the bass.
 `0d19c1c6` (time domain) is used for both drums and bass. `7ecf8ec1` is used only for the bass.
+
+You can see all the hyper parameters at once with (one common line for all common hyper params, and 
+```
+dora grid mdx --dry_run --init mdx
+dora grid mdx --dry_run --init mdx_refine
+```
 
 ### Track B
 
@@ -182,7 +188,7 @@ The hybrid models are combined with equal weights for all sources except for the
 - `cfa93e08`
 
 All the models are 48ch hybrid demucs with different random seeds. Two of them
-are using CaC, and two of them are using Wiener filtering.
+are using CaC, and two are using amplitude spectrograms with masking.
 All the models are combined with equal weights for all sources.
 
 Things are a bit messy for Track B, there was a lot of fine tuning
