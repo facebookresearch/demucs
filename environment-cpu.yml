@@ -13,6 +13,7 @@ dependencies:
   - pip
   - pip:
     - diffq>=0.2
+    - dora-search
     - hydra-colorlog>=1.1
     - hydra-core>=1.1
     - julius>=0.2.3
