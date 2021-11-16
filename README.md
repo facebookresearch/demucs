@@ -95,7 +95,7 @@ Anaconda console.
 If you just want to use Demucs to separate tracks, you can install it with
 
 ```bash
-python3 -m pip -U install demucs
+python3 -m pip install -U demucs
 ```
 
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
