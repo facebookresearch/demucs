@@ -146,8 +146,8 @@ def apply_model(model, mix, shifts=1, split=True,
                 totals[k] += inst_weight    
             estimates += out
             
-        for k in range(estimates.shape[0]):
-            estimates[k] /= totals[k]
+        for k in range(estimates.shape[1]):
+            estimates[:, k, :, :] /= totals[k]
         return estimates
 
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
