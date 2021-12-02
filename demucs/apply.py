@@ -143,9 +143,9 @@ def apply_model(model, mix, shifts=1, split=True,
                 transition_power=transition_power, progress=progress)
             for k, inst_weight in enumerate(weight):
                 out[:, k, :, :] *= inst_weight
-                totals[k] += inst_weight    
+                totals[k] += inst_weight
             estimates += out
-            
+
         for k in range(estimates.shape[1]):
             estimates[:, k, :, :] /= totals[k]
         return estimates
