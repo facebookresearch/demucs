@@ -112,18 +112,17 @@ def main():
                 file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        wav = load_track(track, args.device, model.audio_channels, model.samplerate)
+        wav = load_track(track, "cpu", model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav[None], shifts=args.shifts, split=args.split,
+        sources = apply_model(model, wav[None], args.device, shifts=args.shifts, split=args.split,
                               overlap=args.overlap, progress=True)[0]
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
         for source, name in zip(sources, model.sources):
-            source = source.cpu()
             stem = str(track_folder / name)
             if args.mp3:
                 stem += ".mp3"
