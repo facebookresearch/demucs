@@ -134,6 +134,8 @@ def apply_model(model, mix, shifts=1, split=True,
             When `device` is different from `mix.device`, only local computations will
             be on `device`, while the entire tracks will be stored on `mix.device`.
     """
+    if device is None:
+        device = mix.device
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
@@ -144,7 +146,7 @@ def apply_model(model, mix, shifts=1, split=True,
             out = apply_model(
                 sub_model, mix, device,
                 shifts=shifts, split=split, overlap=overlap,
-                transition_power=transition_power, progress=progress)
+                transition_power=transition_power, progress=progress, device=device)
             for k, inst_weight in enumerate(weight):
                 out[:, k, :, :] *= inst_weight
                 totals[k] += inst_weight
@@ -157,8 +159,8 @@ def apply_model(model, mix, shifts=1, split=True,
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
     batch, channels, length = mix.shape
     if split:
-        out = th.zeros(batch, len(model.sources), channels, length, device="cpu")
-        sum_weight = th.zeros(length, device="cpu")
+        out = th.zeros(batch, len(model.sources), channels, length, device=mix.device)
+        sum_weight = th.zeros(length, device=mix.device)
         segment = int(model.samplerate * model.segment)
         stride = int((1 - overlap) * segment)
         offsets = range(0, length, stride)
@@ -176,10 +178,10 @@ def apply_model(model, mix, shifts=1, split=True,
         weight = (weight / weight.max())**transition_power
         for offset in offsets:
             chunk = TensorChunk(mix, offset, segment)
-            chunk_out = apply_model(model, chunk, device, shifts=shifts, split=False)
+            chunk_out = apply_model(model, chunk, shifts=shifts, split=False, device=device)
             chunk_length = chunk_out.shape[-1]
-            out[..., offset:offset + segment] += (weight[:chunk_length] * chunk_out).cpu()
-            sum_weight[offset:offset + segment] += weight[:chunk_length].cpu()
+            out[..., offset:offset + segment] += (weight[:chunk_length] * chunk_out).to(mix.device)
+            sum_weight[offset:offset + segment] += weight[:chunk_length].to(mix.device)
             offset += segment
         assert sum_weight.min() > 0
         out /= sum_weight
@@ -192,7 +194,7 @@ def apply_model(model, mix, shifts=1, split=True,
         for _ in range(shifts):
             offset = random.randint(0, max_shift)
             shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
-            shifted_out = apply_model(model, shifted, device, shifts=0, split=False)
+            shifted_out = apply_model(model, shifted, shifts=0, split=False, device=device)
             out += shifted_out[..., max_shift - offset:]
         out /= shifts
         return out
@@ -203,6 +205,9 @@ def apply_model(model, mix, shifts=1, split=True,
             valid_length = length
         mix = tensor_chunk(mix)
         padded_mix = mix.padded(valid_length).to(device)
+        original_model_device = next(iter(model.parameters())).device
+        model.to(device)
         with th.no_grad():
             out = model(padded_mix)
+        model.to(original_model_device)
         return center_trim(out, length)

@@ -98,7 +98,7 @@ def main():
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
-    model.to(args.device)
+    model.cpu()
     model.eval()
 
     out = args.out / args.name
@@ -116,8 +116,8 @@ def main():
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav[None], args.device, shifts=args.shifts, split=args.split,
-                              overlap=args.overlap, progress=True)[0]
+        sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
+                              split=args.split, overlap=args.overlap, progress=True)[0]
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.rsplit(".", 1)[0]
