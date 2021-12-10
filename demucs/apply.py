@@ -115,8 +115,8 @@ def tensor_chunk(tensor_or_chunk):
         return TensorChunk(tensor_or_chunk)
 
 
-def apply_model(model, mix, device, shifts=1, split=True,
-                overlap=0.25, transition_power=1., progress=False):
+def apply_model(model, mix, shifts=1, split=True,
+                overlap=0.25, transition_power=1., progress=False, device=None):
     """
     Apply model to a given mixture.
 
@@ -129,6 +129,10 @@ def apply_model(model, mix, device, shifts=1, split=True,
             and predictions will be performed individually on each and concatenated.
             Useful for model with large memory footprint like Tasnet.
         progress (bool): if True, show a progress bar (requires split=True)
+        device (torch.device, str, or None): if provided, device on which to
+            execute the computation, otherwise `mix.device` is assumed.
+            When `device` is different from `mix.device`, only local computations will
+            be on `device`, while the entire tracks will be stored on `mix.device`.
     """
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
