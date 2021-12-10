@@ -1,9 +1,14 @@
 # Release notes for Demucs
 
-## V3.0.0, 12th of November 2021
+## V3.0.2a, 2nd of December 2021
+
+Fix bug in weights used for different sources. Thanks @keunwoochoi for the report and fix.
+
+## V3.0.1, 12th of November 2021
 
 Release of Demucs v3, featuring hybrid domain separation and much more.
 This drops support for Conv-Tasnet and training on the non HQ MusDB dataset.
+There is no version 3.0.0 because I messed up.
 
 ## V2.0.2, 26th of May 2021
 

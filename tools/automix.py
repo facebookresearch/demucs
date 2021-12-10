@@ -30,7 +30,7 @@ from dora.utils import try_load
 from demucs.audio import save_audio
 from demucs.repitch import repitch
 from demucs.pretrained import SOURCES
-from demucs.wav import _build_metadata, Wavset, _get_musdb_valid
+from demucs.wav import build_metadata, Wavset, _get_musdb_valid
 
 
 MUSDB_PATH = '/checkpoint/defossez/datasets/musdbhq'
@@ -254,13 +254,13 @@ def build_track(ref_index, catalog):
 def get_musdb_dataset(part='train'):
     root = Path(MUSDB_PATH) / part
     ext = '.wav'
-    metadata = _build_metadata(root, SOURCES, ext=ext, normalize=False)
+    metadata = build_metadata(root, SOURCES, ext=ext, normalize=False)
     valid_tracks = _get_musdb_valid()
     metadata_train = {name: meta for name, meta in metadata.items() if name not in valid_tracks}
     train_set = Wavset(
         root, metadata_train, SOURCES, samplerate=SR, channels=CHANNELS,
         normalize=False, ext=ext)
-    sig = hashlib.sha1(root.encode()).hexdigest()[:8]
+    sig = hashlib.sha1(str(root).encode()).hexdigest()[:8]
     train_set.sig = sig
     return train_set
 
@@ -272,7 +272,7 @@ def get_wav_dataset():
     train_set = Wavset(
         root, metadata, SOURCES, samplerate=SR, channels=CHANNELS,
         normalize=False, ext=ext)
-    sig = hashlib.sha1(root.encode()).hexdigest()[:8]
+    sig = hashlib.sha1(str(root).encode()).hexdigest()[:8]
     train_set.sig = sig
     return train_set
 

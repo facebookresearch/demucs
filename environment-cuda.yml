@@ -14,7 +14,7 @@ dependencies:
   - pip
   - pip:
     - dora-search
-    - diffq<0.2.0
+    - diffq>=0.2.0
     - julius>=0.2.3
     - lameenc>=1.2
     - musdb>=0.4.0

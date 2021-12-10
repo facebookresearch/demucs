@@ -96,7 +96,7 @@ def evaluate(solver, compute_sdr=False):
     pendings = []
 
     pool = futures.ProcessPoolExecutor if args.test.workers else DummyPoolExecutor
-    with futures.ProcessPoolExecutor(args.test.workers) as pool:
+    with pool(args.test.workers) as pool:
         for index in indexes:
             track = test_set.tracks[index]
 

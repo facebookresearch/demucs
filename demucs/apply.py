@@ -145,12 +145,13 @@ def apply_model(model, mix, shifts=1, split=True,
                 sub_model, mix, device,
                 shifts=shifts, split=split, overlap=overlap,
                 transition_power=transition_power, progress=progress)
-            for k in range(out.shape[0]):
-                out[k] *= weight[k]
-                totals[k] += weight[k]
+            for k, inst_weight in enumerate(weight):
+                out[:, k, :, :] *= inst_weight
+                totals[k] += inst_weight
             estimates += out
-        for k in range(estimates.shape[0]):
-            estimates[k] /= totals[k]
+
+        for k in range(estimates.shape[1]):
+            estimates[:, k, :, :] /= totals[k]
         return estimates
 
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
