@@ -143,19 +143,25 @@ def apply_model(model, mix, shifts=1, split=True,
         estimates = 0
         totals = [0] * len(model.sources)
         for sub_model, weight in zip(model.models, model.weights):
+            original_model_device = next(iter(sub_model.parameters())).device
+            sub_model.to(device)
+
             out = apply_model(
                 sub_model, mix,
                 shifts=shifts, split=split, overlap=overlap,
                 transition_power=transition_power, progress=progress, device=device)
+            sub_model.to(original_model_device)
             for k, inst_weight in enumerate(weight):
                 out[:, k, :, :] *= inst_weight
                 totals[k] += inst_weight
             estimates += out
+            del out
 
         for k in range(estimates.shape[1]):
             estimates[:, k, :, :] /= totals[k]
         return estimates
 
+    model.to(device)
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
     batch, channels, length = mix.shape
     if split:
@@ -205,9 +211,6 @@ def apply_model(model, mix, shifts=1, split=True,
             valid_length = length
         mix = tensor_chunk(mix)
         padded_mix = mix.padded(valid_length).to(device)
-        original_model_device = next(iter(model.parameters())).device
-        model.to(device)
         with th.no_grad():
             out = model(padded_mix)
-        model.to(original_model_device)
         return center_trim(out, length)

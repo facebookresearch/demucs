@@ -112,7 +112,8 @@ def main():
                 file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        wav = load_track(track, "cpu", model.audio_channels, model.samplerate)
+        wav = load_track(track, args.device, model.audio_channels, model.samplerate)
+        wav = wav.cpu()
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
