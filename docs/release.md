@@ -4,6 +4,8 @@
 
 Fix bug in weights used for different sources. Thanks @keunwoochoi for the report and fix.
 
+Improving drastically memory usage on GPU for long files. Thanks a lot @famzah for providing this.
+
 ## V3.0.1, 12th of November 2021
 
 Release of Demucs v3, featuring hybrid domain separation and much more.
