@@ -98,7 +98,7 @@ def main():
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
-    model.to(args.device)
+    model.cpu()
     model.eval()
 
     out = args.out / args.name
@@ -113,17 +113,17 @@ def main():
             continue
         print(f"Separating track {track}")
         wav = load_track(track, args.device, model.audio_channels, model.samplerate)
+        wav = wav.cpu()
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav[None], shifts=args.shifts, split=args.split,
-                              overlap=args.overlap, progress=True)[0]
+        sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
+                              split=args.split, overlap=args.overlap, progress=True)[0]
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
         for source, name in zip(sources, model.sources):
-            source = source.cpu()
             stem = str(track_folder / name)
             if args.mp3:
                 stem += ".mp3"
