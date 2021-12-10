@@ -144,7 +144,7 @@ def apply_model(model, mix, shifts=1, split=True,
         totals = [0] * len(model.sources)
         for sub_model, weight in zip(model.models, model.weights):
             out = apply_model(
-                sub_model, mix, device,
+                sub_model, mix,
                 shifts=shifts, split=split, overlap=overlap,
                 transition_power=transition_power, progress=progress, device=device)
             for k, inst_weight in enumerate(weight):
