@@ -90,12 +90,8 @@ def main():
     parser.add_argument("-j", "--jobs",
                         default=None,
                         type=int,
-                        const=-1,
-                        nargs='?',
                         help="Number of jobs. This can increase memory usage but will "
-                             "be much faster when multiple cores are available. "
-                             "Either pass a number of parallel workers or half the nb of CPU will "
-                             "be selected (near optimal in most cases because of SSE).")
+                             "be much faster when multiple cores are available.")
 
     args = parser.parse_args()
 
@@ -127,7 +123,8 @@ def main():
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
-                              split=args.split, overlap=args.overlap, progress=True, num_workers=2)[0]
+                              split=args.split, overlap=args.overlap, progress=True,
+                              num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.rsplit(".", 1)[0]

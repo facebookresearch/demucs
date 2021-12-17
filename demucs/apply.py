@@ -116,7 +116,6 @@ def tensor_chunk(tensor_or_chunk):
         return TensorChunk(tensor_or_chunk)
 
 
-
 def apply_model(model, mix, shifts=1, split=True,
                 overlap=0.25, transition_power=1., progress=False, device=None,
                 num_workers=0, pool=None):
@@ -139,10 +138,11 @@ def apply_model(model, mix, shifts=1, split=True,
     """
     if device is None:
         device = mix.device
-    if pool is None and num_workers > 0:
-        pool = ThreadPoolExecutor(num_workers)
-    elif pool is None:
-        pool = DummyPoolExecutor()
+    if pool is None:
+        if num_workers > 0:
+            pool = ThreadPoolExecutor(num_workers)
+        else:
+            pool = DummyPoolExecutor()
     kwargs = {
         'shifts': shifts,
         'split': split,

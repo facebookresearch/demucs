@@ -118,7 +118,7 @@ class DummyPoolExecutor:
         def result(self):
             return self.func(*self.args, **self.kwargs)
 
-    def __init__(self, workers):
+    def __init__(self, workers=0):
         pass
 
     def submit(self, func, *args, **kwargs):
