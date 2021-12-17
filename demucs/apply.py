@@ -140,8 +140,8 @@ def apply_model(model, mix, shifts=1, split=True,
         device = mix.device
     else:
         device = th.device(device)
-    if pool is None and device.type == 'cpu':
-        if num_workers > 0:
+    if pool is None:
+        if num_workers > 0 and device.type == 'cpu':
             pool = ThreadPoolExecutor(num_workers)
         else:
             pool = DummyPoolExecutor()

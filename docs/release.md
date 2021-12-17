@@ -1,12 +1,14 @@
 # Release notes for Demucs
 
-## V3.0.2a, 2nd of December 2021
+## V3.0.3, 2nd of December 2021
 
 Fix bug in weights used for different sources. Thanks @keunwoochoi for the report and fix.
 
 Improving drastically memory usage on GPU for long files. Thanks a lot @famzah for providing this.
 
 Adding multithread evaluation on CPU (`-j` option).
+
+(v3.0.2 had a bug with the CPU pool and is skipped.)
 
 ## V3.0.1, 12th of November 2021
 
