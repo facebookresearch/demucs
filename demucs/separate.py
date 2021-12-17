@@ -18,7 +18,7 @@ from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
 
 
-def load_track(track, device, audio_channels, samplerate):
+def load_track(track, audio_channels, samplerate):
     errors = {}
     wav = None
 
@@ -26,7 +26,7 @@ def load_track(track, device, audio_channels, samplerate):
         wav = AudioFile(track).read(
             streams=0,
             samplerate=samplerate,
-            channels=audio_channels).to(device)
+            channels=audio_channels)
     except FileNotFoundError:
         errors['ffmpeg'] = 'Ffmpeg is not installed.'
     except subprocess.CalledProcessError:
@@ -38,7 +38,6 @@ def load_track(track, device, audio_channels, samplerate):
         except RuntimeError as err:
             errors['torchaudio'] = err.args[0]
         else:
-            wav = wav.to(device)
             wav = convert_audio(wav, sr, samplerate, audio_channels)
 
     if wav is None:
@@ -117,8 +116,7 @@ def main():
                 file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        wav = load_track(track, args.device, model.audio_channels, model.samplerate)
-        wav = wav.cpu()
+        wav = load_track(track, model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
