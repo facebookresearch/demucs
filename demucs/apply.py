@@ -138,7 +138,9 @@ def apply_model(model, mix, shifts=1, split=True,
     """
     if device is None:
         device = mix.device
-    if pool is None:
+    else:
+        device = th.device(device)
+    if pool is None and device.type == 'cpu':
         if num_workers > 0:
             pool = ThreadPoolExecutor(num_workers)
         else:

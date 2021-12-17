@@ -88,7 +88,7 @@ def main():
                         type=int,
                         help="Bitrate of converted mp3.")
     parser.add_argument("-j", "--jobs",
-                        default=None,
+                        default=0,
                         type=int,
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
