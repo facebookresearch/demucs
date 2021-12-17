@@ -87,6 +87,11 @@ def main():
                         default=320,
                         type=int,
                         help="Bitrate of converted mp3.")
+    parser.add_argument("-j", "--jobs",
+                        default=0,
+                        type=int,
+                        help="Number of jobs. This can increase memory usage but will "
+                             "be much faster when multiple cores are available.")
 
     args = parser.parse_args()
 
@@ -118,7 +123,8 @@ def main():
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
-                              split=args.split, overlap=args.overlap, progress=True)[0]
+                              split=args.split, overlap=args.overlap, progress=True,
+                              num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
         track_folder = out / track.name.rsplit(".", 1)[0]

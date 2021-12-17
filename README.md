@@ -39,6 +39,8 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
+- 17/12/2021: Releasing v3.0.3: bug fixes  (thanks @keunwoochoi), memory drastically
+    reduced on GPU (thanks @famzah) and new multi-core evaluation on CPU (`-j` flag).
 - 12/11/2021: Releasing **Demucs v3** with hybrid domain separation. Strong improvements
 	on all sources. This is the model that won Sony MDX challenge.
 - 11/05/2021: Adding support for MusDB-HQ and arbitrary wav set, for the MDX challenge. For more information
@@ -179,6 +181,8 @@ slower. Don't use it unless you have a GPU.
 The `--overlap` option controls the amount of overlap between prediction windows (for Demucs one window is 10 seconds).
 Default is 0.25 (i.e. 25%) which is probably fine.
 
+The `-j` flag allow to specify a number of parallel jobs (e.g. `demucs -j 2 myfile.mp3`).
+This will multiply by the same amount the RAM used so be careful!
 
 ### Memory requirements for GPU acceleration
 
