@@ -7,6 +7,7 @@
 Code to apply a model to a mix. It will handle chunking with overlaps and
 inteprolation between chunks, as well as the "shift trick".
 """
+from concurrent.futures import ThreadPoolExecutor
 import random
 import typing as tp
 
@@ -17,7 +18,7 @@ import tqdm
 
 from .demucs import Demucs
 from .hdemucs import HDemucs
-from .utils import center_trim
+from .utils import center_trim, DummyPoolExecutor
 
 Model = tp.Union[Demucs, HDemucs]
 
@@ -115,8 +116,10 @@ def tensor_chunk(tensor_or_chunk):
         return TensorChunk(tensor_or_chunk)
 
 
+
 def apply_model(model, mix, shifts=1, split=True,
-                overlap=0.25, transition_power=1., progress=False, device=None):
+                overlap=0.25, transition_power=1., progress=False, device=None,
+                num_workers=0, pool=None):
     """
     Apply model to a given mixture.
 
@@ -136,6 +139,19 @@ def apply_model(model, mix, shifts=1, split=True,
     """
     if device is None:
         device = mix.device
+    if pool is None and num_workers > 0:
+        pool = ThreadPoolExecutor(num_workers)
+    elif pool is None:
+        pool = DummyPoolExecutor()
+    kwargs = {
+        'shifts': shifts,
+        'split': split,
+        'overlap': overlap,
+        'transition_power': transition_power,
+        'progress': progress,
+        'device': device,
+        'pool': pool,
+    }
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
@@ -146,10 +162,7 @@ def apply_model(model, mix, shifts=1, split=True,
             original_model_device = next(iter(sub_model.parameters())).device
             sub_model.to(device)
 
-            out = apply_model(
-                sub_model, mix,
-                shifts=shifts, split=split, overlap=overlap,
-                transition_power=transition_power, progress=progress, device=device)
+            out = apply_model(sub_model, mix, **kwargs)
             sub_model.to(original_model_device)
             for k, inst_weight in enumerate(weight):
                 out[:, k, :, :] *= inst_weight
@@ -165,14 +178,13 @@ def apply_model(model, mix, shifts=1, split=True,
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
     batch, channels, length = mix.shape
     if split:
+        kwargs['split'] = False
         out = th.zeros(batch, len(model.sources), channels, length, device=mix.device)
         sum_weight = th.zeros(length, device=mix.device)
         segment = int(model.samplerate * model.segment)
         stride = int((1 - overlap) * segment)
         offsets = range(0, length, stride)
         scale = stride / model.samplerate
-        if progress:
-            offsets = tqdm.tqdm(offsets, unit_scale=scale, ncols=120, unit='seconds')
         # We start from a triangle shaped weight, with maximal weight in the middle
         # of the segment. Then we normalize and take to the power `transition_power`.
         # Large values of transition power will lead to sharper transitions.
@@ -182,17 +194,24 @@ def apply_model(model, mix, shifts=1, split=True,
         # If the overlap < 50%, this will translate to linear transition when
         # transition_power is 1.
         weight = (weight / weight.max())**transition_power
+        futures = []
         for offset in offsets:
             chunk = TensorChunk(mix, offset, segment)
-            chunk_out = apply_model(model, chunk, shifts=shifts, split=False, device=device)
+            future = pool.submit(apply_model, model, chunk, **kwargs)
+            futures.append((future, offset))
+            offset += segment
+        if progress:
+            futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
+        for future, offset in futures:
+            chunk_out = future.result()
             chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment] += (weight[:chunk_length] * chunk_out).to(mix.device)
             sum_weight[offset:offset + segment] += weight[:chunk_length].to(mix.device)
-            offset += segment
         assert sum_weight.min() > 0
         out /= sum_weight
         return out
     elif shifts:
+        kwargs['shifts'] = 0
         max_shift = int(0.5 * model.samplerate)
         mix = tensor_chunk(mix)
         padded_mix = mix.padded(length + 2 * max_shift)
@@ -200,7 +219,7 @@ def apply_model(model, mix, shifts=1, split=True,
         for _ in range(shifts):
             offset = random.randint(0, max_shift)
             shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
-            shifted_out = apply_model(model, shifted, shifts=0, split=False, device=device)
+            shifted_out = apply_model(model, shifted, **kwargs)
             out += shifted_out[..., max_shift - offset:]
         out /= shifts
         return out
