@@ -80,6 +80,9 @@ def main():
                         dest="split",
                         default=True,
                         help="Doesn't split audio in chunks. This can use large amounts of memory.")
+    parser.add_argument("--only-two-stems", 
+                        dest="stem", metavar="STEM", 
+                        help="Only separate audio into {STEM} and no_{STEM}. ")
     parser.add_argument("--mp3", action="store_true",
                         help="Convert the output wavs to mp3.")
     parser.add_argument("--mp3-bitrate",
@@ -105,6 +108,9 @@ def main():
     model.cpu()
     model.eval()
 
+    if args.stem != None and args.stem not in model.sources:
+        print("error: stem \"{}\" is not in selected model".format(args.stem))
+        raise SystemExit
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     print(f"Separated tracks will be stored in {out.resolve()}")
@@ -127,13 +133,29 @@ def main():
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
-        for source, name in zip(sources, model.sources):
-            stem = str(track_folder / name)
+        if args.stem == None:
+            for source, name in zip(sources, model.sources):
+                stem = str(track_folder / name)
+                if args.mp3:
+                    stem += ".mp3"
+                else:
+                    stem += ".wav"
+                save_audio(source, stem, model.samplerate)
+        else:
+            stem = str(track_folder / args.stem)
             if args.mp3:
                 stem += ".mp3"
             else:
                 stem += ".wav"
-            save_audio(source, stem, model.samplerate)
+            save_audio(sources.pop(model.souces.index(args.stem)), stem, model.samplerate)
+            # Warning : after poping the stem, selected stem is no longer in the list 'sources'
+            other_stem = sum(i.numpy() for i in sources)
+            stem = str(track_folder / ("no_" + args.stem))
+            if args.mp3:
+                stem += ".mp3"
+            else:
+                stem += ".wav"
+            save_audio(th.from_numpy(other_stem), stem, model.samplerate)
 
 
 if __name__ == "__main__":
