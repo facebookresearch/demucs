@@ -133,7 +133,7 @@ def main():
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
-        if args.stem == None:
+        if args.stem is None:
             for source, name in zip(sources, model.sources):
                 stem = str(track_folder / name)
                 if args.mp3:
