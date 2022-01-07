@@ -109,7 +109,9 @@ def main():
     model.eval()
 
     if args.stem != None and args.stem not in model.sources:
-        print("error: stem \"{}\" is not in selected model".format(args.stem))
+        print("error: stem \"{}\" is not in selected model. STEM must be one of \"{}\". "
+              "".format(args.stem, str(model.sources)), 
+              file=sys.stderr)
         raise SystemExit
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
@@ -133,29 +135,23 @@ def main():
 
         track_folder = out / track.name.rsplit(".", 1)[0]
         track_folder.mkdir(exist_ok=True)
+        if args.mp3:
+            ext = ".mp3"
+        else:
+            ext = ".wav"
         if args.stem is None:
             for source, name in zip(sources, model.sources):
-                stem = str(track_folder / name)
-                if args.mp3:
-                    stem += ".mp3"
-                else:
-                    stem += ".wav"
+                stem = str(track_folder / (name + ext))
                 save_audio(source, stem, model.samplerate)
         else:
-            stem = str(track_folder / args.stem)
-            if args.mp3:
-                stem += ".mp3"
-            else:
-                stem += ".wav"
+            stem = str(track_folder / (args.stem + ext)
             save_audio(sources.pop(model.souces.index(args.stem)), stem, model.samplerate)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
-            other_stem = sum(i.numpy() for i in sources)
-            stem = str(track_folder / ("no_" + args.stem))
-            if args.mp3:
-                stem += ".mp3"
-            else:
-                stem += ".wav"
-            save_audio(th.from_numpy(other_stem), stem, model.samplerate)
+            other_stem = th.zeros_like(sources[0])
+            for i in sources:
+                other_stem += i
+            stem = str(track_folder / ("no_" + args.stem + ext))
+            save_audio(other_stem, stem, model.samplerate)
 
 
 if __name__ == "__main__":
