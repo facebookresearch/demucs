@@ -144,7 +144,7 @@ def main():
                 stem = str(track_folder / (name + ext))
                 save_audio(source, stem, model.samplerate)
         else:
-            stem = str(track_folder / (args.stem + ext)
+            stem = str(track_folder / (args.stem + ext))
             save_audio(sources.pop(model.souces.index(args.stem)), stem, model.samplerate)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
