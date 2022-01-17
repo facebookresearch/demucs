@@ -14,6 +14,7 @@ test_train: tests/musdb
 
 test_eval:
 	python3 -m demucs -n demucs_unittest test.mp3
+	python3 -m demucs -n demucs_unittest --two-stems=vocals test.mp3
 	python3 -m demucs -n demucs_unittest --mp3 test.mp3
 
 tests/musdb:

@@ -80,8 +80,8 @@ def main():
                         dest="split",
                         default=True,
                         help="Doesn't split audio in chunks. This can use large amounts of memory.")
-    parser.add_argument("--only-two-stems", 
-                        dest="stem", metavar="STEM", 
+    parser.add_argument("--two-stems",
+                        dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
     parser.add_argument("--mp3", action="store_true",
                         help="Convert the output wavs to mp3.")
@@ -108,11 +108,10 @@ def main():
     model.cpu()
     model.eval()
 
-    if args.stem != None and args.stem not in model.sources:
-        print("error: stem \"{}\" is not in selected model. STEM must be one of \"{}\". "
-              "".format(args.stem, str(model.sources)), 
-              file=sys.stderr)
-        raise SystemExit
+    if args.stem is not None and args.stem not in model.sources:
+        fatal(
+            'error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
+                stem=args.stem, sources=', '.join(model.sources)))
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     print(f"Separated tracks will be stored in {out.resolve()}")
@@ -144,8 +143,9 @@ def main():
                 stem = str(track_folder / (name + ext))
                 save_audio(source, stem, model.samplerate)
         else:
+            sources = list(sources)
             stem = str(track_folder / (args.stem + ext))
-            save_audio(sources.pop(model.souces.index(args.stem)), stem, model.samplerate)
+            save_audio(sources.pop(model.sources.index(args.stem)), stem, model.samplerate)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:

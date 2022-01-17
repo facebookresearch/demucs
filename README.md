@@ -177,14 +177,16 @@ The list of pre-trained models is:
     but quality can be slightly worse. `mdx_extra_q` is the default model used.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
 
+The `--two-stems=vocals` option allows to separate vocals from the rest (e.g. karaoke mode).
+`vocals` can be changed into any source in the selected model.
+This will mix the files after separating the mix fully, so this won't be faster or use less memory.
+
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a the *shift trick*) of the input and average them. This makes prediction `SHIFTS` times
 slower. Don't use it unless you have a GPU.
 
 The `--overlap` option controls the amount of overlap between prediction windows (for Demucs one window is 10 seconds).
 Default is 0.25 (i.e. 25%) which is probably fine.
 
-The `--only-two-stems=vocal` option allows separate vocals only. `vocal` can be changed into any source in the selected model. 
-This will mix the files after separating it fully, so it woldn't be faster or more memory-efficient. 
 
 The `-j` flag allow to specify a number of parallel jobs (e.g. `demucs -j 2 myfile.mp3`).
 This will multiply by the same amount the RAM used so be careful!
