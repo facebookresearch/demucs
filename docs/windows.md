@@ -25,6 +25,14 @@ conda activate demucs
 demucs -d cpu "PATH_TO_AUDIO_FILE_1" ...
 ```
 
+### Separating an entire folder
+
+You can use the following command to separate an entire folder of mp3s for instance (replace the extension `.mp3` if needs be for other file types)
+```
+cd FOLDER
+for %i in (*.mp3) do (demucs -d cpu "%i")
+```
+
 ## Updating Demucs
 
 In order to update Demucs, simply run the following from the Anaconda Prompt:
