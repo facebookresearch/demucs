@@ -4,6 +4,20 @@ If you are using Windows, replace `python3` by `python.exe` in all the commands 
 
 Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions. Note that **Demucs is not supported on 32bits systems** (as Pytorch is not available there).
 
+## Installation and Usage
+
+- First install Anaconda with **Python 3.7** or more recent, which you can find [here][install].
+- Start the [Anaconda prompt][prompt].
+- Since demucs has been updated into PyPi, now users can simply run `python.exe -m pip install demucs PySoundFile` to install demucs and 
+- If you have graphic cards produced by nVidia with more than 6GiB of memory, you can separate tracks with GPU acceleration. To achieve this, you must reinstall Pytorch with CUDA. Run `python.exe -m pip uninstall torch torchaudio`, visit [Pytorch Home Page](https://pytorch.org/get-started/locally/) and follow the guide on it. 
+- Run `demucs -d cpu "PATH_TO_AUDIO_FILE_1" ["PATH_TO_AUDIO_FILE_2" ...]`
+
+---
+
+Contents below are out of date. 
+
+---
+
 - First install Anaconda with **Python 3.7** or more recent, which you can find [here][install].
 - Start the [Anaconda prompt][prompt].
 - Type in the following commands:
@@ -49,7 +63,6 @@ python.exe -m pip install -e .
 If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run
 `conda install -c defaults intel-openmp -f`. Then try again to run the `demucs.separate` command. If it still doesn't work, you can try to run first `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1`, then again the `demucs.separate` command and hopefully it will work 🙏.
 If you get a permission error, please try starting the Anaconda Prompt as administrator.
-
 
 [install]: https://www.anaconda.com/distribution/#windows
 [prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-prompt-win
