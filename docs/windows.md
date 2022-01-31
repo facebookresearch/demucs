@@ -1,29 +1,41 @@
 # Windows support for Demucs
 
-If you are using Windows, replace `python3` by `python.exe` in all the commands provided hereafter :)
+## Installation and usage
 
 Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions. Note that **Demucs is not supported on 32bits systems** (as Pytorch is not available there).
 
 - First install Anaconda with **Python 3.7** or more recent, which you can find [here][install].
 - Start the [Anaconda prompt][prompt].
-- Type in the following commands:
 
-```bash
-cd %HOMEPATH%
-git clone -b main --single-branch https://github.com/facebookresearch/demucs ./demucs
-cd ./demucs
-conda env update -f environment-cpu.yml
-conda activate demucs
-python.exe -m pip install -e .
+Then, all commands that follow must be run from this prompt.
+
+### If you want to use your GPU
+
+If you have graphic cards produced by nVidia with more than 6GiB of memory, you can separate tracks with GPU acceleration. To achieve this, you must install Pytorch with CUDA. If Pytorch was already installed (you already installed Demucs for instance), first run  `python.exe -m pip uninstall torch torchaudio`.
+Then visit [Pytorch Home Page](https://pytorch.org/get-started/locally/) and follow the guide on it to install with CUDA support. 
+
+### Installation
+
+Start the Anaconda prompt, and run the following
+bash
+```
+conda install -c conda-forge ffmpeg
+python.exe -m pip install -U demucs PySoundFile
+```
+
+### Upgrade
+
+To upgrade Demucs, simply run `python.exe -m pip install -U demucs`, from the Anaconda prompt.
+
+### Usage
+
+Then to use Demucs, just start the **Anaconda prompt** and run:
+```
 demucs -d cpu "PATH_TO_AUDIO_FILE_1" ["PATH_TO_AUDIO_FILE_2" ...]
 ```
-
 The `"` around the filename are required if the path contains spaces.
-The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demucs\`. The next time you want to use Demucs, start again the [Anaconda prompt][prompt] and simply run
-```bash
-conda activate demucs
-demucs -d cpu "PATH_TO_AUDIO_FILE_1" ...
-```
+The separated files will be under `C:\Users\YOUR_USERNAME\demucs\separated\demucs\`.
+
 
 ### Separating an entire folder
 
@@ -33,16 +45,6 @@ cd FOLDER
 for %i in (*.mp3) do (demucs -d cpu "%i")
 ```
 
-## Updating Demucs
-
-In order to update Demucs, simply run the following from the Anaconda Prompt:
-```bash
-cd %HOMEPATH%
-cd demucs
-git pull
-conda env update -f environment-cpu.yml
-python.exe -m pip install -e .
-```
 
 ## Potential errors
 
