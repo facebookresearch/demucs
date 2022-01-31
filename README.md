@@ -100,6 +100,11 @@ If you just want to use Demucs to separate tracks, you can install it with
 python3 -m pip install -U demucs
 ```
 
+For bleeding edge versions, you can install directly from this repo using
+```bash
+python3 -m pip install -U git+https://github.com/facebookresearch/demucs#egg=demucs
+```
+
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
 - **If you are using Windows:** [Windows support](docs/windows.md).
 - **If you are using MAC OS X:** [Mac OS X support](docs/mac.md).
@@ -136,9 +141,13 @@ but it will allow you to use Demucs without installing anything.
 
 [Demucs on Google Colab](https://colab.research.google.com/drive/1dC9nVxk3V_VPjUADsnFu8EiT-xnU1tGH?usp=sharing)
 
-## Web Demo
+### Web Demo
 
 (Possibly broken with the update, need to investigate) Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/demucs)
+
+### Other providers
+
+@thenormal is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
 
 
 ## Separating tracks
