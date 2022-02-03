@@ -147,7 +147,7 @@ but it will allow you to use Demucs without installing anything.
 
 ### Other providers
 
-@thenormal is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
+Audiostrip is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
 
 
 ## Separating tracks
