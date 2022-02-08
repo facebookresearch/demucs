@@ -173,7 +173,7 @@ Separated tracks are stored in the `separated/MODEL_NAME/TRACK_NAME` folder. The
 
 All audio formats supported by `torchaudio` can be processed (i.e. wav, mp3, flac, ogg/vorbis on Linux/Mac OS X etc.). On Windows, `torchaudio` has limited support, so we rely on `ffmpeg`, which should support pretty much anything.
 Audio is resampled on the fly if necessary.
-The output will be a wave file, either in int16 format or float32 (if `--float32` is passed).
+The output will be a wave file encoded as int16.
 You can pass `--mp3` to save as mp3 instead, and set the bitrate with `--mp3-bitrate` (default is 320kbps).
 
 
