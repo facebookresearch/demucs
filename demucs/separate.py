@@ -83,6 +83,11 @@ def main():
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
+    parser.add_argument("--float32", action="store_true",
+                        help="Save wav output as float32 (2x bigger).")
+    parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp"],
+                        help="Strategy for avoiding clipping: rescaling entire signal "
+                             "if necessary  (rescale) or hard clipping (clamp).")
     parser.add_argument("--mp3", action="store_true",
                         help="Convert the output wavs to mp3.")
     parser.add_argument("--mp3-bitrate",
@@ -138,6 +143,12 @@ def main():
             ext = ".mp3"
         else:
             ext = ".wav"
+        kwargs = {
+            'samplerate': model.samplerate,
+            'bitrate': args.mp3_bitrate,
+            'clip': args.clip_mode,
+            'as_float': args.float32,
+        }
         if args.stem is None:
             for source, name in zip(sources, model.sources):
                 stem = str(track_folder / (name + ext))
@@ -145,13 +156,13 @@ def main():
         else:
             sources = list(sources)
             stem = str(track_folder / (args.stem + ext))
-            save_audio(sources.pop(model.sources.index(args.stem)), stem, model.samplerate)
+            save_audio(sources.pop(model.sources.index(args.stem)), stem, **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:
                 other_stem += i
             stem = str(track_folder / ("no_" + args.stem + ext))
-            save_audio(other_stem, stem, model.samplerate)
+            save_audio(other_stem, stem, **kwargs)
 
 
 if __name__ == "__main__":
