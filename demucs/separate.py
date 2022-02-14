@@ -83,8 +83,11 @@ def main():
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
-    parser.add_argument("--float32", action="store_true",
-                        help="Save wav output as float32 (2x bigger).")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--int24", action="store_true",
+                       help="Save wav output as 24 bits wav.")
+    group.add_argument("--float32", action="store_true",
+                       help="Save wav output as float32 (2x bigger).")
     parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp"],
                         help="Strategy for avoiding clipping: rescaling entire signal "
                              "if necessary  (rescale) or hard clipping (clamp).")
@@ -148,11 +151,12 @@ def main():
             'bitrate': args.mp3_bitrate,
             'clip': args.clip_mode,
             'as_float': args.float32,
+            'bits_per_sample': 24 if args.int24 else 16,
         }
         if args.stem is None:
             for source, name in zip(sources, model.sources):
                 stem = str(track_folder / (name + ext))
-                save_audio(source, stem, model.samplerate)
+                save_audio(source, stem, **kwargs)
         else:
             sources = list(sources)
             stem = str(track_folder / (args.stem + ext))

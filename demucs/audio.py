@@ -233,7 +233,8 @@ def prevent_clip(wav, mode='rescale'):
     return wav
 
 
-def save_audio(wav, path, samplerate, bitrate=320, clip='rescale', as_float=False):
+def save_audio(wav, path, samplerate, bitrate=320, clip='rescale',
+               bits_per_sample=16, as_float=False):
     """Save audio file, automatically preventing clipping if necessary
     based on the given `clip` strategy. If the path ends in `.mp3`, this
     will save as mp3 with the given `bitrate`.
@@ -244,8 +245,12 @@ def save_audio(wav, path, samplerate, bitrate=320, clip='rescale', as_float=Fals
     if suffix == ".mp3":
         encode_mp3(wav, path, samplerate, bitrate)
     elif suffix == ".wav":
-        if not as_float:
-            wav = i16_pcm(wav)
-        ta.save(str(path), wav, sample_rate=samplerate)
+        if as_float:
+            bits_per_sample = 32
+            encoding = 'PCM_F'
+        else:
+            encoding = 'PCM_S'
+        ta.save(str(path), wav, sample_rate=samplerate,
+                encoding=encoding, bits_per_sample=bits_per_sample)
     else:
         raise ValueError(f"Invalid suffix for path: {suffix}")

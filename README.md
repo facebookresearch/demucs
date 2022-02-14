@@ -174,7 +174,13 @@ Separated tracks are stored in the `separated/MODEL_NAME/TRACK_NAME` folder. The
 All audio formats supported by `torchaudio` can be processed (i.e. wav, mp3, flac, ogg/vorbis on Linux/Mac OS X etc.). On Windows, `torchaudio` has limited support, so we rely on `ffmpeg`, which should support pretty much anything.
 Audio is resampled on the fly if necessary.
 The output will be a wave file encoded as int16.
+You can save as float32 wav files with `--float32`, or 24 bits integer wav with `--int24`.
 You can pass `--mp3` to save as mp3 instead, and set the bitrate with `--mp3-bitrate` (default is 320kbps).
+
+It can happen that the output would need clipping, in particular due to some separation artifacts.
+Demucs will automatically rescale each output stem so as to avoid clipping. This can however break
+the relative volume between stems. If instead you prefer hard clipping, pass `--clip-mode clamp`.
+You can also try to reduce the volume of the input mixture before feeding it to Demucs.
 
 
 Other pre-trained models can be selected with the `-n` flag.

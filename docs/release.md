@@ -4,6 +4,8 @@
 
 Added option to split into two stems (i.e. vocals, vs. non vocals), thanks to @CarlGao4.
 
+Added `--float32`, `--int24` and `--clip-mode` options to customize how output stems are saved.
+
 ## V3.0.3, 2nd of December 2021
 
 Fix bug in weights used for different sources. Thanks @keunwoochoi for the report and fix.
