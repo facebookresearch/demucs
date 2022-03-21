@@ -377,7 +377,7 @@ It was originally released under the MIT License updated to support multiple aud
 [tasnet]: https://github.com/kaituoxu/Conv-TasNet
 [audio]: https://ai.honu.io/papers/demucs/index.html
 [spleeter]: https://github.com/deezer/spleeter
-[soundcloud]: https://soundcloud.com/voyageri/sets/source-separation-in-the-waveform-domain
+[soundcloud]: https://soundcloud.com/honualx/sets/source-separation-in-the-waveform-domain
 [original_demucs]: https://github.com/facebookresearch/demucs/tree/dcee007a350467abc3295dfe267034460f9ffa4e
 [diffq]: https://github.com/facebookresearch/diffq
 [d3net]: https://arxiv.org/abs/2010.01733
