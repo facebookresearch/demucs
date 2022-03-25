@@ -169,7 +169,7 @@ demucs -n mdx_q myfile.mp3
 demucs --two-stems=vocals myfile.mp3
 ```
 
-If you have a GPU, but you run out of memory, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
+If you have a GPU, but you run out of memory, please use `--segment SEGMENT` to reduce length of each split. `SEGMENT` should be changed to a integer. Personally recommend not less than 10 (the bigger the number is, the more memory is required, but quality may increase). If this still cannot help, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
 
 Separated tracks are stored in the `separated/MODEL_NAME/TRACK_NAME` folder. There you will find four stereo wav files sampled at 44.1 kHz: `drums.wav`, `bass.wav`,
 `other.wav`, `vocals.wav` (or `.mp3` if you used the `--mp3` option).
@@ -211,7 +211,9 @@ This will multiply by the same amount the RAM used so be careful!
 
 ### Memory requirements for GPU acceleration
 
-If you want to use GPU acceleration, you will need at least 8GB of RAM on your GPU for `demucs`. Sorry, the code for demucs is not super optimized for memory! If you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to 1.5 times the duration of the track.
+If you want to use GPU acceleration, you will need at least 3GB of RAM on your GPU for `demucs`. However, about 7GB of RAM will be required if you use the default arguments. Add `--segment SEGMENT` to change size of each split. If you only have 3GB memory, set SEGMENT to 8 (though quality may be worse if this argument is too small). 
+
+If you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to 1.5 times the duration of the track.
 
 
 ## Training Demucs
