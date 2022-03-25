@@ -80,6 +80,8 @@ def main():
                         dest="split",
                         default=True,
                         help="Doesn't split audio in chunks. This can use large amounts of memory.")
+    parser.add_argument("--segment", type=int, 
+                        help="Set split size of each chunk. ")
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
@@ -113,6 +115,13 @@ def main():
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
+        if args.segment is not None:
+            for sub in model.models:
+                sub.segment = args.segment
+    else:
+        if args.segment is not None:
+            sub.segment = args.segment
+
     model.cpu()
     model.eval()
 
