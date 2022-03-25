@@ -75,12 +75,13 @@ def main():
                         default=0.25,
                         type=float,
                         help="Overlap between the splits.")
-    parser.add_argument("--no-split",
+    split_group = parser.add_mutually_exclusive_group()
+    split_group.add_argument("--no-split",
                         action="store_false",
                         dest="split",
                         default=True,
                         help="Doesn't split audio in chunks. This can use large amounts of memory.")
-    parser.add_argument("--segment", type=int, 
+    split_group.add_argument("--segment", type=int, 
                         help="Set split size of each chunk. ")
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
