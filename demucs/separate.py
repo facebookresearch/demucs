@@ -80,8 +80,9 @@ def main():
                              action="store_false",
                              dest="split",
                              default=True,
-                             help="Doesn't split audio in chunks. This can use large amounts of memory.")
-    split_group.add_argument("--segment", type=int, 
+                             help="Doesn't split audio in chunks. "
+                             "This can use large amounts of memory.")
+    split_group.add_argument("--segment", type=int,
                              help="Set split size of each chunk. ")
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
