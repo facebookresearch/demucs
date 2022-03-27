@@ -83,7 +83,8 @@ def main():
                              help="Doesn't split audio in chunks. "
                              "This can use large amounts of memory.")
     split_group.add_argument("--segment", type=int,
-                             help="Set split size of each chunk. ")
+                             help="Set split size of each chunk. "
+                             "This can help save memory of graphic card. ")
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
@@ -113,6 +114,9 @@ def main():
         model = get_model_from_args(args)
     except ModelLoadingError as error:
         fatal(error.args[0])
+
+    if args.segment is not None and args.segment < 8:
+        fatal('Segment must greater than 8. ')
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
