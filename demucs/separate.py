@@ -75,11 +75,16 @@ def main():
                         default=0.25,
                         type=float,
                         help="Overlap between the splits.")
-    parser.add_argument("--no-split",
-                        action="store_false",
-                        dest="split",
-                        default=True,
-                        help="Doesn't split audio in chunks. This can use large amounts of memory.")
+    split_group = parser.add_mutually_exclusive_group()
+    split_group.add_argument("--no-split",
+                             action="store_false",
+                             dest="split",
+                             default=True,
+                             help="Doesn't split audio in chunks. "
+                             "This can use large amounts of memory.")
+    split_group.add_argument("--segment", type=int,
+                             help="Set split size of each chunk. "
+                             "This can help save memory of graphic card. ")
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
@@ -110,9 +115,19 @@ def main():
     except ModelLoadingError as error:
         fatal(error.args[0])
 
+    if args.segment is not None and args.segment < 8:
+        fatal('Segment must greater than 8. ')
+
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
+        if args.segment is not None:
+            for sub in model.models:
+                sub.segment = args.segment
+    else:
+        if args.segment is not None:
+            sub.segment = args.segment
+
     model.cpu()
     model.eval()
 
