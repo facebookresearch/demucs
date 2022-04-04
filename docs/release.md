@@ -1,5 +1,9 @@
 # Release notes for Demucs
 
+## V3.0.5a, TBC
+
+Added `--segment` flag to customize the segment length and use less memory (thanks @CarlGao4).
+
 ## V3.0.4, 24th of February 2022
 
 Added option to split into two stems (i.e. vocals, vs. non vocals), thanks to @CarlGao4.
