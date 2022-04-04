@@ -49,8 +49,9 @@ for %i in (*.mp3) do (demucs -d cpu "%i")
 ## Potential errors
 
 If you have an error saying that `mkl_intel_thread.dll` cannot be found, you can try to first run
-`conda install -c defaults intel-openmp -f`. Then try again to run the `demucs.separate` command. If it still doesn't work, you can try to run first `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1`, then again the `demucs.separate` command and hopefully it will work 🙏.
-If you get a permission error, please try starting the Anaconda Prompt as administrator.
+`conda install -c defaults intel-openmp -f`. Then try again to run the `demucs` command. If it still doesn't work, you can try to run first `set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1`, then again the `demucs` command and hopefully it will work 🙏.
+
+**If you get a permission error**, please try starting the Anaconda Prompt as administrator.
 
 
 [install]: https://www.anaconda.com/distribution/#windows
