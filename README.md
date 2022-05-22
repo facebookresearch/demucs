@@ -174,6 +174,7 @@ demucs -n mdx_q myfile.mp3
 demucs --two-stems=vocals myfile.mp3
 ```
 
+
 If you have a GPU, but you run out of memory, please use `--segment SEGMENT` to reduce length of each split. `SEGMENT` should be changed to a integer. Personally recommend not less than 10 (the bigger the number is, the more memory is required, but quality may increase). Create an environment variable `PYTORCH_NO_CUDA_MEMORY_CACHING=1` is also helpful. If this still cannot help, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
 
 Separated tracks are stored in the `separated/MODEL_NAME/TRACK_NAME` folder. There you will find four stereo wav files sampled at 44.1 kHz: `drums.wav`, `bass.wav`,
@@ -199,6 +200,9 @@ The list of pre-trained models is:
 - `mdx_q`, `mdx_extra_q`: quantized version of the previous models. Smaller download and storage
     but quality can be slightly worse. `mdx_extra_q` is the default model used.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
+
+**Faster separation:** if you want faster separation, in particular if you do not have a GPU, you can use `-n 83fc094f` for instance to use
+a single model, as opposed to the bag of 4 models used for the competition.
 
 The `--two-stems=vocals` option allows to separate vocals from the rest (e.g. karaoke mode).
 `vocals` can be changed into any source in the selected model.
