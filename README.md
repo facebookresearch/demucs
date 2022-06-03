@@ -157,7 +157,7 @@ Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](
 Audiostrip is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
 [MVSep](https://mvsep.com/) also provides free online separation, select `Demucs3 model B` for the best quality.
 
-Spleeter.io provides free online separation with Demucs on their website [https://www.spleeter.io/demucs](https://www.speeter.io/demucs).
+Spleeter.io provides free online separation with Demucs on their website [https://www.spleeter.io/demucs](https://www.spleeter.io/demucs).
 
 
 ## Separating tracks
