@@ -15,7 +15,7 @@ If Python is too old, or you want to be able to train, I recommend [installing M
 
 ```bash
 conda activate
-python3 install -U demucs
+pip3 install -U demucs
 # Then anytime you want to use demucs, first do conda activate, then
 demucs -d cpu PATH_TO_AUDIO_FILE_1
 ```
