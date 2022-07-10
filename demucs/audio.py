@@ -210,6 +210,8 @@ def encode_mp3(wav, path, samplerate=44100, bitrate=320, verbose=False):
     encoder.set_quality(2)  # 2-highest, 7-fastest
     if not verbose:
         encoder.silence()
+    if 'cuda' in str(wav.device):
+        wav = wav.cpu()
     wav = wav.transpose(0, 1).numpy()
     mp3_data = encoder.encode(wav.tobytes())
     mp3_data += encoder.flush()
