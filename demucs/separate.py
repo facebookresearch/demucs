@@ -41,6 +41,7 @@ def load_track(track, audio_channels, samplerate):
             wav = convert_audio(wav, sr, samplerate, audio_channels)
 
     if wav is None:
+        print("backends", ta.list_audio_backends())
         print(f"Could not load file {track}. "
               "Maybe it is not a supported file format? ")
         for backend, error in errors.items():
