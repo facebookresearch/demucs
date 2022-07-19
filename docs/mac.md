@@ -22,5 +22,7 @@ pip3 install -U demucs
 demucs -d cpu PATH_TO_AUDIO_FILE_1
 ```
 
+**Important, torchaudio 0.12 update:** Torchaudio no longer supports decoding mp3s without ffmpeg installed. You must have ffmpeg installed, either through Anaconda (`conda install ffmpeg -c conda-forge`) or with Homebrew for instance (`brew install ffmpeg`).
+
 [anaconda]:  https://www.anaconda.com/distribution/#download-section
 [prompt]: https://docs.anaconda.com/anaconda/user-guide/getting-started/#open-nav-mac
