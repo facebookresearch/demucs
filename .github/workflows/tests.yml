@@ -21,7 +21,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get install -y libsndfile1
+        sudo apt-get install -y ffmpeg
         python3 -m venv env
         . env/bin/activate
         python -m pip install --upgrade pip
@@ -30,5 +30,4 @@ jobs:
     - name: Run separation test
       run: |
         . env/bin/activate
-        python -c "import torchaudio as ta; print(ta.get_audio_backend()); ta.load('test.mp3')"
         make test_eval
