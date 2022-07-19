@@ -68,7 +68,8 @@ class RemoteRepo(ModelOnlyRepo):
             url = self._models[sig]
         except KeyError:
             raise ModelLoadingError(f'Could not find a pre-trained model with signature {sig}.')
-        pkg = torch.hub.load_state_dict_from_url(url, map_location='cpu', check_hash=True)
+        pkg = torch.hub.load_state_dict_from_url(
+            url, map_location='cpu', check_hash=True)  # type: ignore
         return load_model(pkg)
 
 
