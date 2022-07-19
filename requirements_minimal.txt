@@ -5,6 +5,6 @@ julius>=0.2.3
 lameenc>=1.2
 openunmix
 pyyaml
-torch>=1.8.1,<1.12
+torch>=1.8.1
 torchaudio>=0.8
 tqdm
