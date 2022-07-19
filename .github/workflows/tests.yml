@@ -30,4 +30,5 @@ jobs:
     - name: Run separation test
       run: |
         . env/bin/activate
+        python -c "import torchaudio as ta; print(ta.get_audio_backend()); ta.load('test.mp3')"
         make test_eval
