@@ -8,6 +8,7 @@ This code contains the spectrogram and Hybrid version of Demucs.
 """
 from copy import deepcopy
 import math
+import typing as tp
 
 from openunmix.filtering import wiener
 import torch
@@ -17,6 +18,18 @@ from torch.nn import functional as F
 from .demucs import DConv, rescale_module
 from .states import capture_init
 from .spec import spectro, ispectro
+
+
+def pad1d(x: torch.Tensor, paddings: tp.Tuple[int, int], mode: str = 'zero', value: float = 0.):
+    """Tiny wrapper around F.pad, just to allow for reflect padding on small input.
+    If this is the case, we insert extra 0 padding to the right before the reflection happen."""
+    length = x.shape[-1]
+    padding_left, padding_right = paddings
+    if mode == 'reflect':
+        max_pad = max(padding_left, padding_right)
+        if length <= max_pad:
+            x = F.pad(x, (0, max_pad - length + 1))
+    return F.pad(x, paddings, mode, value)
 
 
 class ScaledEmbedding(nn.Module):
@@ -580,9 +593,9 @@ class HDemucs(nn.Module):
             le = int(math.ceil(x.shape[-1] / hl))
             pad = hl // 2 * 3
             if not self.hybrid_old:
-                x = F.pad(x, (pad, pad + le * hl - x.shape[-1]), mode='reflect')
+                x = pad1d(x, (pad, pad + le * hl - x.shape[-1]), mode='reflect')
             else:
-                x = F.pad(x, (pad, pad + le * hl - x.shape[-1]))
+                x = pad1d(x, (pad, pad + le * hl - x.shape[-1]))
 
         z = spectro(x, nfft, hl)[..., :-1, :]
         if self.hybrid:
