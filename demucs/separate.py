@@ -126,7 +126,7 @@ def main():
                 sub.segment = args.segment
     else:
         if args.segment is not None:
-            sub.segment = args.segment
+            model.segment = args.segment
 
     model.cpu()
     model.eval()
