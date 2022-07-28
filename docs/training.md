@@ -25,6 +25,9 @@ to point to your copy of MusDB HQ. Then run
 export NUMBA_NUM_THREADS=1; python3 -m tools.automix
 ```
 
+**Important:** the script will show many errors, those are normals. They just indicate when two stems
+ do not batch due to BPM or music scale difference.
+
 Finally, edit the file `conf/dset/auto_mus.yaml` and replace `dset.wav` to the value of `OUTPATH`.
 
 If you have a custom dataset, you can also uncomment the lines `dset2 = ...` and
