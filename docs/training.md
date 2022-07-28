@@ -22,7 +22,7 @@ In the file `tools/automix.py`, edit `OUTPATH` to suit your setup, as well as th
 to point to your copy of MusDB HQ. Then run
 
 ```bash
-python3 -m tools.automix
+export NUMBA_NUM_THREADS=1 python3 -m tools.automix
 ```
 
 Finally, edit the file `conf/dset/auto_mus.yaml` and replace `dset.wav` to the value of `OUTPATH`.
