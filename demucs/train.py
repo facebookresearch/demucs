@@ -9,6 +9,7 @@
 import logging
 import os
 from pathlib import Path
+from random import sample
 import sys
 
 from dora import hydra_main
@@ -16,7 +17,9 @@ import hydra
 from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 import torch
+from torch import nn
 from torch.utils.data import ConcatDataset
+from torchaudio.prototype.models import HDemucs as Torch_HDemucs
 
 from . import distrib
 from .wav import get_wav_datasets, get_musdb_wav_datasets
@@ -27,6 +30,24 @@ from .solver import Solver
 
 logger = logging.getLogger(__name__)
 
+class HDemucsWrapper(nn.Module):
+    def __init__(
+        self,
+        model,
+        args,
+        kwargs,
+    ):
+        super(HDemucsWrapper, self).__init__()
+        self.samplerate = args.pop('samplerate')
+        self.segment = args.pop('segment')
+        self.sources = args['sources']
+        self.torch_hdemucs = model(**args, **kwargs)
+        self._init_args_kwargs = (args, kwargs)
+
+    def forward(self, mix):
+        return self.torch_hdemucs.forward(mix)
+
+
 
 def get_model(args):
     extra = {
@@ -35,9 +56,12 @@ def get_model(args):
         'samplerate': args.dset.samplerate,
         'segment': args.model_segment or 4 * args.dset.segment,
     }
-    klass = {'demucs': Demucs, 'hdemucs': HDemucs}[args.model]
+    klass = {'demucs': Demucs, 'hdemucs': HDemucs, 'torch_hdemucs': Torch_HDemucs}[args.model]
     kw = OmegaConf.to_container(getattr(args, args.model), resolve=True)
-    model = klass(**extra, **kw)
+    if args.model == 'torch_hdemucs':
+        model = HDemucsWrapper(klass, extra, kw)
+    else:
+        model = klass(**extra, **kw)
     return model
 
 

@@ -159,6 +159,32 @@ hdemucs:  # see demucs/hdemucs.py for a detailed description
   # Weight init
   rescale: 0.1
 
+torch_hdemucs:
+# Channels
+  channels: 48
+  growth: 2
+  # STFT
+  nfft: 4096
+  # Main structure
+  depth: 6
+  freq_emb: 0.2
+  emb_scale: 10
+  emb_smooth: true
+  # Convolutions
+  kernel_size: 8
+  stride: 4
+  time_stride: 2
+  context: 1
+  context_enc: 0
+  # normalization
+  norm_starts: 4
+  norm_groups: 4
+  # DConv residual branch
+  dconv_depth: 2
+  dconv_comp: 4
+  dconv_attn: 4
+  dconv_lstm: 4
+  dconv_init: 1e-3
 
 svd:  # see svd.py for documentation
   penalty: 0
