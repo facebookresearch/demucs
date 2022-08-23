@@ -1,5 +1,10 @@
 # Release notes for Demucs
 
+## V3.0.6a, TBD
+
+Added support for [Torchaudio implementation of HDemucs](https://pytorch.org/audio/main/tutorials/hybrid_demucs_tutorial.html), thanks @skim0514.
+
+
 ## V3.0.5, 17th of August 2022
 
 Added `--segment` flag to customize the segment length and use less memory (thanks @CarlGao4).

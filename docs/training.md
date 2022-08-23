@@ -148,7 +148,7 @@ python3 -m tools.test_pretrained --repo ./release_models -n my_bag
 
 ## Model Zoo
 
-  
+
  **About Wiener filtering**: It came to my attention that in fact none of the model were trained with Wiener filtering. In particular, using Wiener filtering at train time was too slow, while using it only at test time led to worse performance, as this would change the output of the spectrogram prediction without giving a chance to the waveform one to adapt. I will update the paper and code documentation to make that clear.
 
 Here is a short descriptions of the models used for the MDX submission, either Track A (MusDB HQ only)
