@@ -9,7 +9,6 @@
 import logging
 import os
 from pathlib import Path
-from random import sample
 import sys
 
 from dora import hydra_main
@@ -19,7 +18,6 @@ from omegaconf import OmegaConf
 import torch
 from torch import nn
 from torch.utils.data import ConcatDataset
-from torchaudio.prototype.models import HDemucs as Torch_HDemucs
 
 from . import distrib
 from .wav import get_wav_datasets, get_musdb_wav_datasets
@@ -27,26 +25,30 @@ from .demucs import Demucs
 from .hdemucs import HDemucs
 from .repitch import RepitchedWrapper
 from .solver import Solver
+from .states import capture_init
 
 logger = logging.getLogger(__name__)
 
-class HDemucsWrapper(nn.Module):
-    def __init__(
-        self,
-        model,
-        args,
-        kwargs,
-    ):
-        super(HDemucsWrapper, self).__init__()
-        self.samplerate = args.pop('samplerate')
-        self.segment = args.pop('segment')
-        self.sources = args['sources']
-        self.torch_hdemucs = model(**args, **kwargs)
-        self._init_args_kwargs = (args, kwargs)
+
+class TorchHDemucsWrapper(nn.Module):
+    """Wrapper around torchaudio HDemucs implementation to provide the proper metadata
+    for model evaluation.
+    See https://pytorch.org/audio/main/tutorials/hybrid_demucs_tutorial.html"""
+
+    @capture_init
+    def __init__(self,  **kwargs):
+        super().__init__()
+        try:
+            from torchaudio.prototype.models import HDemucs as TorchHDemucs
+        except ImportError:
+            raise ImportError("Please upgrade torchaudio for using its implementation of HDemucs")
+        self.samplerate = kwargs.pop('samplerate')
+        self.segment = kwargs.pop('segment')
+        self.sources = kwargs['sources']
+        self.torch_hdemucs = TorchHDemucs(**kwargs)
 
     def forward(self, mix):
         return self.torch_hdemucs.forward(mix)
-
 
 
 def get_model(args):
@@ -56,12 +58,9 @@ def get_model(args):
         'samplerate': args.dset.samplerate,
         'segment': args.model_segment or 4 * args.dset.segment,
     }
-    klass = {'demucs': Demucs, 'hdemucs': HDemucs, 'torch_hdemucs': Torch_HDemucs}[args.model]
+    klass = {'demucs': Demucs, 'hdemucs': HDemucs, 'torch_hdemucs': TorchHDemucsWrapper}[args.model]
     kw = OmegaConf.to_container(getattr(args, args.model), resolve=True)
-    if args.model == 'torch_hdemucs':
-        model = HDemucsWrapper(klass, extra, kw)
-    else:
-        model = klass(**extra, **kw)
+    model = klass(**extra, **kw)
     return model
 
 
