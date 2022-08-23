@@ -1,6 +1,6 @@
 # Release notes for Demucs
 
-## V3.0.5a, TBC
+## V3.0.5, 17th of August 2022
 
 Added `--segment` flag to customize the segment length and use less memory (thanks @CarlGao4).
 
