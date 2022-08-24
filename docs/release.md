@@ -6,6 +6,8 @@ Added `--segment` flag to customize the segment length and use less memory (than
 
 Fix reflect padding bug on small inputs.
 
+Compatible with pyTorch 1.12
+
 ## V3.0.4, 24th of February 2022
 
 Added option to split into two stems (i.e. vocals, vs. non vocals), thanks to @CarlGao4.
