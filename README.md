@@ -40,6 +40,7 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
+- TBD: added reproducibility and ablation grids, along with an updated version of the paper.
 - 24/02/2022: Releasing v3.0.4: split into two stems (i.e. karaoke mode).
     Export as float32 or int24.
 - 17/12/2021: Releasing v3.0.3: bug fixes  (thanks @keunwoochoi), memory drastically

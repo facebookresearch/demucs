@@ -31,8 +31,11 @@ def explorer(launcher):
         for model in [base, newt, hdem]:
             sub = launcher.bind(model)
             if model is base:
+                # Training the v2 Demucs on MusDB HQ
                 sub(epochs=360)
                 continue
+
+            # those two will be used in the repro_mdx_a bag of models.
             sub(svd)
             sub(svd, seed=43)
             if model == newt:
