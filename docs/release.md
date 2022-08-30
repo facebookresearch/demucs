@@ -1,10 +1,12 @@
 # Release notes for Demucs
 
-## V3.0.5a, TBC
+## V3.0.5, 17th of August 2022
 
 Added `--segment` flag to customize the segment length and use less memory (thanks @CarlGao4).
 
 Fix reflect padding bug on small inputs.
+
+Compatible with pyTorch 1.12
 
 ## V3.0.4, 24th of February 2022
 
