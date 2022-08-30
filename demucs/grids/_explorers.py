@@ -8,7 +8,7 @@ import treetable as tt
 
 
 class MyExplorer(Explorer):
-    test_metrics = ['nsdr']
+    test_metrics = ['nsdr', 'sdr_med']
 
     def get_grid_metrics(self):
         """Return the metrics that should be displayed in the tracking table.

@@ -184,7 +184,7 @@ dora:
 slurm:
   time: 4320
   constraint: volta32gb
-  setup: ['module load cuda/11.0 cudnn/v8.0.3.33-cuda.11.0 NCCL/2.8.3-1-cuda.11.0']
+  setup: ['module load cudnn/v8.4.1.50-cuda.11.6 NCCL/2.11.4-6-cuda.11.6 cuda/11.6']
 
 # Hydra config
 hydra:
