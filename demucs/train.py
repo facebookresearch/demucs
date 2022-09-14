@@ -39,7 +39,7 @@ class TorchHDemucsWrapper(nn.Module):
     def __init__(self,  **kwargs):
         super().__init__()
         try:
-            from torchaudio.prototype.models import HDemucs as TorchHDemucs
+            from torchaudio.models import HDemucs as TorchHDemucs
         except ImportError:
             raise ImportError("Please upgrade torchaudio for using its implementation of HDemucs")
         self.samplerate = kwargs.pop('samplerate')
