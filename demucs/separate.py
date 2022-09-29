@@ -61,6 +61,13 @@ def main():
                         default=Path("separated"),
                         help="Folder where to put extracted tracks. A subfolder "
                         "with the model name will be created.")
+    parser.add_argument("--filename",
+                        default="{track}/{stem}.{ext}",
+                        help="Set the name of output file. \n"
+                        'Use "{track}", "{trackext}", "{stem}", "{ext}" to use '
+                        "variables of track name without extension, track extension, "
+                        "stem name and default output file extension. \n"
+                        'Default is "{track}/{stem}.{ext}".')
     parser.add_argument("-d",
                         "--device",
                         default="cuda" if th.cuda.is_available() else "cpu",
@@ -155,12 +162,12 @@ def main():
                               num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
-        track_folder = out / track.name.rsplit(".", 1)[0]
-        track_folder.mkdir(exist_ok=True)
+        # track_folder = out / track.name.rsplit(".", 1)[0]
+        # track_folder.mkdir(exist_ok=True)
         if args.mp3:
-            ext = ".mp3"
+            ext = "mp3"
         else:
-            ext = ".wav"
+            ext = "wav"
         kwargs = {
             'samplerate': model.samplerate,
             'bitrate': args.mp3_bitrate,
@@ -170,17 +177,26 @@ def main():
         }
         if args.stem is None:
             for source, name in zip(sources, model.sources):
-                stem = str(track_folder / (name + ext))
+                stem = str(out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                                  trackext=track.name.rsplit(".", 1)[-1],
+                                                  stem=name, ext=ext))
+                stem.parent.mkdir(parents=True, exist_ok=True)
                 save_audio(source, stem, **kwargs)
         else:
             sources = list(sources)
-            stem = str(track_folder / (args.stem + ext))
+            stem = str(out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                                  trackext=track.name.rsplit(".", 1)[-1],
+                                                  stem=args.stem, ext=ext))
+            stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(sources.pop(model.sources.index(args.stem)), stem, **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:
                 other_stem += i
-            stem = str(track_folder / ("no_" + args.stem + ext))
+            stem = str(out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                                  trackext=track.name.rsplit(".", 1)[-1],
+                                                  stem="no_"+args.stem, ext=ext))
+            stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(other_stem, stem, **kwargs)
 
 
