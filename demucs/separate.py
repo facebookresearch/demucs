@@ -178,8 +178,8 @@ def main():
         if args.stem is None:
             for source, name in zip(sources, model.sources):
                 stem = str(out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                                  trackext=track.name.rsplit(".", 1)[-1],
-                                                  stem=name, ext=ext))
+                                                      trackext=track.name.rsplit(".", 1)[-1],
+                                                      stem=name, ext=ext))
                 stem.parent.mkdir(parents=True, exist_ok=True)
                 save_audio(source, stem, **kwargs)
         else:
