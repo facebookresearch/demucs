@@ -1,5 +1,11 @@
 # Release notes for Demucs
 
+## V3.0.6a, TBC
+
+Option to customize output path of stems (@CarlGao4)
+
+Fixed bug in pad1d leading to failure sometimes.
+
 ## V3.0.5, 17th of August 2022
 
 Added `--segment` flag to customize the segment length and use less memory (thanks @CarlGao4).

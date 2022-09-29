@@ -23,13 +23,21 @@ from .spec import spectro, ispectro
 def pad1d(x: torch.Tensor, paddings: tp.Tuple[int, int], mode: str = 'constant', value: float = 0.):
     """Tiny wrapper around F.pad, just to allow for reflect padding on small input.
     If this is the case, we insert extra 0 padding to the right before the reflection happen."""
+    x0 = x
     length = x.shape[-1]
     padding_left, padding_right = paddings
     if mode == 'reflect':
         max_pad = max(padding_left, padding_right)
         if length <= max_pad:
-            x = F.pad(x, (0, max_pad - length + 1))
-    return F.pad(x, paddings, mode, value)
+            extra_pad = max_pad - length + 1
+            extra_pad_right = min(padding_right, extra_pad)
+            extra_pad_left = extra_pad - extra_pad_right
+            paddings = (padding_left - extra_pad_left, padding_right - extra_pad_right)
+            x = F.pad(x, (extra_pad_left, extra_pad_right))
+    out = F.pad(x, paddings, mode, value)
+    assert out.shape[-1] == length + padding_left + padding_right
+    assert (out[..., padding_left: padding_left + length] == x0).all()
+    return out
 
 
 class ScaledEmbedding(nn.Module):
