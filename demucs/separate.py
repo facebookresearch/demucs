@@ -28,7 +28,7 @@ def load_track(track, audio_channels, samplerate):
             samplerate=samplerate,
             channels=audio_channels)
     except FileNotFoundError:
-        errors['ffmpeg'] = 'Ffmpeg is not installed.'
+        errors['ffmpeg'] = 'FFmpeg is not installed.'
     except subprocess.CalledProcessError:
         errors['ffmpeg'] = 'FFmpeg could not read the file.'
 
@@ -123,7 +123,10 @@ def main():
         fatal(error.args[0])
 
     if args.segment is not None and args.segment < 8:
-        fatal('Segment must greater than 8. ')
+        fatal("Segment must greater than 8. ")
+
+    if '..' in args.filename.replace("\\", "/").split("/"):
+        fatal('".." must not appear in filename. ')
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
