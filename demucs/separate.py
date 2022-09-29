@@ -162,8 +162,6 @@ def main():
                               num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
-        # track_folder = out / track.name.rsplit(".", 1)[0]
-        # track_folder.mkdir(exist_ok=True)
         if args.mp3:
             ext = "mp3"
         else:
