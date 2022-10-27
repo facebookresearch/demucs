@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -67,7 +67,8 @@ def eval_track(references, estimates, win, hop, compute_sdr=True):
 def evaluate(solver, compute_sdr=False):
     """
     Evaluate model using museval.
-    `new_only` means using only the MDX definition of the SDR, which is much faster to evaluate.
+    compute_sdr=False means using only the MDX definition of the SDR, which
+    is much faster to evaluate.
     """
 
     args = solver.args

@@ -4,34 +4,35 @@
 ![tests badge](https://github.com/facebookresearch/demucs/workflows/tests/badge.svg)
 ![linter badge](https://github.com/facebookresearch/demucs/workflows/linter/badge.svg)
 
-This is the 3rd release of Demucs (v3), featuring hybrid source separation.
-**For the waveform only Demucs (v2):** [Go this commit][demucs_v2].
-If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v2 with
-`git checkout v2`.
 
-We provide an implementation of Hybrid Demucs for music source separation, trained
-both on the [MusDB HQ][musdb] dataset, and with internal extra training data.
-They can separate drums, bass and vocals from the rest and achieved the first rank
-at the 2021 [Sony Music DemiXing Challenge (MDX)][mdx]
+This is the 4th release of Demucs (v4), featuring Hybrid Transformer based source separation.
+**For the classic hybrid Demucs (v3):** [Go this commit][demucs_v3].
+If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v3 with
+`git checkout v3`.
+
+As Hybrid Transformer Demucs is brand new, it is not activated by default, you can activate it in the usual
+commands described hereafter with `-n htdemucs_ft`.
+The single, non fine-tuned model is provided as `-n htdemucs`, and the retrained baseline
+as `-n hdemucs_mmi`. The sparse kernels require custom CUDA
+code that is not ready for release yet.
+
+Samples are available [on our sample page](https://ai.honu.io/papers/htdemucs/index.html).
+
+We provide an implementation of Hybrid Transformer Demucs for music source separation. It has been trained 
+on the [MUSDB HQ][musdb] dataset + an extra training dataset of 800 songs. This model separates drums, 
+bass and vocals and other stems for any song.
 
 Demucs is based on U-Net convolutional architecture inspired by [Wave-U-Net][waveunet].
-The most recent version features hybrid spectrogram/waveform separation,
-along with compressed residual branches, local attention and singular value regularization.
-Checkout our paper [Hybrid Spectrogram and Waveform Source Separation][hybrid_paper]
-for more details. As far as we know, Demucs is currently the only model supporting true
-end-to-end hybrid model training with shared information between the domains,
-as opposed to post-training model blending.
-
-When trained only on MusDB HQ, Hybrid Demucs achieved a SDR of 7.33 on the MDX test set,
-and 8.11 dB with 200 extra training tracks. It is particularly efficient for
-drums and bass extraction, although [KUIELAB-MDX-Net](kuielab) performs better for
-vocals and other accompaniments.
-
+The most recent version features hybrid spectrogram/waveform separation.
+It is based on [Hybrid Demucs][hybrid_paper] which was already an hybrid model but the innermost layers are 
+replaced by a cross-domain Transformer Encoder. This Transformer uses self-attention within each domain, and cross-attention across domains.
+Without finetuning, the model achieves a SDR of 8.80 on the MUSDB HQ test set. Moreover, when using sparse attention 
+kernels to extend its receptive field and per source fine-tuning, we achieve state-of-the-art 9.20 dB of SDR.
 
 <p align="center">
-<img src="./demucs.png" alt="Schema representing the structure of Demucs,
-    with a dual U-Net structure with a shared core, one branch for the temporal domain,
-    and one branch for the spectral domain."
+<img src="./demucs.png" alt="Schema representing the structure of Hybrid Transformer Demucs,
+    with a dual U-Net structure, one branch for the temporal domain,
+    and one branch for the spectral domain. There is a cross-domain Transformer between the Encoders and Decoders."
 width="800px"></p>
 
 
@@ -40,6 +41,7 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
+- TBD: Added the new Hybrid Transformer Demucs models.
 - 30/08/2022: added reproducibility and ablation grids, along with an updated version of the paper.
 - 17/08/2022: Releasing v3.0.5: Set split segment length to reduce memory. Compatible with pyTorch 1.12. 
 - 24/02/2022: Releasing v3.0.4: split into two stems (i.e. karaoke mode).
@@ -81,10 +83,14 @@ for more details.
 | [Demucs (v2)][demucs_v2]     | waveform    | no          | 6.3         | 2.37        | 2.36              |
 | [ResUNetDecouple+][decouple] | spectrogram | no          | 6.7         | -           | -                 |
 | [KUIELAB-MDX-Net][kuielab]   | hybrid      | no          | 7.5         | **2.86**    | 2.55              |
-| **Hybrid Demucs (v3)**       | hybrid      | no          | **7.7**     | **2.83**    | **3.04**          |
+| [Band-Spit RNN][bandsplit]   | spectrogram | no          | **8.2**     | -           | -                 |
+| **Hybrid Demucs (v3)**       | hybrid      | no          | 7.7         | **2.83**    | **3.04**          |
 | [MMDenseLSTM][mmdenselstm]   | spectrogram | 804 songs   | 6.0         | -           | -                 |
 | [D3Net][d3net]               | spectrogram | 1.5k songs  | 6.7         | -           | -                 |
 | [Spleeter][spleeter]         | spectrogram | 25k songs   | 5.9         | -           | -                 |
+| [Band-Spit RNN][bandsplit]   | spectrogram | 1.7k (mixes only)     | **9.0**     | -           | -                 |
+| **HT Demucs f.t. (v4)**      | hybrid      | 800 songs   | **9.0**     | -           | -                 |
+
 
 
 ## Requirements
@@ -200,6 +206,9 @@ You can also try to reduce the volume of the input mixture before feeding it to 
 
 Other pre-trained models can be selected with the `-n` flag.
 The list of pre-trained models is:
+- `htdemucs`: first version of Hybrid Transformer Demucs. Trained on MusDB + 800 songs.
+- `htdemucs_ft`: fine-tuned version of `htdemucs`, separation will take 4 times more time
+    but might be a bit better. Same training set as `htdemucs`.
 - `mdx`: trained only on MusDB HQ, winning model on track A at the [MDX][mdx] challenge.
 - `mdx_extra`: trained with extra training data (including MusDB test set), ranked 2nd on the track B
     of the [MDX][mdx] challenge.
@@ -262,6 +271,7 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
 [demucs_v2]: https://github.com/facebookresearch/demucs/tree/v2
+[demucs_v2]: https://github.com/facebookresearch/demucs/tree/v3
 [spleeter]: https://github.com/deezer/spleeter
 [soundcloud]: https://soundcloud.com/honualx/sets/source-separation-in-the-waveform-domain
 [d3net]: https://arxiv.org/abs/2010.01733

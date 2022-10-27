@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -22,8 +22,10 @@ from . import distrib
 from .wav import get_wav_datasets, get_musdb_wav_datasets
 from .demucs import Demucs
 from .hdemucs import HDemucs
+from .htdemucs import HTDemucs
 from .repitch import RepitchedWrapper
 from .solver import Solver
+from .utils import random_subset
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +37,83 @@ def get_model(args):
         'samplerate': args.dset.samplerate,
         'segment': args.model_segment or 4 * args.dset.segment,
     }
-    klass = {'demucs': Demucs, 'hdemucs': HDemucs}[args.model]
+    klass = {
+        'demucs': Demucs,
+        'hdemucs': HDemucs,
+        'htdemucs': HTDemucs,
+    }[args.model]
     kw = OmegaConf.to_container(getattr(args, args.model), resolve=True)
     model = klass(**extra, **kw)
     return model
+
+
+def get_optimizer(model, args):
+    seen_params = set()
+    other_params = []
+    groups = []
+    for n, module in model.named_modules():
+        if hasattr(module, "make_optim_group"):
+            group = module.make_optim_group()
+            params = set(group["params"])
+            assert params.isdisjoint(seen_params)
+            seen_params |= set(params)
+            groups.append(group)
+    for param in model.parameters():
+        if param not in seen_params:
+            other_params.append(param)
+    groups.insert(0, {"params": other_params})
+    parameters = groups
+    if args.optim.optim == "adam":
+        return torch.optim.Adam(
+            parameters,
+            lr=args.optim.lr,
+            betas=(args.optim.momentum, args.optim.beta2),
+            weight_decay=args.optim.weight_decay,
+        )
+    elif args.optim.optim == "adamw":
+        return torch.optim.AdamW(
+            parameters,
+            lr=args.optim.lr,
+            betas=(args.optim.momentum, args.optim.beta2),
+            weight_decay=args.optim.weight_decay,
+        )
+    else:
+        raise ValueError("Invalid optimizer %s", args.optim.optimizer)
+
+
+def get_datasets(args):
+    train_set, valid_set = get_musdb_wav_datasets(args.dset)
+    if args.dset.wav:
+        extra_train_set, extra_valid_set = get_wav_datasets(args.dset)
+        if len(args.dset.sources) <= 4:
+            train_set = ConcatDataset([train_set, extra_train_set])
+            valid_set = ConcatDataset([valid_set, extra_valid_set])
+        else:
+            train_set = extra_train_set
+            valid_set = extra_valid_set
+
+    if args.dset.wav2:
+        extra_train_set, extra_valid_set = get_wav_datasets(args.dset, "wav2")
+        weight = args.dset.wav2_weight
+        if weight is not None:
+            b = len(train_set)
+            e = len(extra_train_set)
+            reps = max(1, round(e / b * (1 / weight - 1)))
+        else:
+            reps = 1
+        train_set = ConcatDataset([train_set] * reps + [extra_train_set])
+        if args.dset.wav2_valid:
+            if weight is not None:
+                b = len(valid_set)
+                n_kept = int(round(weight * b / (1 - weight)))
+                valid_set = ConcatDataset(
+                    [valid_set, random_subset(extra_valid_set, n_kept)]
+                )
+            else:
+                valid_set = ConcatDataset([valid_set, extra_valid_set])
+    if args.dset.valid_samples is not None:
+        valid_set = random_subset(valid_set, args.dset.valid_samples)
+    return train_set, valid_set
 
 
 def get_solver(args, model_only=False):
@@ -60,16 +135,7 @@ def get_solver(args, model_only=False):
         model.cuda()
 
     # optimizer
-    if args.optim.optim == 'adam':
-        optimizer = torch.optim.Adam(
-            model.parameters(), lr=args.optim.lr,
-            betas=(args.optim.momentum, args.optim.beta2),
-            weight_decay=args.optim.weight_decay)
-    elif args.optim.optim == 'adamw':
-        optimizer = torch.optim.AdamW(
-            model.parameters(), lr=args.optim.lr,
-            betas=(args.optim.momentum, args.optim.beta2),
-            weight_decay=args.optim.weight_decay)
+    optimizer = get_optimizer(model, args)
 
     assert args.batch_size % distrib.world_size == 0
     args.batch_size //= distrib.world_size
@@ -77,11 +143,7 @@ def get_solver(args, model_only=False):
     if model_only:
         return Solver(None, model, optimizer, args)
 
-    train_set, valid_set = get_musdb_wav_datasets(args.dset)
-    if args.dset.wav:
-        extra_train_set, extra_valid_set = get_wav_datasets(args.dset)
-        train_set = ConcatDataset([train_set, extra_train_set])
-        valid_set = ConcatDataset([valid_set, extra_valid_set])
+    train_set, valid_set = get_datasets(args)
 
     if args.augment.repitch.proba:
         vocals = []

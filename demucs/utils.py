@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -13,6 +13,7 @@ import typing as tp
 
 import torch
 from torch.nn import functional as F
+from torch.utils.data import Subset
 
 
 def unfold(a, kernel_size, stride):
@@ -106,6 +107,15 @@ def temp_filenames(count: int, delete=True):
         if delete:
             for name in names:
                 os.unlink(name)
+
+
+def random_subset(dataset, max_samples: int, seed: int = 42):
+    if max_samples >= len(dataset):
+        return dataset
+
+    generator = torch.Generator().manual_seed(seed)
+    perm = torch.randperm(len(dataset), generator=generator)
+    return Subset(dataset, perm[:max_samples].tolist())
 
 
 class DummyPoolExecutor:

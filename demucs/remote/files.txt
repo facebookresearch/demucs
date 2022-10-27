@@ -1,3 +1,5 @@
+# MDX Models
+root: mdx_final/
 0d19c1c6-0f06f20e.th
 5d2d6c55-db83574e.th
 7d865c68-3d5dd56b.th
@@ -18,3 +20,11 @@ b72baf4e-8778635e.th
 902315c2-b39ce9c9.th
 9a6b4851-03af0aa6.th
 fa0cb7f9-100d8bf4.th
+# Hybrid Transformer models
+root: hybrid_transformer/
+955717e8-8726e21a.th
+f7e0c4bc-ba3fe64a.th
+d12395a8-e57c48e6.th
+92cfc3b6-ef3bcb9c.th
+04573f0d-f3cf25b2.th
+75fc33f5-1941ce65.th

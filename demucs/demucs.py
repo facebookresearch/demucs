@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -14,6 +14,7 @@ from torch.nn import functional as F
 
 from .states import capture_init
 from .utils import center_trim, unfold
+from .transformer import LayerScale
 
 
 class BLSTM(nn.Module):
@@ -80,19 +81,6 @@ def rescale_module(module, reference):
     for sub in module.modules():
         if isinstance(sub, (nn.Conv1d, nn.ConvTranspose1d, nn.Conv2d, nn.ConvTranspose2d)):
             rescale_conv(sub, reference)
-
-
-class LayerScale(nn.Module):
-    """Layer scale from [Touvron et al 2021] (https://arxiv.org/pdf/2103.17239.pdf).
-    This rescales diagonaly residual outputs close to 0 initially, then learnt.
-    """
-    def __init__(self, channels: int, init: float = 0):
-        super().__init__()
-        self.scale = nn.Parameter(torch.zeros(channels, requires_grad=True))
-        self.scale.data[:] = init
-
-    def forward(self, x):
-        return self.scale[:, None] * x
 
 
 class DConv(nn.Module):

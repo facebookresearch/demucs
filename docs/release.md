@@ -1,5 +1,9 @@
 # Release notes for Demucs
 
+## V4.0.0a, TBC
+
+Adding hybrid transformer Demucs model.
+
 ## V3.0.6a, TBC
 
 Option to customize output path of stems (@CarlGao4)
