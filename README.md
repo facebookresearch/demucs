@@ -271,7 +271,7 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
 [demucs_v2]: https://github.com/facebookresearch/demucs/tree/v2
-[demucs_v2]: https://github.com/facebookresearch/demucs/tree/v3
+[demucs_v3]: https://github.com/facebookresearch/demucs/tree/v3
 [spleeter]: https://github.com/deezer/spleeter
 [soundcloud]: https://soundcloud.com/honualx/sets/source-separation-in-the-waveform-domain
 [d3net]: https://arxiv.org/abs/2010.01733
