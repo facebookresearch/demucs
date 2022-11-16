@@ -1,6 +1,6 @@
 # Demucs Music Source Separation
 
-[![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine) 
+[![Support Ukraine](https://img.shields.io/badge/Support-Ukraine-FFD500?style=flat&labelColor=005BBB)](https://opensource.fb.com/support-ukraine)
 ![tests badge](https://github.com/facebookresearch/demucs/workflows/tests/badge.svg)
 ![linter badge](https://github.com/facebookresearch/demucs/workflows/linter/badge.svg)
 
@@ -8,25 +8,25 @@
 This is the 4th release of Demucs (v4), featuring Hybrid Transformer based source separation.
 **For the classic Hybrid Demucs (v3):** [Go this commit][demucs_v3].
 If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v3 with
-`git checkout v3`.
+`git checkout v3`. You can also go [Demucs v2][demucs_v2].
 
 As Hybrid Transformer Demucs is brand new, it is not activated by default, you can activate it in the usual
 commands described hereafter with `-n htdemucs_ft`.
 The single, non fine-tuned model is provided as `-n htdemucs`, and the retrained baseline
-as `-n hdemucs_mmi`. The sparse kernels require custom CUDA
-code that is not ready for release yet.
+as `-n hdemucs_mmi`. The Sparse Hybrid Transformer model decribed in our paper is not provided as its
+requires custom CUDA code that is not ready for release yet.
 
 Samples are available [on our sample page](https://ai.honu.io/papers/htdemucs/index.html).
 
-We provide an implementation of Hybrid Transformer Demucs for music source separation. It has been trained 
-on the [MUSDB HQ][musdb] dataset + an extra training dataset of 800 songs. This model separates drums, 
+We provide an implementation of Hybrid Transformer Demucs for music source separation. It has been trained
+on the [MUSDB HQ][musdb] dataset + an extra training dataset of 800 songs. This model separates drums,
 bass and vocals and other stems for any song.
 
 Demucs is based on U-Net convolutional architecture inspired by [Wave-U-Net][waveunet].
-The most recent version features hybrid spectrogram/waveform separation.
-It is based on [Hybrid Demucs][hybrid_paper] which was already an hybrid model but the innermost layers are 
+The most recent version features hybrid spectrogram/waveform separation using Transformers.
+It is based on [Hybrid Demucs][hybrid_paper] which was already an hybrid model but the innermost layers are
 replaced by a cross-domain Transformer Encoder. This Transformer uses self-attention within each domain, and cross-attention across domains.
-Without finetuning, the model achieves a SDR of 8.80 on the MUSDB HQ test set. Moreover, when using sparse attention 
+Without finetuning, the model achieves a SDR of 8.80 on the MUSDB HQ test set. Moreover, when using sparse attention
 kernels to extend its receptive field and per source fine-tuning, we achieve state-of-the-art 9.20 dB of SDR.
 
 <p align="center">
@@ -43,7 +43,7 @@ See the [release notes](./docs/release.md) for more details.
 
 - 16/11/2022: Added the new Hybrid Transformer Demucs models.
 - 30/08/2022: added reproducibility and ablation grids, along with an updated version of the paper.
-- 17/08/2022: Releasing v3.0.5: Set split segment length to reduce memory. Compatible with pyTorch 1.12. 
+- 17/08/2022: Releasing v3.0.5: Set split segment length to reduce memory. Compatible with pyTorch 1.12.
 - 24/02/2022: Releasing v3.0.4: split into two stems (i.e. karaoke mode).
     Export as float32 or int24.
 - 17/12/2021: Releasing v3.0.3: bug fixes  (thanks @keunwoochoi), memory drastically
@@ -158,7 +158,7 @@ Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](
 
 ### Graphical Interface
 
-@CarlGao4 has released a GUI for Demucs: [CarlGao4/Demucs-Gui](https://github.com/CarlGao4/Demucs-Gui). Downloads for Windows and macOS is available [here](https://github.com/CarlGao4/Demucs-Gui/releases). Use [FossHub mirror](https://fosshub.com/Demucs-GUI.html) to speed up your download. 
+@CarlGao4 has released a GUI for Demucs: [CarlGao4/Demucs-Gui](https://github.com/CarlGao4/Demucs-Gui). Downloads for Windows and macOS is available [here](https://github.com/CarlGao4/Demucs-Gui/releases). Use [FossHub mirror](https://fosshub.com/Demucs-GUI.html) to speed up your download.
 
 @Anjok07 is providing a self contained GUI in [UVR (Ultimate Vocal Remover)](https://github.com/facebookresearch/demucs/issues/334) that supports Demucs.
 
@@ -216,9 +216,6 @@ The list of pre-trained models is:
     but quality can be slightly worse. `mdx_extra_q` is the default model used.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
 
-**Faster separation:** if you want faster separation, in particular if you do not have a GPU, you can use `-n 83fc094f` for instance to use
-a single model, as opposed to the bag of 4 models used for the competition.
-
 The `--two-stems=vocals` option allows to separate vocals from the rest (e.g. karaoke mode).
 `vocals` can be changed into any source in the selected model.
 This will mix the files after separating the mix fully, so this won't be faster or use less memory.
@@ -226,8 +223,8 @@ This will mix the files after separating the mix fully, so this won't be faster 
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a the *shift trick*) of the input and average them. This makes prediction `SHIFTS` times
 slower. Don't use it unless you have a GPU.
 
-The `--overlap` option controls the amount of overlap between prediction windows (for Demucs one window is 10 seconds).
-Default is 0.25 (i.e. 25%) which is probably fine.
+The `--overlap` option controls the amount of overlap between prediction windows. Default is 0.25 (i.e. 25%) which is probably fine.
+It can probably be reduced to 0.1 to improve a bit speed.
 
 
 The `-j` flag allow to specify a number of parallel jobs (e.g. `demucs -j 2 myfile.mp3`).
@@ -235,7 +232,7 @@ This will multiply by the same amount the RAM used so be careful!
 
 ### Memory requirements for GPU acceleration
 
-If you want to use GPU acceleration, you will need at least 3GB of RAM on your GPU for `demucs`. However, about 7GB of RAM will be required if you use the default arguments. Add `--segment SEGMENT` to change size of each split. If you only have 3GB memory, set SEGMENT to 8 (though quality may be worse if this argument is too small). Creating an environment variable `PYTORCH_NO_CUDA_MEMORY_CACHING=1` can help users with even smaller RAM such as 2GB (I separated a track that is 4 minutes but only 1.5GB is used), but this would make the separation slower. 
+If you want to use GPU acceleration, you will need at least 3GB of RAM on your GPU for `demucs`. However, about 7GB of RAM will be required if you use the default arguments. Add `--segment SEGMENT` to change size of each split. If you only have 3GB memory, set SEGMENT to 8 (though quality may be worse if this argument is too small). Creating an environment variable `PYTORCH_NO_CUDA_MEMORY_CACHING=1` can help users with even smaller RAM such as 2GB (I separated a track that is 4 minutes but only 1.5GB is used), but this would make the separation slower.
 
 If you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to 1.5 times the duration of the track.
 
@@ -279,3 +276,4 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [kuielab]: https://github.com/kuielab/mdx-net-submission
 [decouple]: https://arxiv.org/abs/2109.05418
 [mdx_submission]: https://github.com/adefossez/mdx21_demucs
+[bandsplit]: https://arxiv.org/abs/2209.15174
