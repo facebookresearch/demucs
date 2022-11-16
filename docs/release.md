@@ -1,6 +1,6 @@
 # Release notes for Demucs
 
-## V3.0.6a, TBC
+## V3.0.6, 16th of November 2022
 
 Option to customize output path of stems (@CarlGao4)
 
