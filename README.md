@@ -6,7 +6,7 @@
 
 
 This is the 4th release of Demucs (v4), featuring Hybrid Transformer based source separation.
-**For the classic hybrid Demucs (v3):** [Go this commit][demucs_v3].
+**For the classic Hybrid Demucs (v3):** [Go this commit][demucs_v3].
 If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v3 with
 `git checkout v3`.
 
@@ -41,7 +41,7 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
-- TBD: Added the new Hybrid Transformer Demucs models.
+- 16/11/2022: Added the new Hybrid Transformer Demucs models.
 - 30/08/2022: added reproducibility and ablation grids, along with an updated version of the paper.
 - 17/08/2022: Releasing v3.0.5: Set split segment length to reduce memory. Compatible with pyTorch 1.12. 
 - 24/02/2022: Releasing v3.0.4: split into two stems (i.e. karaoke mode).
@@ -271,7 +271,7 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [openunmix]: https://github.com/sigsep/open-unmix-pytorch
 [mmdenselstm]: https://arxiv.org/abs/1805.02410
 [demucs_v2]: https://github.com/facebookresearch/demucs/tree/v2
-[demucs_v2]: https://github.com/facebookresearch/demucs/tree/v3
+[demucs_v3]: https://github.com/facebookresearch/demucs/tree/v3
 [spleeter]: https://github.com/deezer/spleeter
 [soundcloud]: https://soundcloud.com/honualx/sets/source-separation-in-the-waveform-domain
 [d3net]: https://arxiv.org/abs/2010.01733
