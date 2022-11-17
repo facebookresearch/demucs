@@ -10,24 +10,29 @@ This is the 4th release of Demucs (v4), featuring Hybrid Transformer based sourc
 If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v3 with
 `git checkout v3`. You can also go [Demucs v2][demucs_v2].
 
+
+Demucs is a state-of-the-art music source separation model, currently capable of separating
+drums, bass, and vocals from the rest of the accompaniment.
+Demucs is based on a U-Net convolutional architecture inspired by [Wave-U-Net][waveunet].
+The v4 version features [Hybrid Transformer Demucs][htdemucs], a hybrid spectrogram/waveform separation model using Transformers.
+It is based on [Hybrid Demucs][hybrid_paper] (also provided in this repo) with the innermost layers are
+replaced by a cross-domain Transformer Encoder. This Transformer uses self-attention within each domain,
+and cross-attention across domains.
+The model achieves a SDR of 9.00 dB on the MUSDB HQ test set. Moreover, when using sparse attention
+kernels to extend its receptive field and per source fine-tuning, we achieve state-of-the-art 9.20 dB of SDR.
+
+Samples are available [on our sample page](https://ai.honu.io/papers/htdemucs/index.html).
+Checkout [our paper][htdemucs] for more information.
+It has been trained on the [MUSDB HQ][musdb] dataset + an extra training dataset of 800 songs.
+This model separates drums, bass and vocals and other stems for any song.
+
+
 As Hybrid Transformer Demucs is brand new, it is not activated by default, you can activate it in the usual
 commands described hereafter with `-n htdemucs_ft`.
 The single, non fine-tuned model is provided as `-n htdemucs`, and the retrained baseline
 as `-n hdemucs_mmi`. The Sparse Hybrid Transformer model decribed in our paper is not provided as its
 requires custom CUDA code that is not ready for release yet.
 
-Samples are available [on our sample page](https://ai.honu.io/papers/htdemucs/index.html).
-
-We provide an implementation of Hybrid Transformer Demucs for music source separation. It has been trained
-on the [MUSDB HQ][musdb] dataset + an extra training dataset of 800 songs. This model separates drums,
-bass and vocals and other stems for any song.
-
-Demucs is based on U-Net convolutional architecture inspired by [Wave-U-Net][waveunet].
-The most recent version features hybrid spectrogram/waveform separation using Transformers.
-It is based on [Hybrid Demucs][hybrid_paper] which was already an hybrid model but the innermost layers are
-replaced by a cross-domain Transformer Encoder. This Transformer uses self-attention within each domain, and cross-attention across domains.
-Without finetuning, the model achieves a SDR of 8.80 on the MUSDB HQ test set. Moreover, when using sparse attention
-kernels to extend its receptive field and per source fine-tuning, we achieve state-of-the-art 9.20 dB of SDR.
 
 <p align="center">
 <img src="./demucs.png" alt="Schema representing the structure of Hybrid Transformer Demucs,
@@ -115,6 +120,9 @@ For bleeding edge versions, you can install directly from this repo using
 ```bash
 python3 -m pip install -U git+https://github.com/facebookresearch/demucs#egg=demucs
 ```
+
+**For Hybrid Transformer Demucs,** you must install the bleeding edge version and use either
+`-n htdemucs` or `-n htdemucs_ft`.
 
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
 - **If you are using Windows:** [Windows support](docs/windows.md).
@@ -277,3 +285,4 @@ Demucs is released under the MIT license as found in the [LICENSE](LICENSE) file
 [decouple]: https://arxiv.org/abs/2109.05418
 [mdx_submission]: https://github.com/adefossez/mdx21_demucs
 [bandsplit]: https://arxiv.org/abs/2209.15174
+[htdemucs]: https://arxiv.org/abs/2211.08553
