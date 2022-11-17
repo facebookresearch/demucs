@@ -217,6 +217,7 @@ The list of pre-trained models is:
 - `htdemucs`: first version of Hybrid Transformer Demucs. Trained on MusDB + 800 songs.
 - `htdemucs_ft`: fine-tuned version of `htdemucs`, separation will take 4 times more time
     but might be a bit better. Same training set as `htdemucs`.
+- `hdemucs_mmi`: Hybrid Demucs v3, retrained on MusDB + 800 songs.
 - `mdx`: trained only on MusDB HQ, winning model on track A at the [MDX][mdx] challenge.
 - `mdx_extra`: trained with extra training data (including MusDB test set), ranked 2nd on the track B
     of the [MDX][mdx] challenge.
