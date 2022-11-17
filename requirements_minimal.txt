@@ -1,6 +1,7 @@
 # please make sure you have already a pytorch install that is cuda enabled!
 dora-search
 diffq>=0.2.1
+einops
 julius>=0.2.3
 lameenc>=1.2
 openunmix

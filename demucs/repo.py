@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -51,14 +51,8 @@ class ModelOnlyRepo:
 
 
 class RemoteRepo(ModelOnlyRepo):
-    def __init__(self, root_url: str, remote_files: tp.List[str]):
-        if not root_url.endswith('/'):
-            root_url += '/'
-        self._models: tp.Dict[str, str] = {}
-        for file in remote_files:
-            sig, checksum = file.split('.')[0].split('-')
-            assert sig not in self._models
-            self._models[sig] = root_url + file
+    def __init__(self, models: tp.Dict[str, str]):
+        self._models = models
 
     def has_model(self, sig: str) -> bool:
         return sig in self._models

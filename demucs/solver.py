@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -254,15 +254,16 @@ class Solver(object):
             # Eval model every `test.every` epoch or on last epoch
             should_eval = (epoch + 1) % self.args.test.every == 0
             is_last = epoch == self.args.epochs - 1
-            reco = metrics['valid']['main']['reco']
-            # Tries to detect divergence in a reliable way and finish job
-            # not to waste compute.
-            div = epoch >= 180 and reco > 0.18
-            div = div or epoch >= 100 and reco > 0.25
-            div = div and self.args.optim.loss == 'l1'
-            if div:
-                logger.warning("Finishing training early because valid loss is too high.")
-                is_last = True
+            # # Tries to detect divergence in a reliable way and finish job
+            # # not to waste compute.
+            # # Commented out as this was super specific to the MDX competition.
+            # reco = metrics['valid']['main']['reco']
+            # div = epoch >= 180 and reco > 0.18
+            # div = div or epoch >= 100 and reco > 0.25
+            # div = div and self.args.optim.loss == 'l1'
+            # if div:
+            #     logger.warning("Finishing training early because valid loss is too high.")
+            #     is_last = True
             if should_eval or is_last:
                 # Evaluate on the testset
                 logger.info('-' * 70)
@@ -290,8 +291,8 @@ class Solver(object):
     def _run_one_epoch(self, epoch, train=True):
         args = self.args
         data_loader = self.loaders['train'] if train else self.loaders['valid']
-        # get a different order for distributed training, otherwise this will get ignored
-        data_loader.sampler.epoch = epoch
+        if distrib.world_size > 1 and train:
+            data_loader.sampler.set_epoch(epoch)
 
         label = ["Valid", "Train"][train]
         name = label + f" | Epoch {epoch + 1}"
