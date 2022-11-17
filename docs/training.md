@@ -183,7 +183,7 @@ The configuration for the Hybrid Transformer models are available in:
 
 ```shell
 dora grid mmi --dry_run --init
-dora grid mmi_ft --dry_run --init  # datasets fined on each sources.
+dora grid mmi_ft --dry_run --init  # fined tuned on each sources.
 ```
 
 We release in particular `955717e8`, Hybrid Transformer Demucs using 5 layers, 512 channels, 10 seconds training segment length. We also release its fine tuned version, with one model
