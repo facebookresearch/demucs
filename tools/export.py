@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -9,6 +9,7 @@ a final checkpoint, with only the model itself. The model is always stored as
 half float to gain space, and because this has zero impact on the final loss.
 When DiffQ was used for training, the model will actually be quantized and bitpacked."""
 from argparse import ArgumentParser
+from fractions import Fraction
 import logging
 from pathlib import Path
 import sys
@@ -49,6 +50,10 @@ def main():
 
         solver.model.load_state_dict(solver.best_state)
         pkg = serialize_model(solver.model, solver.args, solver.quantizer, half=True)
+        if getattr(solver.model, 'use_train_segment', False):
+            batch = solver.augment(next(iter(solver.loaders['train'])))
+            pkg['kwargs']['segment'] = Fraction(batch.shape[-1], solver.model.samplerate)
+            print("Override", pkg['kwargs']['segment'])
         valid, test = None, None
         for m in solver.history:
             if 'valid' in m:

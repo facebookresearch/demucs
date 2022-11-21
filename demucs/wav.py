@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -173,12 +173,13 @@ class Wavset:
             return example
 
 
-def get_wav_datasets(args):
+def get_wav_datasets(args, name='wav'):
     """Extract the wav datasets from the XP arguments."""
-    sig = hashlib.sha1(str(args.wav).encode()).hexdigest()[:8]
+    path = getattr(args, name)
+    sig = hashlib.sha1(str(path).encode()).hexdigest()[:8]
     metadata_file = Path(args.metadata) / ('wav_' + sig + ".json")
-    train_path = Path(args.wav) / "train"
-    valid_path = Path(args.wav) / "valid"
+    train_path = Path(path) / "train"
+    valid_path = Path(path) / "valid"
     if not metadata_file.is_file() and distrib.rank == 0:
         metadata_file.parent.mkdir(exist_ok=True, parents=True)
         train = build_metadata(train_path, args.sources)

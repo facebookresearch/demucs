@@ -11,6 +11,7 @@ dset:
   musdb: /checkpoint/defossez/datasets/musdbhq
   musdb_samplerate: 44100
   wav:  # path to custom wav dataset
+  wav2:  # second custom wav dataset
   segment: 11
   shift: 1
   train_valid: false
@@ -20,6 +21,7 @@ dset:
   normalize: true
   metadata: ./metadata
   sources: ['drums', 'bass', 'other', 'vocals']
+  valid_samples: # valid dataset size
 
 test:
   save: False
@@ -85,6 +87,7 @@ ema:
   epoch: []
   batch: []
 
+use_train_segment: true  # to remove
 model_segment:  # override the segment parameter for the model, usually 4 times the training segment.
 model: demucs
 demucs:  # see demucs/demucs.py for a detailed description
@@ -187,6 +190,84 @@ torch_hdemucs:
   dconv_lstm: 4
   dconv_init: 1e-3
 
+htdemucs:  # see demucs/htdemucs.py for a detailed description
+  # Channels
+  channels: 48
+  channels_time:
+  growth: 2
+  # STFT
+  nfft: 4096
+  wiener_iters: 0
+  end_iters: 0
+  wiener_residual: false
+  cac: true
+  # Main structure
+  depth: 4
+  rewrite: true
+  # Frequency Branch
+  multi_freqs: []
+  multi_freqs_depth: 3
+  freq_emb: 0.2
+  emb_scale: 10
+  emb_smooth: true
+  # Convolutions
+  kernel_size: 8
+  stride: 4
+  time_stride: 2
+  context: 1
+  context_enc: 0
+  # normalization
+  norm_starts: 4
+  norm_groups: 4
+  # DConv residual branch
+  dconv_mode: 1
+  dconv_depth: 2
+  dconv_comp: 8
+  dconv_init: 1e-3
+  # Before the Transformer
+  bottom_channels: 0
+  # CrossTransformer
+  # ------ Common to all
+  # Regular parameters
+  t_layers: 5
+  t_hidden_scale: 4.0
+  t_heads: 8
+  t_dropout: 0.0
+  t_layer_scale: True
+  t_gelu: True
+  # ------------- Positional Embedding
+  t_emb: sin
+  t_max_positions: 10000 # for the scaled embedding
+  t_max_period: 10000.0
+  t_weight_pos_embed: 1.0
+  t_cape_mean_normalize: True
+  t_cape_augment: True
+  t_cape_glob_loc_scale: [5000.0, 1.0, 1.4]
+  t_sin_random_shift: 0
+  # ------------- norm before a transformer encoder
+  t_norm_in: True
+  t_norm_in_group: False
+  # ------------- norm inside the encoder
+  t_group_norm: False
+  t_norm_first: True
+  t_norm_out: True
+  # ------------- optim
+  t_weight_decay: 0.0
+  t_lr:
+  # ------------- sparsity
+  t_sparse_self_attn: False
+  t_sparse_cross_attn: False
+  t_mask_type: diag
+  t_mask_random_seed: 42
+  t_sparse_attn_window: 400
+  t_global_window: 100
+  t_sparsity: 0.95
+  t_auto_sparsity: False
+  # Cross Encoder First (False)
+  t_cross_first: False
+  # Weight init
+  rescale: 0.1
+
 svd:  # see svd.py for documentation
   penalty: 0
   min_size: 0.1
@@ -211,7 +292,7 @@ dora:
 slurm:
   time: 4320
   constraint: volta32gb
-  setup: ['module load cuda/11.0 cudnn/v8.0.3.33-cuda.11.0 NCCL/2.8.3-1-cuda.11.0']
+  setup: ['module load cudnn/v8.4.1.50-cuda.11.6 NCCL/2.11.4-6-cuda.11.6 cuda/11.6']
 
 # Hydra config
 hydra:

@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -8,7 +8,7 @@ import treetable as tt
 
 
 class MyExplorer(Explorer):
-    test_metrics = ['nsdr']
+    test_metrics = ['nsdr', 'sdr_med']
 
     def get_grid_metrics(self):
         """Return the metrics that should be displayed in the tracking table.
@@ -24,10 +24,10 @@ class MyExplorer(Explorer):
                 tt.leaf("reco", ".2%"),
                 tt.leaf("breco", ".2%"),
                 tt.leaf("b_nsdr", ".2f"),
-                tt.leaf("b_nsdr_drums", ".2f"),
-                tt.leaf("b_nsdr_bass", ".2f"),
-                tt.leaf("b_nsdr_other", ".2f"),
-                tt.leaf("b_nsdr_vocals", ".2f"),
+                # tt.leaf("b_nsdr_drums", ".2f"),
+                # tt.leaf("b_nsdr_bass", ".2f"),
+                # tt.leaf("b_nsdr_other", ".2f"),
+                # tt.leaf("b_nsdr_vocals", ".2f"),
              ], align=">"),
             tt.group("test", [
                 tt.leaf(name, ".2f")

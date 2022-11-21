@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -47,6 +47,11 @@ xp = main.get_xp_from_sig(sys.argv[1])
 xp = main.get_xp(xp.argv + sys.argv[2:])
 with xp.enter():
     solver = get_solver(xp.cfg)
+    if getattr(solver.model, 'use_train_segment', False):
+        batch = solver.augment(next(iter(solver.loaders['train'])))
+        solver.model.segment = Fraction(batch.shape[-1], solver.model.samplerate)
+        train_segment = solver.model.segment
+        solver.model.eval()
     model = solver.model
     model.cuda()
     x = torch.randn(2, xp.cfg.dset.channels, int(10 * model.samplerate), device='cuda')

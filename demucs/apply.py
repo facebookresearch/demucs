@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -78,8 +78,12 @@ class TensorChunk:
         else:
             length = min(total_length - offset, length)
 
-        self.tensor = tensor
-        self.offset = offset
+        if isinstance(tensor, TensorChunk):
+            self.tensor = tensor.tensor
+            self.offset = offset + tensor.offset
+        else:
+            self.tensor = tensor
+            self.offset = offset
         self.length = length
         self.device = tensor.device
 
@@ -177,16 +181,30 @@ def apply_model(model, mix, shifts=1, split=True,
         return estimates
 
     model.to(device)
+    model.eval()
     assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
     batch, channels, length = mix.shape
-    if split:
+    if shifts:
+        kwargs['shifts'] = 0
+        max_shift = int(0.5 * model.samplerate)
+        mix = tensor_chunk(mix)
+        padded_mix = mix.padded(length + 2 * max_shift)
+        out = 0
+        for _ in range(shifts):
+            offset = random.randint(0, max_shift)
+            shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
+            shifted_out = apply_model(model, shifted, **kwargs)
+            out += shifted_out[..., max_shift - offset:]
+        out /= shifts
+        return out
+    elif split:
         kwargs['split'] = False
         out = th.zeros(batch, len(model.sources), channels, length, device=mix.device)
         sum_weight = th.zeros(length, device=mix.device)
         segment = int(model.samplerate * model.segment)
         stride = int((1 - overlap) * segment)
         offsets = range(0, length, stride)
-        scale = stride / model.samplerate
+        scale = float(format(stride / model.samplerate, ".2f"))
         # We start from a triangle shaped weight, with maximal weight in the middle
         # of the segment. Then we normalize and take to the power `transition_power`.
         # Large values of transition power will lead to sharper transitions.
@@ -211,19 +229,6 @@ def apply_model(model, mix, shifts=1, split=True,
             sum_weight[offset:offset + segment] += weight[:chunk_length].to(mix.device)
         assert sum_weight.min() > 0
         out /= sum_weight
-        return out
-    elif shifts:
-        kwargs['shifts'] = 0
-        max_shift = int(0.5 * model.samplerate)
-        mix = tensor_chunk(mix)
-        padded_mix = mix.padded(length + 2 * max_shift)
-        out = 0
-        for _ in range(shifts):
-            offset = random.randint(0, max_shift)
-            shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
-            shifted_out = apply_model(model, shifted, **kwargs)
-            out += shifted_out[..., max_shift - offset:]
-        out /= shifts
         return out
     else:
         if hasattr(model, 'valid_length'):

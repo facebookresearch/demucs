@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Meta, Inc. and its affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the license found in the
@@ -28,7 +28,7 @@ def load_track(track, audio_channels, samplerate):
             samplerate=samplerate,
             channels=audio_channels)
     except FileNotFoundError:
-        errors['ffmpeg'] = 'Ffmpeg is not installed.'
+        errors['ffmpeg'] = 'FFmpeg is not installed.'
     except subprocess.CalledProcessError:
         errors['ffmpeg'] = 'FFmpeg could not read the file.'
 
@@ -61,6 +61,13 @@ def main():
                         default=Path("separated"),
                         help="Folder where to put extracted tracks. A subfolder "
                         "with the model name will be created.")
+    parser.add_argument("--filename",
+                        default="{track}/{stem}.{ext}",
+                        help="Set the name of output file. \n"
+                        'Use "{track}", "{trackext}", "{stem}", "{ext}" to use '
+                        "variables of track name without extension, track extension, "
+                        "stem name and default output file extension. \n"
+                        'Default is "{track}/{stem}.{ext}".')
     parser.add_argument("-d",
                         "--device",
                         default="cuda" if th.cuda.is_available() else "cpu",
@@ -116,7 +123,10 @@ def main():
         fatal(error.args[0])
 
     if args.segment is not None and args.segment < 8:
-        fatal('Segment must greater than 8. ')
+        fatal("Segment must greater than 8. ")
+
+    if '..' in args.filename.replace("\\", "/").split("/"):
+        fatal('".." must not appear in filename. ')
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
@@ -155,12 +165,10 @@ def main():
                               num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
-        track_folder = out / track.name.rsplit(".", 1)[0]
-        track_folder.mkdir(exist_ok=True)
         if args.mp3:
-            ext = ".mp3"
+            ext = "mp3"
         else:
-            ext = ".wav"
+            ext = "wav"
         kwargs = {
             'samplerate': model.samplerate,
             'bitrate': args.mp3_bitrate,
@@ -170,18 +178,27 @@ def main():
         }
         if args.stem is None:
             for source, name in zip(sources, model.sources):
-                stem = str(track_folder / (name + ext))
-                save_audio(source, stem, **kwargs)
+                stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                                  trackext=track.name.rsplit(".", 1)[-1],
+                                                  stem=name, ext=ext)
+                stem.parent.mkdir(parents=True, exist_ok=True)
+                save_audio(source, str(stem), **kwargs)
         else:
             sources = list(sources)
-            stem = str(track_folder / (args.stem + ext))
-            save_audio(sources.pop(model.sources.index(args.stem)), stem, **kwargs)
+            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                              trackext=track.name.rsplit(".", 1)[-1],
+                                              stem=args.stem, ext=ext)
+            stem.parent.mkdir(parents=True, exist_ok=True)
+            save_audio(sources.pop(model.sources.index(args.stem)), str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:
                 other_stem += i
-            stem = str(track_folder / ("no_" + args.stem + ext))
-            save_audio(other_stem, stem, **kwargs)
+            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+                                              trackext=track.name.rsplit(".", 1)[-1],
+                                              stem="no_"+args.stem, ext=ext)
+            stem.parent.mkdir(parents=True, exist_ok=True)
+            save_audio(other_stem, str(stem), **kwargs)
 
 
 if __name__ == "__main__":
