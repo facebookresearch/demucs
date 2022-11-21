@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class TorchHDemucsWrapper(nn.Module):
     """Wrapper around torchaudio HDemucs implementation to provide the proper metadata
     for model evaluation.
-    See https://pytorch.org/audio/main/tutorials/hybrid_demucs_tutorial.html"""
+    See https://pytorch.org/audio/stable/tutorials/hybrid_demucs_tutorial.html"""
 
     @capture_init
     def __init__(self,  **kwargs):
