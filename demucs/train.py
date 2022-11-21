@@ -16,6 +16,7 @@ import hydra
 from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 import torch
+from torch import nn
 from torch.utils.data import ConcatDataset
 
 from . import distrib
@@ -25,9 +26,31 @@ from .hdemucs import HDemucs
 from .htdemucs import HTDemucs
 from .repitch import RepitchedWrapper
 from .solver import Solver
+from .states import capture_init
 from .utils import random_subset
 
 logger = logging.getLogger(__name__)
+
+
+class TorchHDemucsWrapper(nn.Module):
+    """Wrapper around torchaudio HDemucs implementation to provide the proper metadata
+    for model evaluation.
+    See https://pytorch.org/audio/stable/tutorials/hybrid_demucs_tutorial.html"""
+
+    @capture_init
+    def __init__(self,  **kwargs):
+        super().__init__()
+        try:
+            from torchaudio.models import HDemucs as TorchHDemucs
+        except ImportError:
+            raise ImportError("Please upgrade torchaudio for using its implementation of HDemucs")
+        self.samplerate = kwargs.pop('samplerate')
+        self.segment = kwargs.pop('segment')
+        self.sources = kwargs['sources']
+        self.torch_hdemucs = TorchHDemucs(**kwargs)
+
+    def forward(self, mix):
+        return self.torch_hdemucs.forward(mix)
 
 
 def get_model(args):
@@ -41,6 +64,7 @@ def get_model(args):
         'demucs': Demucs,
         'hdemucs': HDemucs,
         'htdemucs': HTDemucs,
+        'torch_hdemucs': TorchHDemucsWrapper,
     }[args.model]
     kw = OmegaConf.to_container(getattr(args, args.model), resolve=True)
     model = klass(**extra, **kw)

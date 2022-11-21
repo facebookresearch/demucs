@@ -1,8 +1,11 @@
 # Release notes for Demucs
 
+
 ## V4.0.0a, TBC
 
 Adding hybrid transformer Demucs model.
+
+Added support for [Torchaudio implementation of HDemucs](https://pytorch.org/audio/main/tutorials/hybrid_demucs_tutorial.html), thanks @skim0514.
 
 ## V3.0.6, 16th of November 2022
 

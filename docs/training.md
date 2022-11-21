@@ -88,6 +88,19 @@ Have a look at [conf/config.yaml](../conf/config.yaml) for a list of all the hyp
 If you are not familiar with [Hydra](https://github.com/facebookresearch/hydra), go checkout their page
 to be familiar with how to provide overrides for your trainings.
 
+
+## Model architecture
+
+A number of architectures are supported. You can select one with `model=NAME`, and have a look
+in [conf/config.yaml'(../conf/config.yaml) for each architecture specific hyperparams.
+Those specific params will be always prefixed with the architecture name when passing the override
+from the command line or in grid files. Here is the list of models:
+
+- demucs: original time-only Demucs.
+- hdemucs: Hybrid Demucs (v3).
+- torch_hdemucs: Same as Hybrid Demucs, but using [torchaudio official implementation](https://pytorch.org/audio/stable/tutorials/hybrid_demucs_tutorial.html).
+- htdemucs: Hybrid Transformer Demucs (v4).
+
 ### Storing config in files
 
 As mentioned earlier, you should never change the base config files. However, you can use Hydra config groups
