@@ -237,7 +237,7 @@ The `--overlap` option controls the amount of overlap between prediction windows
 It can probably be reduced to 0.1 to improve a bit speed.
 
 
-The `-j` flag allow to specify a number of parallel jobs (e.g. `demucs -j 2 myfile.mp3`).
+The `-j` flag (CPU only) allows specifying a number of parallel jobs (e.g. `demucs -j 2 myfile.mp3`).
 This will multiply by the same amount the RAM used so be careful!
 
 ### Memory requirements for GPU acceleration
