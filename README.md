@@ -46,7 +46,7 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
-- 16/11/2022: Added the new Hybrid Transformer Demucs models.
+- 16/11/2022: Added the new **Hybrid Transformer Demucs v4** models.
 	Adding support for the [torchaudio implementation of HDemucs](https://pytorch.org/audio/stable/tutorials/hybrid_demucs_tutorial.html).
 - 30/08/2022: added reproducibility and ablation grids, along with an updated version of the paper.
 - 17/08/2022: Releasing v3.0.5: Set split segment length to reduce memory. Compatible with pyTorch 1.12.
