@@ -28,3 +28,5 @@ d12395a8-e57c48e6.th
 92cfc3b6-ef3bcb9c.th
 04573f0d-f3cf25b2.th
 75fc33f5-1941ce65.th
+# Experimental 6 sources model
+5c90dfd2-34c22ccb.th

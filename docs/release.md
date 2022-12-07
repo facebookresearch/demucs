@@ -1,11 +1,13 @@
 # Release notes for Demucs
 
 
-## V4.0.0a, TBC
+## V4.0.0, 7th of December 2022
 
 Adding hybrid transformer Demucs model.
 
 Added support for [Torchaudio implementation of HDemucs](https://pytorch.org/audio/main/tutorials/hybrid_demucs_tutorial.html), thanks @skim0514.
+
+Added experimental 6 sources model `htdemucs_6s` (`drums`, `bass`, `other`, `vocals`, `piano`, `guitar`).
 
 ## V3.0.6, 16th of November 2022
 

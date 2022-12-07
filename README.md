@@ -32,6 +32,8 @@ commands described hereafter with `-n htdemucs_ft`.
 The single, non fine-tuned model is provided as `-n htdemucs`, and the retrained baseline
 as `-n hdemucs_mmi`. The Sparse Hybrid Transformer model decribed in our paper is not provided as its
 requires custom CUDA code that is not ready for release yet.
+We are also releasing an experimental 6 sources model, that adds a `guitar` and `piano` source.
+Quick testing seems to show okay quality for `guitar`, but a lot of bleeding and artifacts for the `piano` source.
 
 
 <p align="center">
@@ -46,6 +48,8 @@ width="800px"></p>
 
 See the [release notes](./docs/release.md) for more details.
 
+- 07/12/2022: Demucs v4 now on PyPI. **htdemucs** model now used by default. Also releasing
+    a 6 sources models (adding `guitar` and `piano`, although the latter doesn't work so well at the moment).
 - 16/11/2022: Added the new **Hybrid Transformer Demucs v4** models.
 	Adding support for the [torchaudio implementation of HDemucs](https://pytorch.org/audio/stable/tutorials/hybrid_demucs_tutorial.html).
 - 30/08/2022: added reproducibility and ablation grids, along with an updated version of the paper.
@@ -58,13 +62,6 @@ See the [release notes](./docs/release.md) for more details.
 	on all sources. This is the model that won Sony MDX challenge.
 - 11/05/2021: Adding support for MusDB-HQ and arbitrary wav set, for the MDX challenge. For more information
 on joining the challenge with Demucs see [the Demucs MDX instructions](docs/mdx.md)
-- 28/04/2021: **Demucs v2**, with extra augmentation and DiffQ based quantization.
-  **EVERYTHING WILL BREAK**, please restart from scratch following the instructions hereafter.
-  This version also adds overlap between prediction frames, with linear transition from one to the next,
-  which should prevent sudden changes at frame boundaries. Also, Demucs is now on PyPI, so for separation
-  only, installation is as easy as `pip install demucs` :)
-- 13/04/2020: **Demucs released under MIT**: We are happy to release Demucs under the MIT licence.
-    We hope that this will broaden the impact of this research to new applications.
 
 
 ## Comparison with other models
@@ -121,9 +118,6 @@ For bleeding edge versions, you can install directly from this repo using
 ```bash
 python3 -m pip install -U git+https://github.com/facebookresearch/demucs#egg=demucs
 ```
-
-**For Hybrid Transformer Demucs,** you must install the bleeding edge version and use either
-`-n htdemucs` or `-n htdemucs_ft`.
 
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
 - **If you are using Windows:** [Windows support](docs/windows.md).
@@ -215,15 +209,17 @@ You can also try to reduce the volume of the input mixture before feeding it to 
 
 Other pre-trained models can be selected with the `-n` flag.
 The list of pre-trained models is:
-- `htdemucs`: first version of Hybrid Transformer Demucs. Trained on MusDB + 800 songs.
+- `htdemucs`: first version of Hybrid Transformer Demucs. Trained on MusDB + 800 songs. Default model.
 - `htdemucs_ft`: fine-tuned version of `htdemucs`, separation will take 4 times more time
     but might be a bit better. Same training set as `htdemucs`.
+- `htdemucs_6s`: 6 sources version of `htdemucs`, with `piano` and `guitar` being added as sources.
+    Note that the `piano` source is not working great at the moment.
 - `hdemucs_mmi`: Hybrid Demucs v3, retrained on MusDB + 800 songs.
 - `mdx`: trained only on MusDB HQ, winning model on track A at the [MDX][mdx] challenge.
 - `mdx_extra`: trained with extra training data (including MusDB test set), ranked 2nd on the track B
     of the [MDX][mdx] challenge.
 - `mdx_q`, `mdx_extra_q`: quantized version of the previous models. Smaller download and storage
-    but quality can be slightly worse. `mdx_extra_q` is the default model used.
+    but quality can be slightly worse.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
 
 The `--two-stems=vocals` option allows to separate vocals from the rest (e.g. karaoke mode).

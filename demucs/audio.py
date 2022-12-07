@@ -244,7 +244,7 @@ def save_audio(wav, path, samplerate, bitrate=320, clip='rescale',
     path = Path(path)
     suffix = path.suffix.lower()
     if suffix == ".mp3":
-        encode_mp3(wav, path, samplerate, bitrate)
+        encode_mp3(wav, path, samplerate, bitrate, verbose=True)
     elif suffix == ".wav":
         if as_float:
             bits_per_sample = 32

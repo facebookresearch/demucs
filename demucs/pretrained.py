@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 import typing as tp
 
-from dora.log import fatal
+from dora.log import fatal, bold
 
 from .hdemucs import HDemucs
 from .repo import RemoteRepo, LocalRepo, ModelOnlyRepo, BagOnlyRepo, AnyModelRepo, ModelLoadingError  # noqa
@@ -20,6 +20,7 @@ ROOT_URL = "https://dl.fbaipublicfiles.com/demucs/"
 REMOTE_ROOT = Path(__file__).parent / 'remote'
 
 SOURCES = ["drums", "bass", "other", "vocals"]
+DEFAULT_MODEL = 'htdemucs'
 
 
 def demucs_unittest():
@@ -30,7 +31,7 @@ def demucs_unittest():
 def add_model_flags(parser):
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument("-s", "--sig", help="Locally trained XP signature.")
-    group.add_argument("-n", "--name", default="mdx_extra_q",
+    group.add_argument("-n", "--name", default=None,
                        help="Pretrained model name or signature. Default is mdx_extra_q.")
     parser.add_argument("--repo", type=Path,
                         help="Folder containing all pre-trained models for use with -n.")
@@ -79,4 +80,10 @@ def get_model_from_args(args):
     """
     Load local model package or pre-trained model.
     """
+    if args.name is None:
+        args.name = DEFAULT_MODEL
+        print(bold("Important: the default model was recently changed to `htdemucs`"),
+              "the latest Hybrid Transformer Demucs model. In some cases, this model can "
+              "actually perform worse than previous models. To get back the old default model "
+              "use `-n mdx_extra_q`.")
     return get_model(name=args.name, repo=args.repo)
