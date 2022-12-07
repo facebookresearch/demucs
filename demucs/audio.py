@@ -207,7 +207,7 @@ def encode_mp3(wav, path, samplerate=44100, bitrate=320, verbose=False):
     encoder.set_bit_rate(bitrate)
     encoder.set_in_sample_rate(samplerate)
     encoder.set_channels(C)
-    encoder.set_quality(4)  # 2-highest, 7-fastest
+    encoder.set_quality(2)  # 2-highest, 7-fastest
     if not verbose:
         encoder.silence()
     wav = wav.data.cpu()
@@ -244,10 +244,7 @@ def save_audio(wav, path, samplerate, bitrate=320, clip='rescale',
     path = Path(path)
     suffix = path.suffix.lower()
     if suffix == ".mp3":
-        import time
-        be = time.time()
         encode_mp3(wav, path, samplerate, bitrate, verbose=True)
-        print("saving", path, "took", time.time() - be)
     elif suffix == ".wav":
         if as_float:
             bits_per_sample = 32
