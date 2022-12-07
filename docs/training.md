@@ -108,7 +108,7 @@ in order to store variants you often use. If you want to create a new variant co
 copy the file `conf/variant/example.yaml` to `conf/variant/my_variant.yaml`, and then you can use it with
 
 ```bash
-dora train -d variant=my_variant
+dora run -d variant=my_variant
 ```
 
 Once you have created this file, you should not edit it once you have started training models with it.
