@@ -10,7 +10,8 @@ from dora import Launcher
 
 @MyExplorer
 def explorer(launcher: Launcher):
-    launcher.slurm_(gpus=8, time=3 * 24 * 60, partition="speechgpt,learnfair")  # 3 days
+    launcher.slurm_(gpus=8, time=3 * 24 * 60, partition="speechgpt,learnfair",
+                    mem_per_gpu=None, constraint='')
     launcher.bind_({"dset.use_musdb": False})
 
     with launcher.job_array():

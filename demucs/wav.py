@@ -34,6 +34,15 @@ def _track_metadata(track, sources, normalize=True, ext=EXT):
     std = 1
     for source in sources + [MIXTURE]:
         file = track / f"{source}{ext}"
+        if source == MIXTURE and not file.exists():
+            audio = 0
+            for sub_source in sources:
+                sub_file = track / f"{sub_source}{ext}"
+                sub_audio, sr = ta.load(sub_file)
+                audio += sub_audio
+            assert audio.abs().max() < 1, ("clipping", audio.abs().max(), file)
+            ta.save(file, audio, sr, encoding='PCM_S')
+
         try:
             info = ta.info(str(file))
         except RuntimeError:
