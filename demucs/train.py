@@ -106,7 +106,10 @@ def get_optimizer(model, args):
 
 
 def get_datasets(args):
-    train_set, valid_set = get_musdb_wav_datasets(args.dset)
+    if args.dset.use_musdb:
+        train_set, valid_set = get_musdb_wav_datasets(args.dset)
+    else:
+        train_set, valid_set = [], []
     if args.dset.wav:
         extra_train_set, extra_valid_set = get_wav_datasets(args.dset)
         if len(args.dset.sources) <= 4:
@@ -137,6 +140,8 @@ def get_datasets(args):
                 valid_set = ConcatDataset([valid_set, extra_valid_set])
     if args.dset.valid_samples is not None:
         valid_set = random_subset(valid_set, args.dset.valid_samples)
+    assert len(train_set)
+    assert len(valid_set)
     return train_set, valid_set
 
 

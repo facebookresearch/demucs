@@ -10,6 +10,7 @@ dummy:
 dset:
   musdb: /checkpoint/defossez/datasets/musdbhq
   musdb_samplerate: 44100
+  use_musdb: true   # set to false to not use musdb as training data.
   wav:  # path to custom wav dataset
   wav2:  # second custom wav dataset
   segment: 11
