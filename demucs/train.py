@@ -17,6 +17,7 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 import torch
 from torch import nn
+import torchaudio
 from torch.utils.data import ConcatDataset
 
 from . import distrib
@@ -106,6 +107,8 @@ def get_optimizer(model, args):
 
 
 def get_datasets(args):
+    if args.dset.backend:
+        torchaudio.set_audio_backend(args.dset.backend)
     if args.dset.use_musdb:
         train_set, valid_set = get_musdb_wav_datasets(args.dset)
     else:

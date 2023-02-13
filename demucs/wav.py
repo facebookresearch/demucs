@@ -40,8 +40,10 @@ def _track_metadata(track, sources, normalize=True, ext=EXT):
                 sub_file = track / f"{sub_source}{ext}"
                 sub_audio, sr = ta.load(sub_file)
                 audio += sub_audio
-            assert audio.abs().max() < 1, ("clipping", audio.abs().max(), file)
-            ta.save(file, audio, sr, encoding='PCM_S')
+            would_clip = audio.abs().max() >= 1
+            if would_clip:
+                assert ta.get_audio_backend() == 'soundfile', 'use dset.backend=soundfile'
+            ta.save(file, audio, sr, encoding='PCM_F')
 
         try:
             info = ta.info(str(file))

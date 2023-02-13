@@ -23,6 +23,7 @@ dset:
   metadata: ./metadata
   sources: ['drums', 'bass', 'other', 'vocals']
   valid_samples: # valid dataset size
+  backend: null   # if provided select torchaudio backend.
 
 test:
   save: False
@@ -288,7 +289,7 @@ quant:  # quantization hyper params
 
 dora:
   dir: outputs
-  exclude: ["misc.*", "slurm.*", 'test.reval', 'flag']
+  exclude: ["misc.*", "slurm.*", 'test.reval', 'flag', 'dset.backend']
 
 slurm:
   time: 4320

@@ -6,4 +6,5 @@ dset:
   use_musdb: false
   samplerate: 44100
   channels: 2
+  backend: soundfile   # must use soundfile as some mixture would clip with sox.
 epochs: 320
