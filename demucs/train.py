@@ -219,7 +219,7 @@ def get_solver_from_sig(sig, model_only=False):
         return get_solver(xp.cfg, model_only)
 
 
-@hydra_main(config_path="../conf", config_name="config")
+@hydra_main(config_path="../conf", config_name="config", version_base="1.1")
 def main(args):
     global __file__
     __file__ = hydra.utils.to_absolute_path(__file__)
