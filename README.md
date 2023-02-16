@@ -254,6 +254,13 @@ In order to reproduce the results from the Track A and Track B submissions, chec
 ## How to cite
 
 ```
+@inproceedings{rouard2022hybrid,
+  title={Hybrid Transformers for Music Source Separation},
+  author={Rouard, Simon and Massa, Francisco and D{\'e}fossez, Alexandre},
+  booktitle={ICASSP 23},
+  year={2023}
+}
+
 @inproceedings{defossez2021hybrid,
   title={Hybrid Spectrogram and Waveform Source Separation},
   author={D{\'e}fossez, Alexandre},
