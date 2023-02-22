@@ -10,6 +10,7 @@ dummy:
 dset:
   musdb: /checkpoint/defossez/datasets/musdbhq
   musdb_samplerate: 44100
+  use_musdb: true   # set to false to not use musdb as training data.
   wav:  # path to custom wav dataset
   wav2:  # second custom wav dataset
   segment: 11
@@ -22,6 +23,7 @@ dset:
   metadata: ./metadata
   sources: ['drums', 'bass', 'other', 'vocals']
   valid_samples: # valid dataset size
+  backend: null   # if provided select torchaudio backend.
 
 test:
   save: False
@@ -287,7 +289,7 @@ quant:  # quantization hyper params
 
 dora:
   dir: outputs
-  exclude: ["misc.*", "slurm.*", 'test.reval', 'flag']
+  exclude: ["misc.*", "slurm.*", 'test.reval', 'flag', 'dset.backend']
 
 slurm:
   time: 4320

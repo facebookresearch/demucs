@@ -17,6 +17,7 @@ from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 import torch
 from torch import nn
+import torchaudio
 from torch.utils.data import ConcatDataset
 
 from . import distrib
@@ -106,7 +107,12 @@ def get_optimizer(model, args):
 
 
 def get_datasets(args):
-    train_set, valid_set = get_musdb_wav_datasets(args.dset)
+    if args.dset.backend:
+        torchaudio.set_audio_backend(args.dset.backend)
+    if args.dset.use_musdb:
+        train_set, valid_set = get_musdb_wav_datasets(args.dset)
+    else:
+        train_set, valid_set = [], []
     if args.dset.wav:
         extra_train_set, extra_valid_set = get_wav_datasets(args.dset)
         if len(args.dset.sources) <= 4:
@@ -137,6 +143,8 @@ def get_datasets(args):
                 valid_set = ConcatDataset([valid_set, extra_valid_set])
     if args.dset.valid_samples is not None:
         valid_set = random_subset(valid_set, args.dset.valid_samples)
+    assert len(train_set)
+    assert len(valid_set)
     return train_set, valid_set
 
 
@@ -211,7 +219,7 @@ def get_solver_from_sig(sig, model_only=False):
         return get_solver(xp.cfg, model_only)
 
 
-@hydra_main(config_path="../conf", config_name="config")
+@hydra_main(config_path="../conf", config_name="config", version_base="1.1")
 def main(args):
     global __file__
     __file__ = hydra.utils.to_absolute_path(__file__)
