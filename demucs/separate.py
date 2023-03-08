@@ -18,7 +18,7 @@ from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
 
 
-def load_track(track, audio_channels, samplerate):
+def load_track(track, audio_channels, samplerate, args):
     errors = {}
     wav = None
 
@@ -42,9 +42,9 @@ def load_track(track, audio_channels, samplerate):
 
     if wav is None:
         print(f"Could not load file {track}. "
-              "Maybe it is not a supported file format? ")
+              "Maybe it is not a supported file format? ") if args.verbose != 0 else None
         for backend, error in errors.items():
-            print(f"When trying to load using {backend}, got the following error: {error}")
+            print(f"When trying to load using {backend}, got the following error: {error}") if args.verbose != 0 else None
         sys.exit(1)
     return wav
 
@@ -54,7 +54,12 @@ def main():
                                      description="Separate the sources for the given tracks")
     parser.add_argument("tracks", nargs='+', type=Path, default=[], help='Path to tracks')
     add_model_flags(parser)
-    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-v",
+                        "--verbose",
+                        type = int,
+                        choices = [0, 1, 2],
+                        default = 2,
+                        help = 'Set output verbosity (0 - none, 1 - error only, 2 - all), defaults to 2.')
     parser.add_argument("-o",
                         "--out",
                         type=Path,
@@ -130,7 +135,7 @@ def main():
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
-              "You will see that many progress bars per track.")
+              "You will see that many progress bars per track.") if args.verbose == 2 else None
         if args.segment is not None:
             for sub in model.models:
                 sub.segment = args.segment
@@ -147,21 +152,25 @@ def main():
                 stem=args.stem, sources=', '.join(model.sources)))
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
-    print(f"Separated tracks will be stored in {out.resolve()}")
+    print(f"Separated tracks will be stored in {out.resolve()}") if args.verbose == 2 else None
     for track in args.tracks:
         if not track.exists():
             print(
                 f"File {track} does not exist. If the path contains spaces, "
                 "please try again after surrounding the entire path with quotes \"\".",
-                file=sys.stderr)
+                file=sys.stderr) if args.verbose != 0 else None
             continue
-        print(f"Separating track {track}")
-        wav = load_track(track, model.audio_channels, model.samplerate)
+        print(f"Separating track {track}") if args.verbose == 2 else None
+        wav = load_track(track, model.audio_channels, model.samplerate, args)
 
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
+        if args.verbose == 2:
+            progress = True
+        else:
+            progress = False
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
-                              split=args.split, overlap=args.overlap, progress=True,
+                              split=args.split, overlap=args.overlap, progress=progress,
                               num_workers=args.jobs)[0]
         sources = sources * ref.std() + ref.mean()
 
