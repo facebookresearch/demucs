@@ -216,7 +216,7 @@ The list of pre-trained models is:
     Note that the `piano` source is not working great at the moment.
 - `hdemucs_mmi`: Hybrid Demucs v3, retrained on MusDB + 800 songs.
 - `mdx`: trained only on MusDB HQ, winning model on track A at the [MDX][mdx] challenge.
-- `mdx_extra`: trained with extra training data (including MusDB test set), ranked 2nd on the track B
+- `mdx_extra`: trained with extra training data (**including MusDB test set**), ranked 2nd on the track B
     of the [MDX][mdx] challenge.
 - `mdx_q`, `mdx_extra_q`: quantized version of the previous models. Smaller download and storage
     but quality can be slightly worse.
