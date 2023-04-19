@@ -24,6 +24,7 @@ def create_sin_embedding(
     pos = shift + torch.arange(length, device=device).view(-1, 1, 1)
     half_dim = dim // 2
     adim = torch.arange(dim // 2, device=device).view(1, 1, -1)
+    max_period = torch.full([], float(max_period), device=device)
     phase = pos / (max_period ** (adim / (half_dim - 1)))
     return torch.cat(
         [
@@ -46,14 +47,13 @@ def create_2d_sin_embedding(d_model, height, width, device="cpu", max_period=100
             "Cannot use sin/cos positional encoding with "
             "odd dimension (got dim={:d})".format(d_model)
         )
-    pe = torch.zeros(d_model, height, width)
+    max_period = torch.full([], float(max_period), device=device)
+    pe = torch.zeros(d_model, height, width, device=device)
     # Each dimension use half of d_model
     d_model = int(d_model / 2)
-    div_term = torch.exp(
-        torch.arange(0.0, d_model, 2) * -(math.log(max_period) / d_model)
-    )
-    pos_w = torch.arange(0.0, width).unsqueeze(1)
-    pos_h = torch.arange(0.0, height).unsqueeze(1)
+    div_term = torch.exp(torch.arange(0.0, d_model, 2, device=device) * -(torch.log(max_period) / d_model))
+    pos_w = torch.arange(0.0, width, device=device).unsqueeze(1)
+    pos_h = torch.arange(0.0, height, device=device).unsqueeze(1)
     pe[0:d_model:2, :, :] = (
         torch.sin(pos_w * div_term).transpose(0, 1).unsqueeze(1).repeat(1, height, 1)
     )
@@ -67,7 +67,7 @@ def create_2d_sin_embedding(d_model, height, width, device="cpu", max_period=100
         torch.cos(pos_h * div_term).transpose(0, 1).unsqueeze(2).repeat(1, 1, width)
     )
 
-    return pe[None, :].to(device)
+    return pe[None, :]
 
 
 def create_sin_embedding_cape(

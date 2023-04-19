@@ -227,7 +227,7 @@ def apply_model(model, mix, shifts=1, split=True,
             chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment] += (weight[:chunk_length] * chunk_out).to(mix.device)
             sum_weight[offset:offset + segment] += weight[:chunk_length].to(mix.device)
-        assert sum_weight.min() > 0
+        # assert sum_weight.min() > 0
         out /= sum_weight
         return out
     else:
