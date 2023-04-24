@@ -242,6 +242,20 @@ If you want to use GPU acceleration, you will need at least 3GB of RAM on your G
 
 If you do not have enough memory on your GPU, simply add `-d cpu` to the command line to use the CPU. With Demucs, processing time should be roughly equal to 1.5 times the duration of the track.
 
+## Calling from another Python program
+
+The main function provides a `opt` parameter as a simple API. You can just pass the parsed command line as this parameter: 
+```python
+# Assume that your command is `demucs --mp3 --two-stems vocals -n mdx_extra "track with space.mp3"`
+# The following codes are same as the command above:
+import demucs.separate
+demucs.separate.main(["--mp3", "--two-stems", "vocals", "-n", "mdx_extra", "track with space.mp3"])
+
+# Or like this
+import demucs.separate
+import shlex
+demucs.separate.main(shlex.split('--mp3 --two-stems vocals -n mdx_extra "track with space.mp3"'))
+```
 
 ## Training Demucs
 
