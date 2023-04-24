@@ -49,7 +49,7 @@ def load_track(track, audio_channels, samplerate):
     return wav
 
 
-def main():
+def main(opts=None):
     parser = argparse.ArgumentParser("demucs.separate",
                                      description="Separate the sources for the given tracks")
     parser.add_argument("tracks", nargs='+', type=Path, default=[], help='Path to tracks')
@@ -115,7 +115,7 @@ def main():
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(opts)
 
     try:
         model = get_model_from_args(args)
