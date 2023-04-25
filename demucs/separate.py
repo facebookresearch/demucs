@@ -114,7 +114,7 @@ def get_parser():
                         type=int,
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
-    
+
     return parser
 
 

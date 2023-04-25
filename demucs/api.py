@@ -215,6 +215,8 @@ class Separator:
         model.to(device)
         model.eval()
         assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
+        if len(wav.shape) == 3:
+            wav = wav[None]
         batch, channels, length = wav.shape
         if shifts:
             kwargs["shifts"] = 0
@@ -289,6 +291,7 @@ class Separator:
                 valid_length = model.valid_length(length)
             else:
                 valid_length = length
+            wav = wav[0]
             ref = wav.mean(0)
             wav = (wav - ref.mean()) / ref.std()
             wav = tensor_chunk(wav[None])
