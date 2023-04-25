@@ -15,7 +15,7 @@ import torch as th
 import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, Union
+from typing import Optional, Callable, Union
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
@@ -333,7 +333,9 @@ class Separator:
                 num_workers=num_workers,
                 pool=pool,
                 callback=callback,
-                callback_arg=_replace_dict(callback_arg if callback_arg else {}, ("audio_length", wav.shape[1])),
+                callback_arg=_replace_dict(
+                    callback_arg if callback_arg else {}, ("audio_length", wav.shape[1])
+                ),
             )
             * ref.std()
             + ref.mean()
@@ -348,8 +350,8 @@ class Separator:
         transition_power=1.0,
         device=None,
         num_workers=None,
-        callback: Callable[[dict], None] = None,
-        callback_arg: dict = None,
+        callback: Optional[Callable[[dict], None]] = None,
+        callback_arg: Optional[dict] = None,
     ):
         if len(self._file) != len(self._wav):
             raise RuntimeError("File list and waves not matched. Please `clear_filelist` first. ")
