@@ -15,11 +15,11 @@ import torch as th
 import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Callable, Union
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model
+from .repo import AnyModel
 from .separate import get_parser
 from .utils import center_trim, DummyPoolExecutor
 
@@ -28,7 +28,7 @@ class LoadAudioError(Exception):
     pass
 
 
-def _replace_dict(_dict: dict, *subs: tuple):
+def _replace_dict(_dict, *subs):
     if _dict is None:
         return
     for key, value in subs:
@@ -37,7 +37,7 @@ def _replace_dict(_dict: dict, *subs: tuple):
 
 
 class Separator:
-    def __init__(self, cmd_line, **kw):
+    def __init__(self, cmd_line=None, **kw):
         self._opts = get_parser().parse_args(cmd_line if cmd_line else [""])
         if not cmd_line:
             self._opts.tracks = []
@@ -132,7 +132,7 @@ class Separator:
         self,
         wav,
         model=None,
-        segment=0,
+        segment=0.0,
         shifts=None,
         split=None,
         overlap=None,
@@ -140,8 +140,8 @@ class Separator:
         device=None,
         num_workers=None,
         pool=None,
-        callback: Union[Callable[[dict], None], None] = None,
-        callback_arg: Union[dict, None] = None,
+        callback=None,
+        callback_arg=None,
     ):
         if model is None:
             if self._model is None:
@@ -167,7 +167,8 @@ class Separator:
         if callback_arg is None:
             callback_arg = {}
         callback_arg = _replace_dict(
-            callback_arg, *{"model_idx_in_bag": 0, "shift_idx": 0, "segment_offset": 0}.items()
+            callback_arg,
+            *{"model_idx_in_bag": 0, "shift_idx": 0, "segment_offset": 0}.items(),
         )
         kwargs = {
             "shifts": shifts,
@@ -307,7 +308,7 @@ class Separator:
         self,
         wav,
         model=None,
-        segment=0,
+        segment=0.0,
         shifts=None,
         split=None,
         overlap=None,
@@ -315,8 +316,8 @@ class Separator:
         device=None,
         num_workers=None,
         pool=None,
-        callback: Union[Callable[[dict], None], None] = None,
-        callback_arg: Union[dict, None] = None,
+        callback=None,
+        callback_arg=None,
     ):
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
@@ -343,15 +344,15 @@ class Separator:
 
     def separate_loaded_audio(
         self,
-        segment=0,
-        split=None,
+        segment=0.0,
         shifts=None,
+        split=None,
         overlap=None,
         transition_power=1.0,
         device=None,
         num_workers=None,
-        callback: Optional[Callable[[dict], None]] = None,
-        callback_arg: Optional[dict] = None,
+        callback=None,
+        callback_arg=None,
     ):
         if len(self._file) != len(self._wav):
             raise RuntimeError("File list and waves not matched. Please `clear_filelist` first. ")
