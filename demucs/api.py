@@ -100,7 +100,7 @@ class Separator:
             if ignore_errors:
                 try:
                     yield track, self._load_audio(track, audio_channels, samplerate)
-                except:
+                except Exception:
                     yield track, None
             else:
                 yield track, self._load_audio(track, audio_channels, samplerate)
