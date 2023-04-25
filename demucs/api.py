@@ -232,7 +232,7 @@ class Separator:
                     if callable(callback)
                     else None,
                 )
-                out += shifted_out[..., max_shift - offset :]
+                out += shifted_out[..., max_shift - offset:]
             out /= shifts
             return out
         elif split:
@@ -275,10 +275,10 @@ class Separator:
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
-                out[..., offset : offset + segment] += (weight[:chunk_length] * chunk_out).to(
+                out[..., offset: offset + segment] += (weight[:chunk_length] * chunk_out).to(
                     wav.device
                 )
-                sum_weight[offset : offset + segment] += weight[:chunk_length].to(wav.device)
+                sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
             return out
