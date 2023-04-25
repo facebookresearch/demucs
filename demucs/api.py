@@ -15,7 +15,7 @@ import torch as th
 import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable
+from typing import Callable, Union
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
@@ -128,7 +128,7 @@ class Separator:
         self._file.append(filename)
         self._wav.append(wav)
 
-    def separate_track(
+    def _separate_track(
         self,
         wav,
         model=None,
@@ -140,8 +140,8 @@ class Separator:
         device=None,
         num_workers=None,
         pool=None,
-        callback: Callable[[dict], None] = None,
-        callback_arg: dict = None,
+        callback: Union[Callable[[dict], None], None] = None,
+        callback_arg: Union[dict, None] = None,
     ):
         if model is None:
             if self._model is None:
@@ -186,7 +186,7 @@ class Separator:
                 original_model_device = next(iter(sub_model.parameters())).device
                 sub_model.to(device)
 
-                out = self.separate_track(
+                out = self._separate_track(
                     wav,
                     model=sub_model,
                     **kwargs,
@@ -215,8 +215,6 @@ class Separator:
         model.to(device)
         model.eval()
         assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
-        if len(wav.shape) == 2:
-            wav = wav[None]
         batch, channels, length = wav.shape
         if shifts:
             kwargs["shifts"] = 0
@@ -227,7 +225,7 @@ class Separator:
             for shift_idx in range(shifts):
                 offset = random.randint(0, max_shift)
                 shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
-                shifted_out = self.separate_track(
+                shifted_out = self._separate_track(
                     shifted,
                     model=model,
                     **kwargs,
@@ -236,7 +234,7 @@ class Separator:
                     if callable(callback)
                     else None,
                 )
-                out += shifted_out[..., max_shift - offset:]
+                out += shifted_out[..., max_shift - offset :]
             out /= shifts
             model.cpu()
             return out
@@ -266,7 +264,7 @@ class Separator:
             for offset in offsets:
                 chunk = TensorChunk(wav, offset, segment)
                 future = pool.submit(
-                    self.separate_track,
+                    self._separate_track,
                     chunk,
                     model=model,
                     **kwargs,
@@ -280,10 +278,10 @@ class Separator:
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
-                out[..., offset: offset + segment] += (weight[:chunk_length] * chunk_out).to(
+                out[..., offset : offset + segment] += (weight[:chunk_length] * chunk_out).to(
                     wav.device
                 )
-                sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
+                sum_weight[offset : offset + segment] += weight[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()
@@ -293,10 +291,7 @@ class Separator:
                 valid_length = model.valid_length(length)
             else:
                 valid_length = length
-            wav = wav[0]
-            ref = wav.mean(0)
-            wav = (wav - ref.mean()) / ref.std()
-            wav = tensor_chunk(wav[None])
+            wav = tensor_chunk(wav)
             padded_mix = wav.padded(valid_length).to(device)
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "start")))
@@ -305,7 +300,43 @@ class Separator:
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "end")))
             model.cpu()
-            return center_trim(out, length) * ref.std() + ref.mean()
+            return center_trim(out, length)
+
+    def separate_audio(
+        self,
+        wav,
+        model=None,
+        segment=0,
+        shifts=None,
+        split=None,
+        overlap=None,
+        transition_power=1.0,
+        device=None,
+        num_workers=None,
+        pool=None,
+        callback: Union[Callable[[dict], None], None] = None,
+        callback_arg: Union[dict, None] = None,
+    ):
+        ref = wav.mean(0)
+        wav = (wav - ref.mean()) / ref.std()
+        return (
+            self._separate_track(
+                wav[None],
+                model=model,
+                segment=segment,
+                shifts=shifts,
+                split=split,
+                overlap=overlap,
+                transition_power=transition_power,
+                device=device,
+                num_workers=num_workers,
+                pool=pool,
+                callback=callback,
+                callback_arg=_replace_dict(callback_arg if callback_arg else {}, ("audio_length", wav.shape[1])),
+            )
+            * ref.std()
+            + ref.mean()
+        )
 
     def separate_loaded_audio(
         self,
@@ -333,14 +364,14 @@ class Separator:
         }
         self._out = []
         for file, wav in zip(self._file, self._wav):
-            out = self.separate_track(
+            out = self.separate_audio(
                 wav,
                 **kwargs,
-                callback_arg=_replace_dict(callback_arg, ("file", file)),
+                callback_arg=_replace_dict(callback_arg if callback_arg else {}, ("file", file)),
                 callback=callback,
             )
-            self._out.append(file, dict(zip(out, self._model.sources)))
-            yield file, dict(zip(out, self._model.sources))
+            self._out.append((file, dict(zip(self._model.sources, out[0]))))
+            yield file, dict(zip(self._model.sources, out[0]))
 
 
 if __name__ == "__main__":
