@@ -29,6 +29,8 @@ class LoadAudioError(Exception):
 
 
 def _replace_dict(_dict: dict, *subs: tuple):
+    if _dict is None:
+        return
     for key, value in subs:
         _dict[key] = value
     return _dict
