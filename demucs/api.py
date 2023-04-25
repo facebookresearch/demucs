@@ -15,7 +15,7 @@ import torch as th
 import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, Hashable, Any
+from typing import Callable
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
@@ -28,7 +28,7 @@ class LoadAudioError(Exception):
     pass
 
 
-def _replace_dict(_dict: dict, *subs: tuple[Hashable, Any]):
+def _replace_dict(_dict: dict, *subs: tuple):
     for key, value in subs:
         _dict[key] = value
     return _dict
