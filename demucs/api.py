@@ -19,7 +19,7 @@ from typing import Callable, Hashable, Any
 from types import NoneType
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
-from .audio import AudioFile, convert_audio
+from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model
 from .separate import get_parser
 from .utils import center_trim, DummyPoolExecutor
@@ -116,6 +116,9 @@ class Separator:
             self._file.append(track)
             self._wav.append(wav)
 
+    def load_audios_from_cmdline(self):
+        self.load_audios_to_model(*self._opts.tracks)
+
     def clear_filelist(self):
         self._wav = []
         self._file = []
@@ -129,22 +132,32 @@ class Separator:
         wav,
         model=None,
         segment=0,
-        shifts=0,
-        split=True,
-        overlap=0.25,
+        shifts=None,
+        split=None,
+        overlap=None,
         transition_power=1.0,
         device=None,
-        num_workers=0,
+        num_workers=None,
         pool=None,
         callback: Callable[[dict], NoneType] = None,
         callback_arg: dict = None,
     ):
-        if device is None:
-            device = self.device
         if model is None:
             if self._model is None:
                 raise RuntimeError("Load a model first! ")
             model = self._model
+        if not segment:
+            segment = self._opts.segment
+        if shifts is None:
+            shifts = self._opts.shifts
+        if split is None:
+            split = self._opts.split
+        if overlap is None:
+            overlap = self._opts.overlap
+        if device is None:
+            device = self.device
+        if num_workers is None:
+            num_workers = self._opts.jobs
         if pool is None:
             if num_workers > 0 and device.type == "cpu":
                 pool = ThreadPoolExecutor(num_workers)
@@ -232,7 +245,6 @@ class Separator:
             segment = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment)
             offsets = range(0, length, stride)
-            scale = float(format(stride / model.samplerate, ".2f"))
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
@@ -278,7 +290,7 @@ class Separator:
                 valid_length = length
             ref = wav.mean(0)
             wav = (wav - ref.mean()) / ref.std()
-            wav = tensor_chunk(wav)
+            wav = tensor_chunk(wav[None])
             padded_mix = wav.padded(valid_length).to(device)
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "start")))
@@ -288,15 +300,15 @@ class Separator:
                 callback(_replace_dict(callback_arg, ("state", "end")))
             return center_trim(out, length) * ref.std() + ref.mean()
 
-    def separate_loaded_track(
+    def separate_loaded_audio(
         self,
         segment=0,
-        split=True,
-        shifts=0,
-        overlap=0.25,
+        split=None,
+        shifts=None,
+        overlap=None,
         transition_power=1.0,
         device=None,
-        num_workers=0,
+        num_workers=None,
         callback: Callable[[dict], NoneType] = None,
         callback_arg: dict = None,
     ):
@@ -322,3 +334,39 @@ class Separator:
             )
             self._out.append(file, dict(zip(out, self._model.sources)))
             yield file, dict(zip(out, self._model.sources))
+
+
+if __name__ == "__main__":
+    # Test API functions
+    # two-stem not supported
+
+    import pathlib
+    import sys
+
+    separator = Separator(sys.argv[1:])
+    separator.load_model()
+    separator.load_audios_from_cmdline()
+    args = separator._opts
+    out = args.out / args.name
+    out.mkdir(parents=True, exist_ok=True)
+    for file, sources in separator.separate_loaded_audio(callback=print):
+        if args.mp3:
+            ext = "mp3"
+        else:
+            ext = "wav"
+        kwargs = {
+            "samplerate": separator._samplerate,
+            "bitrate": args.mp3_bitrate,
+            "clip": args.clip_mode,
+            "as_float": args.float32,
+            "bits_per_sample": 24 if args.int24 else 16,
+        }
+        for stem, source in sources.items():
+            stem = out / args.filename.format(
+                track=pathlib.Path(file).name.rsplit(".", 1)[0],
+                trackext=pathlib.Path(file).name.rsplit(".", 1)[-1],
+                stem=stem,
+                ext=ext,
+            )
+            stem.parent.mkdir(parents=True, exist_ok=True)
+            save_audio(source, str(stem), **kwargs)
