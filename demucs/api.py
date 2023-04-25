@@ -16,7 +16,6 @@ import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Hashable, Any
-from types import NoneType
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
@@ -139,7 +138,7 @@ class Separator:
         device=None,
         num_workers=None,
         pool=None,
-        callback: Callable[[dict], NoneType] = None,
+        callback: Callable[[dict], None] = None,
         callback_arg: dict = None,
     ):
         if model is None:
@@ -309,7 +308,7 @@ class Separator:
         transition_power=1.0,
         device=None,
         num_workers=None,
-        callback: Callable[[dict], NoneType] = None,
+        callback: Callable[[dict], None] = None,
         callback_arg: dict = None,
     ):
         if len(self._file) != len(self._wav):
