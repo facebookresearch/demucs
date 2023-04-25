@@ -122,7 +122,7 @@ def tensor_chunk(tensor_or_chunk):
 
 def apply_model(model, mix, shifts=1, split=True,
                 overlap=0.25, transition_power=1., progress=False, device=None,
-                num_workers=0, pool=None):
+                num_workers=0, segment=None, pool=None):
     """
     Apply model to a given mixture.
 
@@ -157,6 +157,7 @@ def apply_model(model, mix, shifts=1, split=True,
         'progress': progress,
         'device': device,
         'pool': pool,
+        'segment': segment,
     }
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
@@ -201,7 +202,9 @@ def apply_model(model, mix, shifts=1, split=True,
         kwargs['split'] = False
         out = th.zeros(batch, len(model.sources), channels, length, device=mix.device)
         sum_weight = th.zeros(length, device=mix.device)
-        segment = int(model.samplerate * model.segment)
+        if segment is None:
+            segment = model.segment
+        segment = int(model.samplerate * segment)
         stride = int((1 - overlap) * segment)
         offsets = range(0, length, stride)
         scale = float(format(stride / model.samplerate, ".2f"))

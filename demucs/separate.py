@@ -136,12 +136,6 @@ def main(opts=None):
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
-        if args.segment is not None:
-            for sub in model.models:
-                sub.segment = args.segment
-    else:
-        if args.segment is not None:
-            model.segment = args.segment
 
     model.cpu()
     model.eval()
@@ -167,7 +161,7 @@ def main(opts=None):
         wav = (wav - ref.mean()) / ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
                               split=args.split, overlap=args.overlap, progress=True,
-                              num_workers=args.jobs)[0]
+                              num_workers=args.jobs, segment=args.segment)[0]
         sources = sources * ref.std() + ref.mean()
 
         if args.mp3:
