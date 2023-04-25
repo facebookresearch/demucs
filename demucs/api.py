@@ -187,8 +187,8 @@ class Separator:
                 sub_model.to(device)
 
                 out = self.separate_track(
-                    sub_model,
                     wav,
+                    model=sub_model,
                     **kwargs,
                     callback_arg=callback_arg,
                     callback=(
@@ -228,8 +228,8 @@ class Separator:
                 offset = random.randint(0, max_shift)
                 shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
                 shifted_out = self.separate_track(
-                    model,
                     shifted,
+                    model=model,
                     **kwargs,
                     callback_arg=callback_arg,
                     callback=(lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i))))
@@ -238,6 +238,7 @@ class Separator:
                 )
                 out += shifted_out[..., max_shift - offset:]
             out /= shifts
+            model.cpu()
             return out
         elif split:
             kwargs["split"] = False
@@ -266,8 +267,8 @@ class Separator:
                 chunk = TensorChunk(wav, offset, segment)
                 future = pool.submit(
                     self.separate_track,
-                    model,
                     chunk,
+                    model=model,
                     **kwargs,
                     callback_arg=callback_arg,
                     callback=(lambda d, i=offset: callback(_replace_dict(d, ("segment_offset", i))))
@@ -285,6 +286,7 @@ class Separator:
                 sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
+            model.cpu()
             return out
         else:
             if hasattr(model, "valid_length"):
@@ -302,6 +304,7 @@ class Separator:
                 out = model(padded_mix)
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "end")))
+            model.cpu()
             return center_trim(out, length) * ref.std() + ref.mean()
 
     def separate_loaded_audio(
