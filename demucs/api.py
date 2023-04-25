@@ -211,7 +211,8 @@ class Separator:
                 estimates[:, k, :, :] /= totals[k]
             return estimates
 
-        callback_arg["models"] = 1
+        if "models" not in callback_arg:
+            callback_arg["models"] = 1
         model.to(device)
         model.eval()
         assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
