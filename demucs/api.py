@@ -215,7 +215,7 @@ class Separator:
         model.to(device)
         model.eval()
         assert transition_power >= 1, "transition_power < 1 leads to weird behavior."
-        if len(wav.shape) == 3:
+        if len(wav.shape) == 2:
             wav = wav[None]
         batch, channels, length = wav.shape
         if shifts:
