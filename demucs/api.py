@@ -19,7 +19,6 @@ from concurrent.futures import ThreadPoolExecutor
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model
-from .repo import AnyModel
 from .separate import get_parser
 from .utils import center_trim, DummyPoolExecutor
 
