@@ -245,6 +245,8 @@ class Separator:
             sum_weight = th.zeros(length, device=wav.device)
             if segment is None:
                 segment = model.segment
+            segment_old = model.segment
+            model.segment = segment
             segment = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment)
             offsets = range(0, length, stride)
@@ -283,6 +285,7 @@ class Separator:
                     wav.device
                 )
                 sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
+            model.segment = segment_old
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()

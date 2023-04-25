@@ -205,6 +205,8 @@ def apply_model(model, mix, shifts=1, split=True,
         sum_weight = th.zeros(length, device=mix.device)
         if segment is None:
             segment = model.segment
+        segment_old = model.segment
+        model.segment = segment
         segment = int(model.samplerate * segment)
         stride = int((1 - overlap) * segment)
         offsets = range(0, length, stride)
@@ -231,6 +233,7 @@ def apply_model(model, mix, shifts=1, split=True,
             chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment] += (weight[:chunk_length] * chunk_out).to(mix.device)
             sum_weight[offset:offset + segment] += weight[:chunk_length].to(mix.device)
+        model.segment = segment_old
         assert sum_weight.min() > 0
         out /= sum_weight
         return out
