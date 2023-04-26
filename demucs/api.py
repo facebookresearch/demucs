@@ -4,7 +4,15 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""API calls
+"""API methods for demucs
+
+Classes
+=======
+`demucs.api.Separator`: The base separator class
+
+Examples
+========
+See the end of this module (if __name__ == "__main__")
 """
 
 import random
@@ -15,10 +23,13 @@ import torch as th
 import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import Optional, Callable, Union, List, Any, Hashable, Tuple
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model
+from .repo import AnyModel
 from .separate import get_parser
 from .utils import center_trim, DummyPoolExecutor
 
@@ -27,30 +38,34 @@ class LoadAudioError(Exception):
     pass
 
 
-def _replace_dict(_dict, *subs):
+class LoadModelError(Exception):
+    pass
+
+
+def _replace_dict(_dict: Optional[dict], *subs: Tuple[Hashable, Any]) -> dict:
     if _dict is None:
-        return
+        _dict = {}
     for key, value in subs:
         _dict[key] = value
     return _dict
 
 
 class Separator:
-    def __init__(self, cmd_line=None, **kw):
+    def __init__(self, cmd_line: Optional[List[str]] = None, **kw):
         self._opts = get_parser().parse_args(cmd_line if cmd_line else [""])
         if not cmd_line:
             self._opts.tracks = []
-        for key, value in kw:
+        for key, value in kw.items():
             setattr(self._opts, key, value)
         self._model = None
         self._audio_channels = 2
         self._samplerate = 44100
         self.segment = None
-        self._wav = []
-        self._file = []
+        self._wav: List[th.Tensor] = []
+        self._file: List[str] = []
         self.device = self._opts.device
 
-    def load_model(self, model=None, repo=None):
+    def load_model(self, model: Optional[str] = None, repo: Optional[str] = None):
         if self._model is not None:
             raise RuntimeError("Method `load_model` can only be called once. ")
         if model is not None:
@@ -58,11 +73,18 @@ class Separator:
         if repo is not None:
             self._opts.repo = repo
         self._model = get_model(name=self._opts.name, repo=self._opts.repo)
+        if self._model is None:
+            raise LoadModelError("Failed to load model")
         self._audio_channels = self._model.audio_channels
         self._samplerate = self._model.samplerate
         return self._model
 
-    def _load_audio(self, track, audio_channels=None, samplerate=None):
+    def _load_audio(
+        self,
+        track: Path,
+        audio_channels: Optional[int] = None,
+        samplerate: Optional[int] = None,
+    ):
         errors = {}
         wav = None
         if audio_channels is None:
@@ -96,7 +118,13 @@ class Separator:
             )
         return wav
 
-    def load_audios(self, *tracks, audio_channels=None, samplerate=None, ignore_errors=True):
+    def load_audios(
+        self,
+        *tracks: Path,
+        audio_channels: Optional[int] = None,
+        samplerate: Optional[int] = None,
+        ignore_errors=True,
+    ):
         for track in tracks:
             if ignore_errors:
                 try:
@@ -106,7 +134,7 @@ class Separator:
             else:
                 yield track, self._load_audio(track, audio_channels, samplerate)
 
-    def load_audios_to_model(self, *tracks):
+    def load_audios_to_model(self, *tracks: Path):
         if self._model is None:
             raise RuntimeError("Please load model first! ")
         for track, wav in self.load_audios(*tracks):
@@ -123,25 +151,25 @@ class Separator:
         self._wav = []
         self._file = []
 
-    def add_track(self, filename, wav):
+    def add_track(self, filename: str, wav: th.FloatTensor):
         self._file.append(filename)
         self._wav.append(wav)
 
     def _separate_track(
         self,
         wav,
-        model=None,
-        segment=0.0,
-        shifts=None,
-        split=None,
-        overlap=None,
+        model: Optional[AnyModel] = None,
+        segment: Optional[float] = 0.0,
+        shifts: Optional[int] = None,
+        split: Optional[bool] = None,
+        overlap: Optional[float] = None,
         transition_power=1.0,
         device=None,
         num_workers=None,
         pool=None,
-        callback=None,
-        callback_arg=None,
-    ):
+        callback: Union[Callable[[dict], None], None] = None,
+        callback_arg: Union[dict, None] = None,
+    ) -> th.Tensor:
         if model is None:
             if self._model is None:
                 raise RuntimeError("Load a model first! ")
@@ -163,11 +191,8 @@ class Separator:
                 pool = ThreadPoolExecutor(num_workers)
             else:
                 pool = DummyPoolExecutor()
-        if callback_arg is None:
-            callback_arg = {}
         callback_arg = _replace_dict(
-            callback_arg,
-            *{"model_idx_in_bag": 0, "shift_idx": 0, "segment_offset": 0}.items(),
+            callback_arg, *{"model_idx_in_bag": 0, "shift_idx": 0, "segment_offset": 0}.items()
         )
         kwargs = {
             "shifts": shifts,
@@ -179,9 +204,18 @@ class Separator:
             "segment": segment,
         }
         if isinstance(model, BagOfModels):
-            estimates = 0
-            totals = [0] * len(model.sources)
+            estimates = th.Tensor()
+            totals = [0.0] * len(model.sources)
             callback_arg["models"] = len(model.models)
+            kwargs["callback"] = (
+                (
+                    lambda d, i=callback_arg["model_idx_in_bag"]: callback(
+                        _replace_dict(d, ("model_idx_in_bag", i))
+                    )
+                )
+                if callable(callback)
+                else None
+            )
             for sub_model, weight in zip(model.models, model.weights):
                 original_model_device = next(iter(sub_model.parameters())).device
                 sub_model.to(device)
@@ -191,19 +225,15 @@ class Separator:
                     model=sub_model,
                     **kwargs,
                     callback_arg=callback_arg,
-                    callback=(
-                        lambda d, i=callback_arg["model_idx_in_bag"]: callback(
-                            _replace_dict(d, ("model_idx_in_bag", i))
-                        )
-                    )
-                    if callable(callback)
-                    else None,
                 )
                 sub_model.to(original_model_device)
                 for k, inst_weight in enumerate(weight):
                     out[:, k, :, :] *= inst_weight
                     totals[k] += inst_weight
-                estimates += out
+                if not len(estimates):
+                    estimates = out
+                else:
+                    estimates = estimates + out
                 del out
                 callback_arg["model_idx_in_bag"] += 1
 
@@ -222,20 +252,25 @@ class Separator:
             max_shift = int(0.5 * model.samplerate)
             wav = tensor_chunk(wav)
             padded_mix = wav.padded(length + 2 * max_shift)
-            out = 0
+            out = th.Tensor()
             for shift_idx in range(shifts):
                 offset = random.randint(0, max_shift)
                 shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
+                kwargs["callback"] = (
+                    (lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i))))
+                    if callable(callback)
+                    else None
+                )
                 shifted_out = self._separate_track(
                     shifted,
                     model=model,
                     **kwargs,
                     callback_arg=callback_arg,
-                    callback=(lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i))))
-                    if callable(callback)
-                    else None,
                 )
-                out += shifted_out[..., max_shift - offset:]
+                if not len(out):
+                    out = shifted_out[..., max_shift - offset:]
+                else:
+                    out = out + shifted_out[..., max_shift - offset:]
             out /= shifts
             model.cpu()
             return out
@@ -245,24 +280,22 @@ class Separator:
             sum_weight = th.zeros(length, device=wav.device)
             if segment is None:
                 segment = model.segment
-            segment_old = model.segment
-            model.segment = segment
             segment = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment)
             offsets = range(0, length, stride)
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
-            weight = th.cat(
+            weight_seg = th.cat(
                 [
                     th.arange(1, segment // 2 + 1, device=device),
                     th.arange(segment - segment // 2, 0, -1, device=device),
                 ]
             )
-            assert len(weight) == segment
+            assert len(weight_seg) == segment
             # If the overlap < 50%, this will translate to linear transition when
             # transition_power is 1.
-            weight = (weight / weight.max()) ** transition_power
+            weight_seg = (weight_seg / weight_seg.max()) ** transition_power
             futures = []
             for offset in offsets:
                 chunk = TensorChunk(wav, offset, segment)
@@ -281,17 +314,16 @@ class Separator:
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
-                out[..., offset: offset + segment] += (weight[:chunk_length] * chunk_out).to(
+                out[..., offset: offset + segment] += (weight_seg[:chunk_length] * chunk_out).to(
                     wav.device
                 )
-                sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
-            model.segment = segment_old
+                sum_weight[offset: offset + segment] += weight_seg[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()
             return out
         else:
-            if hasattr(model, "valid_length"):
+            if hasattr(model, "valid_length") and callable(model.valid_length):
                 valid_length = model.valid_length(length)
             else:
                 valid_length = length
@@ -309,17 +341,17 @@ class Separator:
     def separate_audio(
         self,
         wav,
-        model=None,
-        segment=0.0,
-        shifts=None,
-        split=None,
-        overlap=None,
+        model: Optional[AnyModel] = None,
+        segment: Optional[float] = 0.0,
+        shifts: Optional[int] = None,
+        split: Optional[bool] = None,
+        overlap: Optional[float] = None,
         transition_power=1.0,
         device=None,
         num_workers=None,
         pool=None,
-        callback=None,
-        callback_arg=None,
+        callback: Union[Callable[[dict], None], None] = None,
+        callback_arg: Union[dict, None] = None,
     ):
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
@@ -336,9 +368,7 @@ class Separator:
                 num_workers=num_workers,
                 pool=pool,
                 callback=callback,
-                callback_arg=_replace_dict(
-                    callback_arg if callback_arg else {}, ("audio_length", wav.shape[1])
-                ),
+                callback_arg=_replace_dict(callback_arg, ("audio_length", wav.shape[1])),
             )
             * ref.std()
             + ref.mean()
@@ -346,18 +376,20 @@ class Separator:
 
     def separate_loaded_audio(
         self,
-        segment=0.0,
-        shifts=None,
-        split=None,
-        overlap=None,
+        segment: Optional[float] = 0.0,
+        shifts: Optional[int] = None,
+        split: Optional[bool] = None,
+        overlap: Optional[float] = None,
         transition_power=1.0,
         device=None,
         num_workers=None,
-        callback=None,
-        callback_arg=None,
+        callback: Optional[Callable[[dict], None]] = None,
+        callback_arg: Optional[dict] = None,
     ):
         if len(self._file) != len(self._wav):
             raise RuntimeError("File list and waves not matched. Please `clear_filelist` first. ")
+        if self._model is None:
+            raise RuntimeError("Load a model first! ")
         kwargs = {
             "model": self._model,
             "shifts": shifts,
@@ -373,7 +405,7 @@ class Separator:
             out = self.separate_audio(
                 wav,
                 **kwargs,
-                callback_arg=_replace_dict(callback_arg if callback_arg else {}, ("file", file)),
+                callback_arg=_replace_dict(callback_arg, ("file", file)),
                 callback=callback,
             )
             self._out.append((file, dict(zip(self._model.sources, out[0]))))
