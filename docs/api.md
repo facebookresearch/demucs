@@ -296,3 +296,7 @@ bitrate: If the suffix of `path` is `.mp3`, it will be used to specify the bitra
 clip: Clipping preventing strategy.
 bits_per_sample: If the suffix of `path` is `.wav`, it will be used to specify the bit depth of wav.
 as_float: If it is True and the suffix of `path` is `.wav`, then `bits_per_sample` will be set to 32 and will write the wave file with float format.
+
+##### Returns
+
+None
