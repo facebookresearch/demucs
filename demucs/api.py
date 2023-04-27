@@ -10,6 +10,10 @@ Classes
 -------
 `demucs.api.Separator`: The base separator class
 
+Functions
+---------
+`demucs.api.save_audio`: Save an audio
+
 Examples
 --------
 See the end of this module (if __name__ == "__main__")
@@ -666,7 +670,6 @@ if __name__ == "__main__":
     # Test API functions
     # two-stem not supported
 
-    import pathlib
     import sys
 
     separator = Separator(sys.argv[1:])
@@ -689,8 +692,8 @@ if __name__ == "__main__":
         }
         for stem, source in sources.items():
             stem = out / args.filename.format(
-                track=pathlib.Path(file).name.rsplit(".", 1)[0],
-                trackext=pathlib.Path(file).name.rsplit(".", 1)[-1],
+                track=Path(file).name.rsplit(".", 1)[0],
+                trackext=Path(file).name.rsplit(".", 1)[-1],
                 stem=stem,
                 ext=ext,
             )
