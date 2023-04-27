@@ -290,11 +290,17 @@ Save audio file.
 ##### Parameters
 
 wav: Audio to be saved
+
 path: The file path to be saved. Ending must be one of `.mp3` and `.wav`.
+
 samplerate: File sample rate.
+
 bitrate: If the suffix of `path` is `.mp3`, it will be used to specify the bitrate of mp3.
+
 clip: Clipping preventing strategy.
+
 bits_per_sample: If the suffix of `path` is `.wav`, it will be used to specify the bit depth of wav.
+
 as_float: If it is True and the suffix of `path` is `.wav`, then `bits_per_sample` will be set to 32 and will write the wave file with float format.
 
 ##### Returns
