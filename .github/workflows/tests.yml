@@ -19,7 +19,7 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: env
-        key: env-${{ hashFiles('**/requirements.txt') }}
+        key: env-${{ hashFiles('**/requirements.txt', '.github/workflows/*') }}
 
     - name: Install dependencies
       run: |
