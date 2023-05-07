@@ -665,6 +665,26 @@ class Separator:
             self._out.append((file, dict(zip(self._model.sources, out[0]))))
             yield file, dict(zip(self._model.sources, out[0]))
 
+    @property
+    def samplerate(self):
+        if self._model is None:
+            warnings.warn("No model is loaded. Will return the default sample rate 44100")
+        return self._samplerate
+    
+    @property
+    def audio_channels(self):
+        if self._model is None:
+            warnings.warn("No model is loaded. Will return the default audio channels 2")
+        return self._audio_channels
+    
+    @property
+    def model(self):
+        return self._model
+    
+    @property
+    def opts(self):
+        return self._opts
+
 
 if __name__ == "__main__":
     # Test API functions
@@ -675,7 +695,7 @@ if __name__ == "__main__":
     separator = Separator(sys.argv[1:])
     separator.load_model()
     separator.load_audios_from_cmdline()
-    args = separator._opts
+    args = separator.opts
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     for file, sources in separator.separate_loaded_audio(callback=print):
@@ -684,7 +704,7 @@ if __name__ == "__main__":
         else:
             ext = "wav"
         kwargs = {
-            "samplerate": separator._samplerate,
+            "samplerate": separator.samplerate,
             "bitrate": args.mp3_bitrate,
             "clip": args.clip_mode,
             "as_float": args.float32,

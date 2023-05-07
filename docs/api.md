@@ -72,6 +72,22 @@ cmd_line (optional): Parsed command line, use `sys.argv[1:]` to use runtime comm
 
 kw: Arguments to be added or replaced in the command line. To get a list of supported keys, you can run `print(demucs.separate.get_parser().parse_args([""]))`.
 
+#### `property samplerate`
+
+A read-only property saving sample rate of the model requires. Will raise a warning if the model is not loaded and return the default value.
+
+#### `property audio_channels`
+
+A read-only property saving audio channels of the model requires. Will raise a warning if the model is not loaded and return the default value.
+
+#### `property model`
+
+A read-only property saving the model.
+
+#### `property model`
+
+A read-only property saving the parsed arguments.
+
 #### `method load_model()`
 
 Load a model to the class and return the model. This could only be called once.
