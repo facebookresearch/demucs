@@ -670,17 +670,17 @@ class Separator:
         if self._model is None:
             warnings.warn("No model is loaded. Will return the default sample rate 44100")
         return self._samplerate
-    
+
     @property
     def audio_channels(self):
         if self._model is None:
             warnings.warn("No model is loaded. Will return the default audio channels 2")
         return self._audio_channels
-    
+
     @property
     def model(self):
         return self._model
-    
+
     @property
     def opts(self):
         return self._opts
