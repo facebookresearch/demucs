@@ -81,7 +81,7 @@ class Separator:
         self._file: List[str] = []
         self.device = self._opts.device
 
-    def load_model(self, model: Optional[str] = None, repo: Optional[str] = None):
+    def load_model(self, model: Optional[str] = None, repo: Optional[Path] = None):
         """
         Load a model to the class and return the model. This could only be called once.
 
