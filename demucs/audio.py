@@ -72,8 +72,7 @@ class AudioFile:
              duration=None,
              streams=slice(None),
              samplerate=None,
-             channels=None,
-             temp_folder=None):
+             channels=None):
         """
         Slightly more efficient implementation than stempeg,
         in particular, this will extract all stems at once
@@ -94,9 +93,6 @@ class AudioFile:
                 See https://sound.stackexchange.com/a/42710.
                 Our definition of mono is simply the average of the two channels. Any other
                 value will be ignored.
-            temp_folder (str or Path or None): temporary folder to use for decoding.
-
-
         """
         streams = np.array(range(len(self)))[streams]
         single = not isinstance(streams, np.ndarray)
