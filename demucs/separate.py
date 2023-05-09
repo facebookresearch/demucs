@@ -126,7 +126,11 @@ def main(opts=None):
             continue
         print(f"Separating track {track}")
         separator.clear_filelist()
-        separator.load_audios_to_model(track)
+        with warnings.catch_warnings(record=True) as w:
+            separator.load_audios_to_model(track)
+            if len(w):
+                print(f"Failed to load {track}. Skipped.", file=sys.stderr)
+                continue
 
         res = next(
             iter(
