@@ -11,7 +11,7 @@ from pathlib import Path
 from dora.log import fatal
 import torch as th
 
-import api
+from .api import Separator, save_audio
 
 from .apply import BagOfModels
 from .pretrained import add_model_flags, ModelLoadingError
@@ -97,7 +97,7 @@ def main(opts=None):
         fatal('".." must not appear in filename.')
 
     try:
-        separator = api.Separator()
+        separator = Separator()
         separator.load_model(model=args.name, repo=args.repo)
     except ModelLoadingError as error:
         fatal(error.args[0])
@@ -109,8 +109,9 @@ def main(opts=None):
         )
 
     if args.stem is not None and args.stem not in separator.model.sources:
-        fatal('error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
-              stem=args.stem, sources=", ".join(separator.model.sources)))
+        fatal('error: stem "{stem}" is not in selected model. '
+              "STEM must be one of {sources}.".format(stem=args.stem,
+              sources=", ".join(separator.model.sources)))
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     print(f"Separated tracks will be stored in {out.resolve()}")
@@ -136,7 +137,7 @@ def main(opts=None):
                     segment=args.segment,
                 )
             )
-        )[1] # type: dict[str, th.Tensor]
+        )[1]
 
         if args.mp3:
             ext = "mp3"
@@ -158,7 +159,7 @@ def main(opts=None):
                     ext=ext,
                 )
                 stem.parent.mkdir(parents=True, exist_ok=True)
-                api.save_audio(source, str(stem), **kwargs)
+                save_audio(source, str(stem), **kwargs)
         else:
             sources = list(res.values())
             stem = out / args.filename.format(
@@ -168,7 +169,8 @@ def main(opts=None):
                 ext=ext,
             )
             stem.parent.mkdir(parents=True, exist_ok=True)
-            api.save_audio(sources.pop(separator.model.sources.index(args.stem)), str(stem), **kwargs)
+            save_audio(sources.pop(separator.model.sources.index(args.stem)),
+                           str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:
@@ -180,7 +182,7 @@ def main(opts=None):
                 ext=ext,
             )
             stem.parent.mkdir(parents=True, exist_ok=True)
-            api.save_audio(other_stem, str(stem), **kwargs)
+            save_audio(other_stem, str(stem), **kwargs)
 
 
 if __name__ == "__main__":
