@@ -477,7 +477,7 @@ class Separator:
                 futures.append((future, offset))
                 offset += segment
             if progress:
-                futures = tqdm.tqdm(futures, unit_scale=scale, unit='seconds')
+                futures = tqdm.tqdm(futures, unit_scale=scale, unit='seconds', ncols=120)
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
