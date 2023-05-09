@@ -14,12 +14,12 @@ import demucs.api
 # Initialize with no parameters:
 separator = demucs.api.Separator()
 
-# Initialize with command line:
-separator = demucs.api.Separator(["-n", "mdx_extra", "--segment=12"])
+# Initialize with parameters:
+separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12)
 
-# Initialize with command line (argv) and add keyword arguments:
-import sys
-separator = demucs.api.Separator(sys.argv[1:], name="mdx_extra")
+# Initialize with parameters and automatically load the model and audios
+# Then you can skip to step 5
+separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12, setup=True)
 ```
 
 3. Load a model
@@ -39,7 +39,7 @@ model = separator.load_model(name="htdemucs_ft", repo="./pretrained")
 audios = ["1.mp3", "2.ogg", "3.flac"]
 separator.load_audios_to_model(*audios)
 
-# Load the audios that is specified in the command line:
+# Load the audios that is specified when calling Separator():
 separator.load_audios_setup()
 ```
 
@@ -68,9 +68,23 @@ The base separator class
 
 ##### Parameters
 
-cmd_line (optional): Parsed command line, use `sys.argv[1:]` to use runtime command line. Supported commands are same as `demucs.separate`. Please remember that not all the options are supported.
+tracks: Tracks to be separated
 
-kw: Arguments to be added or replaced in the command line. To get a list of supported keys, you can run `print(demucs.separate.get_parser().parse_args([""]))`.
+model: Pretrained model name or signature. Default is htdemucs.
+
+repo: Folder containing all pre-trained models for use.
+
+device: Device to use, default is cuda if available else cpu.
+
+shifts: Number of random shifts for equivariant stabilization.
+
+overlap: Overlap between the splits.
+
+split: Split the whole audio into chunks before separating.
+
+segment: The length (seconds) of each chunk.
+
+jobs: Number of jobs.
 
 #### `property samplerate`
 
@@ -224,6 +238,8 @@ callback: A function will be called when the separation of a chunk starts or fin
 
 callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
 
+progress: If true, show a progress bar.
+
 ##### Returns
 
 Separated stems.
@@ -265,6 +281,8 @@ num_workers: Number of jobs. This can increase memory usage but will be much fas
 callback: A function will be called when the separation of a chunk starts or finished. The argument passed to the function will be a dict. For more information, please see the Callback section.
 
 callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
+
+progress: If true, show a progress bar.
 
 ##### Returns
 
