@@ -40,7 +40,7 @@ audios = ["1.mp3", "2.ogg", "3.flac"]
 separator.load_audios_to_model(*audios)
 
 # Load the audios that is specified in the command line:
-separator.load_audios_from_cmdline()
+separator.load_audios_setup()
 ```
 
 5. Separate it!
@@ -83,10 +83,6 @@ A read-only property saving audio channels of the model requires. Will raise a w
 #### `property model`
 
 A read-only property saving the model.
-
-#### `property model`
-
-A read-only property saving the parsed arguments.
 
 #### `method load_model()`
 
@@ -149,7 +145,7 @@ with warnings.catch_warnings(record=True) as w:
     failures = list(i.message.separate('"')[1] for i in w)
 ```
 
-#### `method load_audios_from_cmdline()`
+#### `method load_audios_setup()`
 
 Load audios specied in the command line to the Separator that can be used in `Separator.separate_loaded_audio`.
 
@@ -168,7 +164,7 @@ When an error encountered, this function will only warn and continue loading oth
 ```python
 import warnings
 with warnings.catch_warnings(record=True) as w:
-    Separator.load_audios_from_cmdline()
+    Separator.load_audios_setup()
     failures = list(i.message.separate('"')[1] for i in w)
 ```
 

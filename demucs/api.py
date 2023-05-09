@@ -55,31 +55,60 @@ def _replace_dict(_dict: Optional[dict], *subs: Tuple[Hashable, Any]) -> dict:
 
 
 class Separator:
-    def __init__(self, cmd_line: Optional[List[str]] = None, **kw):
+    def __init__(
+        self,
+        *tracks: Path,
+        setup: bool = False,
+        model: str = "htdemucs",
+        repo: Optional[Path] = None,
+        device: str = "cuda" if th.cuda.is_available() else "cpu",
+        shifts: int = 1,
+        overlap: float = 0.25,
+        split: bool = True,
+        segment: Optional[int] = None,
+        jobs: int = 0,
+    ):
         """
         `class Separator`
         =================
 
         Parameters
         ----------
-        cmd_line (optional): Parsed command line, use `sys.argv[1:]` to use runtime command line. \
-            Supported commands are same as `demucs.separate`. Please remember that not all the \
-            options are supported.
-        kw: Arguments to be added or replaced in the command line. To get a list of supported \
-            keys, you can run `print(dir(demucs.separate.get_parser().parse_args([""])))`.
+        tracks: Tracks to be separated
+        model: Pretrained model name or signature. Default is htdemucs.
+        repo: Folder containing all pre-trained models for use.
+        device: Device to use, default is cuda if available else cpu.
+        shifts: Number of random shifts for equivariant stabilization.
+        overlap: Overlap between the splits.
+        split: Split the whole audio into chunks before separating.
+        segment: The length (seconds) of each chunk.
+        jobs: Number of jobs.
         """
-        self._opts = get_parser().parse_args(cmd_line if cmd_line else [""])
-        if not cmd_line:
-            self._opts.tracks = []
-        for key, value in kw.items():
-            setattr(self._opts, key, value)
+        self._tracks = tracks
+        self._name = model
+        self._repo = repo
+        self._device = device
+        self._shifts = shifts
+        self._overlap = overlap
+        self._split = split
+        self._segment = segment
+        self._jobs = jobs
+
         self._model = None
         self._audio_channels = 2
         self._samplerate = 44100
         self.segment = None
         self._wav: List[th.Tensor] = []
         self._file: List[str] = []
-        self.device = self._opts.device
+
+        if setup:
+            self._setup()
+
+    def _setup(self):
+        if self._name is not None:
+            self.load_model()
+        if self._tracks:
+            self.load_audios_setup()
 
     def load_model(self, model: Optional[str] = None, repo: Optional[Path] = None):
         """
@@ -99,10 +128,12 @@ class Separator:
         if self._model is not None:
             raise RuntimeError("Method `load_model` can only be called once. ")
         if model is not None:
-            self._opts.name = model
+            self._name = model
         if repo is not None:
-            self._opts.repo = repo
-        self._model = get_model(name=self._opts.name, repo=self._opts.repo)
+            self._repo = repo
+        if self._name is None:
+            raise RuntimeError("A model must be specified")
+        self._model = get_model(name=self._name, repo=self._repo)
         if self._model is None:
             raise LoadModelError("Failed to load model")
         self._audio_channels = self._model.audio_channels
@@ -221,7 +252,7 @@ class Separator:
             self._file.append(track)
             self._wav.append(wav)
 
-    def load_audios_from_cmdline(self):
+    def load_audios_setup(self):
         """
         Load audios specied in the command line to the Separator that can be used in
         `Separator.separate_loaded_audio`.
@@ -242,11 +273,11 @@ class Separator:
         ```python
         import warnings
         with warnings.catch_warnings(record=True) as w:
-            Separator.load_audios_from_cmdline()
+            Separator.load_audios_setup()
             failures = list(i.message.separate('"')[1] for i in w)
         ```
         """
-        self.load_audios_to_model(*self._opts.tracks)
+        self.load_audios_to_model(*self._tracks)
 
     def clear_filelist(self):
         """
@@ -306,17 +337,17 @@ class Separator:
                 raise RuntimeError("Load a model first! ")
             model = self._model
         if not segment:
-            segment = self._opts.segment
+            segment = self._segment
         if shifts is None:
-            shifts = self._opts.shifts
+            shifts = self._shifts
         if split is None:
-            split = self._opts.split
+            split = self._split
         if overlap is None:
-            overlap = self._opts.overlap
+            overlap = self._overlap
         if device is None:
             device = self.device
         if num_workers is None:
-            num_workers = self._opts.jobs
+            num_workers = self._jobs
         if pool is None:
             if num_workers > 0 and device.type == "cpu":
                 pool = ThreadPoolExecutor(num_workers)
@@ -681,21 +712,26 @@ class Separator:
     def model(self):
         return self._model
 
-    @property
-    def opts(self):
-        return self._opts
-
 
 if __name__ == "__main__":
     # Test API functions
     # two-stem not supported
 
-    import sys
-
-    separator = Separator(sys.argv[1:])
+    args = get_parser().parse_args()
+    separator = Separator(
+        *args.tracks,
+        setup=True,
+        model=args.name,
+        repo=args.repo,
+        device=args.device,
+        shifts=args.shifts,
+        overlap=args.overlap,
+        split=args.split,
+        segment=args.segment,
+        jobs=args.jobs,
+    )
     separator.load_model()
-    separator.load_audios_from_cmdline()
-    args = separator.opts
+    separator.load_audios_setup()
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     for file, sources in separator.separate_loaded_audio(callback=print):
