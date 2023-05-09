@@ -240,10 +240,10 @@ def prevent_clip(wav, mode='rescale'):
 def save_audio(wav: torch.Tensor,
                path: tp.Union[str, Path],
                samplerate: int,
-               bitrate: tp.Optional[int] = 320,
-               clip: tp.Optional[tp.Literal["rescale", "clamp", "tanh", "none"]] = 'rescale',
-               bits_per_sample: tp.Optional[tp.Literal[16, 24, 32]] = 16,
-               as_float: tp.Optional[bool] = False):
+               bitrate: int = 320,
+               clip: tp.Literal["rescale", "clamp", "tanh", "none"] = 'rescale',
+               bits_per_sample: tp.Literal[16, 24, 32] = 16,
+               as_float: bool = False):
     """Save audio file, automatically preventing clipping if necessary
     based on the given `clip` strategy. If the path ends in `.mp3`, this
     will save as mp3 with the given `bitrate`.

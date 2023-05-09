@@ -7,46 +7,14 @@
 import argparse
 import sys
 from pathlib import Path
-import subprocess
 
 from dora.log import fatal
 import torch as th
-import torchaudio as ta
 
-from .apply import apply_model, BagOfModels
-from .audio import AudioFile, convert_audio, save_audio
-from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
+import api
 
-
-def load_track(track, audio_channels, samplerate):
-    errors = {}
-    wav = None
-
-    try:
-        wav = AudioFile(track).read(
-            streams=0,
-            samplerate=samplerate,
-            channels=audio_channels)
-    except FileNotFoundError:
-        errors['ffmpeg'] = 'FFmpeg is not installed.'
-    except subprocess.CalledProcessError:
-        errors['ffmpeg'] = 'FFmpeg could not read the file.'
-
-    if wav is None:
-        try:
-            wav, sr = ta.load(str(track))
-        except RuntimeError as err:
-            errors['torchaudio'] = err.args[0]
-        else:
-            wav = convert_audio(wav, sr, samplerate, audio_channels)
-
-    if wav is None:
-        print(f"Could not load file {track}. "
-              "Maybe it is not a supported file format? ")
-        for backend, error in errors.items():
-            print(f"When trying to load using {backend}, got the following error: {error}")
-        sys.exit(1)
-    return wav
+from .apply import BagOfModels
+from .pretrained import add_model_flags, ModelLoadingError
 
 
 def get_parser():
@@ -122,82 +90,97 @@ def main(opts=None):
     parser = get_parser()
     args = parser.parse_args(opts)
 
-    try:
-        model = get_model_from_args(args)
-    except ModelLoadingError as error:
-        fatal(error.args[0])
-
     if args.segment is not None and args.segment < 8:
         fatal("Segment must greater than 8. ")
 
-    if '..' in args.filename.replace("\\", "/").split("/"):
-        fatal('".." must not appear in filename. ')
+    if ".." in args.filename.replace("\\", "/").split("/"):
+        fatal('".." must not appear in filename.')
 
-    if isinstance(model, BagOfModels):
-        print(f"Selected model is a bag of {len(model.models)} models. "
-              "You will see that many progress bars per track.")
+    try:
+        separator = api.Separator()
+        separator.load_model(model=args.name, repo=args.repo)
+    except ModelLoadingError as error:
+        fatal(error.args[0])
 
-    model.cpu()
-    model.eval()
+    if isinstance(separator.model, BagOfModels):
+        print(
+            f"Selected model is a bag of {len(separator.model.models)} models. "
+            "You will see that many progress bars per track."
+        )
 
-    if args.stem is not None and args.stem not in model.sources:
-        fatal(
-            'error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
-                stem=args.stem, sources=', '.join(model.sources)))
+    if args.stem is not None and args.stem not in separator.model.sources:
+        fatal('error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
+              stem=args.stem, sources=", ".join(separator.model.sources)))
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     print(f"Separated tracks will be stored in {out.resolve()}")
     for track in args.tracks:
         if not track.exists():
-            print(
-                f"File {track} does not exist. If the path contains spaces, "
-                "please try again after surrounding the entire path with quotes \"\".",
-                file=sys.stderr)
+            print(f"File {track} does not exist. If the path contains spaces, "
+                  'please try again after surrounding the entire path with quotes "".',
+                  file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        wav = load_track(track, model.audio_channels, model.samplerate)
+        separator.clear_filelist()
+        separator.load_audios_to_model(track)
 
-        ref = wav.mean(0)
-        wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
-                              split=args.split, overlap=args.overlap, progress=True,
-                              num_workers=args.jobs, segment=args.segment)[0]
-        sources = sources * ref.std() + ref.mean()
+        res = next(
+            iter(
+                separator.separate_loaded_audio(
+                    device=args.device,
+                    shifts=args.shifts,
+                    split=args.split,
+                    overlap=args.overlap,
+                    progress=True,
+                    num_workers=args.jobs,
+                    segment=args.segment,
+                )
+            )
+        )[1] # type: dict[str, th.Tensor]
 
         if args.mp3:
             ext = "mp3"
         else:
             ext = "wav"
         kwargs = {
-            'samplerate': model.samplerate,
-            'bitrate': args.mp3_bitrate,
-            'clip': args.clip_mode,
-            'as_float': args.float32,
-            'bits_per_sample': 24 if args.int24 else 16,
+            "samplerate": separator.samplerate,
+            "bitrate": args.mp3_bitrate,
+            "clip": args.clip_mode,
+            "as_float": args.float32,
+            "bits_per_sample": 24 if args.int24 else 16,
         }
         if args.stem is None:
-            for source, name in zip(sources, model.sources):
-                stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                                  trackext=track.name.rsplit(".", 1)[-1],
-                                                  stem=name, ext=ext)
+            for name, source in res.items():
+                stem = out / args.filename.format(
+                    track=track.name.rsplit(".", 1)[0],
+                    trackext=track.name.rsplit(".", 1)[-1],
+                    stem=name,
+                    ext=ext,
+                )
                 stem.parent.mkdir(parents=True, exist_ok=True)
-                save_audio(source, str(stem), **kwargs)
+                api.save_audio(source, str(stem), **kwargs)
         else:
-            sources = list(sources)
-            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                              trackext=track.name.rsplit(".", 1)[-1],
-                                              stem=args.stem, ext=ext)
+            sources = list(res.values())
+            stem = out / args.filename.format(
+                track=track.name.rsplit(".", 1)[0],
+                trackext=track.name.rsplit(".", 1)[-1],
+                stem=args.stem,
+                ext=ext,
+            )
             stem.parent.mkdir(parents=True, exist_ok=True)
-            save_audio(sources.pop(model.sources.index(args.stem)), str(stem), **kwargs)
+            api.save_audio(sources.pop(separator.model.sources.index(args.stem)), str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:
                 other_stem += i
-            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                              trackext=track.name.rsplit(".", 1)[-1],
-                                              stem="no_"+args.stem, ext=ext)
+            stem = out / args.filename.format(
+                track=track.name.rsplit(".", 1)[0],
+                trackext=track.name.rsplit(".", 1)[-1],
+                stem="no_" + args.stem,
+                ext=ext,
+            )
             stem.parent.mkdir(parents=True, exist_ok=True)
-            save_audio(other_stem, str(stem), **kwargs)
+            api.save_audio(other_stem, str(stem), **kwargs)
 
 
 if __name__ == "__main__":

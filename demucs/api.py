@@ -21,6 +21,7 @@ See the end of this module (if __name__ == "__main__")
 
 import random
 import subprocess
+import tqdm
 import warnings
 
 import torch as th
@@ -28,10 +29,10 @@ import torchaudio as ta
 
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Optional, Callable, List, Any, Hashable, Tuple
+from typing import Optional, Callable, List, Any, Hashable, Tuple, Union, Literal
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
-from .audio import AudioFile, convert_audio, save_audio
+from .audio import AudioFile, convert_audio, prevent_clip, encode_mp3
 from .pretrained import get_model
 from .repo import AnyModel
 from .separate import get_parser
@@ -87,7 +88,7 @@ class Separator:
         self._tracks = tracks
         self._name = model
         self._repo = repo
-        self._device = device
+        self.device = device
         self._shifts = shifts
         self._overlap = overlap
         self._split = split
@@ -244,10 +245,10 @@ class Separator:
         ```
         """
         if self._model is None:
-            raise RuntimeError("Please load model first! ")
+            raise RuntimeError("Please load model first!")
         for track, wav in self.load_audios(*tracks):
             if wav is None:
-                warnings.warn(f'"{track}" read failed and will not be loaded to model. ')
+                warnings.warn(f'"{track}" read failed and will not be loaded to model.')
                 continue
             self._file.append(track)
             self._wav.append(wav)
@@ -331,10 +332,11 @@ class Separator:
         pool=None,
         callback: Optional[Callable[[dict], None]] = None,
         callback_arg: Optional[dict] = None,
+        progress: bool = False,
     ) -> th.Tensor:
         if model is None:
             if self._model is None:
-                raise RuntimeError("Load a model first! ")
+                raise RuntimeError("Load a model first!")
             model = self._model
         if not segment:
             segment = self._segment
@@ -445,6 +447,7 @@ class Separator:
             segment = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment)
             offsets = range(0, length, stride)
+            scale = float(format(stride / model.samplerate, ".2f"))
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
@@ -473,6 +476,8 @@ class Separator:
                 )
                 futures.append((future, offset))
                 offset += segment
+            if progress:
+                futures = tqdm.tqdm(futures, unit_scale=scale, unit='seconds')
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
@@ -672,9 +677,9 @@ class Separator:
         each time you run this function.
         """
         if len(self._file) != len(self._wav):
-            raise RuntimeError("File list and waves not matched. Please `clear_filelist` first. ")
+            raise RuntimeError("File list and waves not matched. Please `clear_filelist` first.")
         if self._model is None:
-            raise RuntimeError("Load a model first! ")
+            raise RuntimeError("Load a model first!")
         kwargs = {
             "model": self._model,
             "shifts": shifts,
@@ -713,6 +718,44 @@ class Separator:
         return self._model
 
 
+def save_audio(wav: th.Tensor,
+               path: Union[str, Path],
+               samplerate: int,
+               bitrate: int = 320,
+               clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
+               bits_per_sample: Literal[16, 24, 32] = 16,
+               as_float: bool = False):
+    """Save audio file.
+
+    Parameters
+    ----------
+    wav: Audio to be saved.
+    path: The file path to be saved. Ending must be one of `.mp3` and `.wav`.
+    samplerate: File sample rate.
+    bitrate: If the suffix of `path` is `.mp3`, it will be used to specify the bitrate of mp3.
+    clip: Clipping preventing strategy.
+    bits_per_sample: If the suffix of `path` is `.wav`, it will be used to specify the bit depth\
+        of wav.
+    as_float: If it is True and the suffix of `path` is `.wav`, then `bits_per_sample` will be set\
+        to 32 and will write the wave file with float format.
+    """
+    wav = prevent_clip(wav, mode=clip)
+    path = Path(path)
+    suffix = path.suffix.lower()
+    if suffix == ".mp3":
+        encode_mp3(wav, path, samplerate, bitrate, verbose=True)
+    elif suffix == ".wav":
+        if as_float:
+            bits_per_sample = 32
+            encoding = "PCM_F"
+        else:
+            encoding = "PCM_S"
+        ta.save(str(path), wav, sample_rate=samplerate,
+                encoding=encoding, bits_per_sample=bits_per_sample)
+    else:
+        raise ValueError(f"Invalid suffix for path: {suffix}")
+
+
 if __name__ == "__main__":
     # Test API functions
     # two-stem not supported
@@ -730,8 +773,9 @@ if __name__ == "__main__":
         segment=args.segment,
         jobs=args.jobs,
     )
-    separator.load_model()
-    separator.load_audios_setup()
+    # separator.load_model()
+    # separator.load_audios_setup()
+    # These codes are needn't since setup=True
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     for file, sources in separator.separate_loaded_audio(callback=print):
