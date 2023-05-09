@@ -109,9 +109,12 @@ def main(opts=None):
         )
 
     if args.stem is not None and args.stem not in separator.model.sources:
-        fatal('error: stem "{stem}" is not in selected model. '
-              "STEM must be one of {sources}.".format(stem=args.stem,
-              sources=", ".join(separator.model.sources)))
+        fatal(
+            'error: stem "{stem}" is not in selected model. '
+            "STEM must be one of {sources}.".format(
+                stem=args.stem, sources=", ".join(separator.model.sources)
+            )
+        )
     out = args.out / args.name
     out.mkdir(parents=True, exist_ok=True)
     print(f"Separated tracks will be stored in {out.resolve()}")
@@ -170,7 +173,7 @@ def main(opts=None):
             )
             stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(sources.pop(separator.model.sources.index(args.stem)),
-                           str(stem), **kwargs)
+                       str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
             other_stem = th.zeros_like(sources[0])
             for i in sources:

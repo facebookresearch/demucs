@@ -35,7 +35,6 @@ from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, prevent_clip, encode_mp3
 from .pretrained import get_model
 from .repo import AnyModel
-from .separate import get_parser
 from .utils import center_trim, DummyPoolExecutor
 
 
@@ -366,6 +365,7 @@ class Separator:
             "device": device,
             "pool": pool,
             "segment": segment,
+            "progress": progress,
         }
         if isinstance(model, BagOfModels):
             estimates = th.Tensor()
@@ -519,6 +519,7 @@ class Separator:
         pool=None,
         callback: Optional[Callable[[dict], None]] = None,
         callback_arg: Optional[dict] = None,
+        progress: bool = False,
     ):
         """
         Separate an audio.
@@ -552,6 +553,7 @@ class Separator:
             the Callback section.
         callback_arg: A dict containing private parameters to be passed to callback function. For \
             more information, please see the Callback section.
+        progress: If true, show a progress bar.
 
         Returns
         -------
@@ -592,6 +594,7 @@ class Separator:
                 pool=pool,
                 callback=callback,
                 callback_arg=_replace_dict(callback_arg, ("audio_length", wav.shape[1])),
+                progress=progress,
             )
             * ref.std()
             + ref.mean()
@@ -608,6 +611,7 @@ class Separator:
         num_workers=None,
         callback: Optional[Callable[[dict], None]] = None,
         callback_arg: Optional[dict] = None,
+        progress: bool = False,
     ):
         """
         Separate the audio loaded into the Separator.
@@ -637,6 +641,7 @@ class Separator:
             the Callback section.
         callback_arg: A dict containing private parameters to be passed to callback function. For \
             more information, please see the Callback section.
+        progress: If true, show a progress bar.
 
         Returns
         -------
@@ -689,6 +694,7 @@ class Separator:
             "device": device,
             "segment": segment,
             "num_workers": num_workers,
+            "progress": progress,
         }
         self._out = []
         for file, wav in zip(self._file, self._wav):
@@ -759,6 +765,8 @@ def save_audio(wav: th.Tensor,
 if __name__ == "__main__":
     # Test API functions
     # two-stem not supported
+
+    from .separate import get_parser
 
     args = get_parser().parse_args()
     separator = Separator(
