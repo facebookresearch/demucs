@@ -2,13 +2,15 @@
 
 ## Quick start
 
+Notes: Type hints have been added to all API functions. It is recommended to check them before passing parameters to a function as some arguments only support limited types (e.g. parameter `repo` of method `load_model` only support type `pathlib.Path`).
+
 1. The first step is to import api module:
 
 ```python
 import demucs.api
 ```
 
-2. Then initialize the `Separator`. It can either use a command line, or use keyword arguments, or both. The initialize option will do nothing except registering the class. 
+2. Then initialize the `Separator`. Parameters which will be served as default values for methods can be passed. The initialize option will do nothing except registering the class unless you pass `True` to keyword argument `setup` (see the third example below). The setup operation will load model and audio.
 
 ```python
 # Initialize with no parameters:
@@ -29,7 +31,7 @@ separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12, setu
 separator.load_model()
 
 # Or select a model and receive it
-model = separator.load_model(name="htdemucs_ft", repo="./pretrained")
+model = separator.load_model(name="htdemucs_ft", repo=pathlib.Path("./pretrained"))
 ```
 
 4. Load tracks (into the separator if you like, which is recommended)
@@ -53,9 +55,11 @@ separated = separator.separate_loaded_audio()
 6. Save audio
 
 ```python
+# Remember to create the destination folder before calling `save_audio`
+# Or you are likely to recieve `FileNotFoundError`
 for file, sources in separated:
     for stem, source in sources.items():
-        demucs.api.save_audio(source, f"{stem}_{file}", samplerate=separator._samplerate)
+        demucs.api.save_audio(source, f"{stem}_{file}", samplerate=separator.samplerate)
 ```
 
 ## API References
