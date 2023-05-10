@@ -79,28 +79,28 @@ of the naturalness and absence of artifacts given by human listeners (5 = no art
 is a rating from 1 to 5 with 5 being zero contamination by other sources. We refer the reader to our [paper][hybrid_paper],
 for more details.
 
-| Model                        | Domain      | Extra data? | Overall SDR | MOS Quality | MOS Contamination |
-|------------------------------|-------------|-------------|-------------|-------------|-------------------|
-| [Wave-U-Net][waveunet]       | waveform    | no          | 3.2         | -           | -                 |
-| [Open-Unmix][openunmix]      | spectrogram | no          | 5.3         | -           | -                 |
-| [D3Net][d3net]               | spectrogram | no          | 6.0         | -           | -                 |
-| [Conv-Tasnet][demucs_v2]     | waveform    | no          | 5.7         | -           |                   |
-| [Demucs (v2)][demucs_v2]     | waveform    | no          | 6.3         | 2.37        | 2.36              |
-| [ResUNetDecouple+][decouple] | spectrogram | no          | 6.7         | -           | -                 |
-| [KUIELAB-MDX-Net][kuielab]   | hybrid      | no          | 7.5         | **2.86**    | 2.55              |
-| [Band-Spit RNN][bandsplit]   | spectrogram | no          | **8.2**     | -           | -                 |
-| **Hybrid Demucs (v3)**       | hybrid      | no          | 7.7         | **2.83**    | **3.04**          |
-| [MMDenseLSTM][mmdenselstm]   | spectrogram | 804 songs   | 6.0         | -           | -                 |
-| [D3Net][d3net]               | spectrogram | 1.5k songs  | 6.7         | -           | -                 |
-| [Spleeter][spleeter]         | spectrogram | 25k songs   | 5.9         | -           | -                 |
-| [Band-Spit RNN][bandsplit]   | spectrogram | 1.7k (mixes only)     | **9.0**     | -           | -                 |
-| **HT Demucs f.t. (v4)**      | hybrid      | 800 songs   | **9.0**     | -           | -                 |
+| Model                        | Domain      | Extra data?       | Overall SDR | MOS Quality | MOS Contamination |
+|------------------------------|-------------|-------------------|-------------|-------------|-------------------|
+| [Wave-U-Net][waveunet]       | waveform    | no                | 3.2         | -           | -                 |
+| [Open-Unmix][openunmix]      | spectrogram | no                | 5.3         | -           | -                 |
+| [D3Net][d3net]               | spectrogram | no                | 6.0         | -           | -                 |
+| [Conv-Tasnet][demucs_v2]     | waveform    | no                | 5.7         | -           |                   |
+| [Demucs (v2)][demucs_v2]     | waveform    | no                | 6.3         | 2.37        | 2.36              |
+| [ResUNetDecouple+][decouple] | spectrogram | no                | 6.7         | -           | -                 |
+| [KUIELAB-MDX-Net][kuielab]   | hybrid      | no                | 7.5         | **2.86**    | 2.55              |
+| [Band-Spit RNN][bandsplit]   | spectrogram | no                | **8.2**     | -           | -                 |
+| **Hybrid Demucs (v3)**       | hybrid      | no                | 7.7         | **2.83**    | **3.04**          |
+| [MMDenseLSTM][mmdenselstm]   | spectrogram | 804 songs         | 6.0         | -           | -                 |
+| [D3Net][d3net]               | spectrogram | 1.5k songs        | 6.7         | -           | -                 |
+| [Spleeter][spleeter]         | spectrogram | 25k songs         | 5.9         | -           | -                 |
+| [Band-Spit RNN][bandsplit]   | spectrogram | 1.7k (mixes only) | **9.0**     | -           | -                 |
+| **HT Demucs f.t. (v4)**      | hybrid      | 800 songs         | **9.0**     | -           | -                 |
 
 
 
 ## Requirements
 
-You will need at least Python 3.7. See `requirements_minimal.txt` for requirements for separation only,
+You will need at least Python 3.8. See `requirements_minimal.txt` for requirements for separation only,
 and `environment-[cpu|cuda].yml` (or `requirements.txt`) if you want to train a new model.
 
 ### For Windows users
