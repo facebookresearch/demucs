@@ -18,9 +18,10 @@ import tqdm
 
 from .demucs import Demucs
 from .hdemucs import HDemucs
+from .htdemucs import HTDemucs
 from .utils import center_trim, DummyPoolExecutor
 
-Model = tp.Union[Demucs, HDemucs]
+Model = tp.Union[Demucs, HDemucs, HTDemucs]
 
 
 class BagOfModels(nn.Module):
