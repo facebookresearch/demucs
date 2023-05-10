@@ -1,5 +1,16 @@
 # Release notes for Demucs
 
+## V4.1.0a1, TBD
+
+**From this version, Python 3.7 is no longer supported. This is not a problem since the latest PyTorch 2.0.0 no longer support it either.**
+
+Added api.py to be called from another program
+
+Use api in separate.py
+
+Updated process of changing segment to guide developers stop changing the segment attribute of a model directly when applying a model.
+
+Added type `HTDemucs` to type alias `AnyModel`.
 
 ## V4.0.0, 7th of December 2022
 
