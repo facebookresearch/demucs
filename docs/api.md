@@ -32,7 +32,7 @@ separator.load_model()
 
 # Or select a model and receive it
 # If you'd like to use remote models, remove the `repo` parameter
-model = separator.load_model(name="htdemucs_ft", repo=pathlib.Path("./pretrained"))
+model = separator.load_model(model="htdemucs_ft", repo=pathlib.Path("./pretrained"))
 ```
 
 4. Load tracks (into the separator if you like, which is recommended)
@@ -47,6 +47,8 @@ separator.load_audios_setup()
 
 # Add a loaded track to the model
 # e.g. loaded_track = torch.from_numpy(soundfile.read("file.mp3", always_2d=True)[0].transpose())
+# The track should have already been resampled and have the exact amount of channels since the
+# funcion includes no validation of data
 separator.add_track("Anything you'd like to call it", loaded_track)
 ```
 
