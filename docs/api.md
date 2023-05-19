@@ -31,6 +31,7 @@ separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12, setu
 separator.load_model()
 
 # Or select a model and receive it
+# If you'd like to use remote models, remove the `repo` parameter
 model = separator.load_model(name="htdemucs_ft", repo=pathlib.Path("./pretrained"))
 ```
 
