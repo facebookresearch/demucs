@@ -221,7 +221,8 @@ def apply_model(model, mix, shifts=1, split=True,
             futures.append((future, offset))
             offset += segment
         if progress:
-            futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
+            futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds', 
+                                bar_format='{desc}: {percentage:3.0f}%|{bar}| {n:.3f}/{total:.3f} [{elapsed}<{remaining}, ' '{rate_fmt}{postfix}]')
         for future, offset in futures:
             chunk_out = future.result()
             chunk_length = chunk_out.shape[-1]
