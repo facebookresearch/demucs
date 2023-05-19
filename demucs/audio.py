@@ -257,5 +257,7 @@ def save_audio(wav: torch.Tensor,
             encoding = 'PCM_S'
         ta.save(str(path), wav, sample_rate=samplerate,
                 encoding=encoding, bits_per_sample=bits_per_sample)
+    elif suffix == ".flac":
+        ta.save(str(path), wav, sample_rate=samplerate, bits_per_sample=bits_per_sample)
     else:
         raise ValueError(f"Invalid suffix for path: {suffix}")
