@@ -44,6 +44,10 @@ separator.load_audios_to_model(*audios)
 
 # Load the audios that is specified when calling Separator():
 separator.load_audios_setup()
+
+# Add a loaded track to the model
+# e.g. loaded_track = torch.from_numpy(soundfile.read("file.mp3", always_2d=True)[0].transpose())
+separator.add_track("Anything you'd like to call it", loaded_track)
 ```
 
 5. Separate it!
