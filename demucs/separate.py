@@ -157,10 +157,6 @@ def main(opts=None):
         fatal('".." must not appear in filename. ')
 
     if isinstance(model, BagOfModels):
-        print(
-            f"Selected model is a bag of {len(model.models)} models. "
-            "You will see that many progress bars per track."
-        )
         if args.segment is not None:
             for sub in model.models:
                 sub.segment = args.segment
