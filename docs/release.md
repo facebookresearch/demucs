@@ -1,5 +1,9 @@
 # Release notes for Demucs
 
+## V4.0.1a1, TBD
+
+Various improvements by @CarlGao4. Support for `segment` param inside of HTDemucs
+model.
 
 ## V4.0.0, 7th of December 2022
 
