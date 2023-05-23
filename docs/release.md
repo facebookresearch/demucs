@@ -5,6 +5,8 @@
 Various improvements by @CarlGao4. Support for `segment` param inside of HTDemucs
 model.
 
+Made diffq an optional dependency, with an error message if not installed.
+
 ## V4.0.0, 7th of December 2022
 
 Adding hybrid transformer Demucs model.
