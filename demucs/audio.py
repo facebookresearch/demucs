@@ -12,6 +12,7 @@ import julius
 import numpy as np
 import torch
 import torchaudio as ta
+import typing as tp
 
 from .utils import temp_filenames
 
@@ -72,8 +73,7 @@ class AudioFile:
              duration=None,
              streams=slice(None),
              samplerate=None,
-             channels=None,
-             temp_folder=None):
+             channels=None):
         """
         Slightly more efficient implementation than stempeg,
         in particular, this will extract all stems at once
@@ -94,9 +94,6 @@ class AudioFile:
                 See https://sound.stackexchange.com/a/42710.
                 Our definition of mono is simply the average of the two channels. Any other
                 value will be ignored.
-            temp_folder (str or Path or None): temporary folder to use for decoding.
-
-
         """
         streams = np.array(range(len(self)))[streams]
         single = not isinstance(streams, np.ndarray)
@@ -222,6 +219,8 @@ def prevent_clip(wav, mode='rescale'):
     """
     different strategies for avoiding raw clipping.
     """
+    if mode is None or mode == 'none':
+        return wav
     assert wav.dtype.is_floating_point, "too late for clipping"
     if mode == 'rescale':
         wav = wav / max(1.01 * wav.abs().max(), 1)
@@ -234,8 +233,13 @@ def prevent_clip(wav, mode='rescale'):
     return wav
 
 
-def save_audio(wav, path, samplerate, bitrate=320, clip='rescale',
-               bits_per_sample=16, as_float=False):
+def save_audio(wav: torch.Tensor,
+               path: tp.Union[str, Path],
+               samplerate: int,
+               bitrate: int = 320,
+               clip: tp.Literal["rescale", "clamp", "tanh", "none"] = 'rescale',
+               bits_per_sample: tp.Literal[16, 24, 32] = 16,
+               as_float: bool = False):
     """Save audio file, automatically preventing clipping if necessary
     based on the given `clip` strategy. If the path ends in `.mp3`, this
     will save as mp3 with the given `bitrate`.
