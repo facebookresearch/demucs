@@ -49,7 +49,7 @@ def load_track(track, audio_channels, samplerate):
     return wav
 
 
-def main(opts=None):
+def get_parser():
     parser = argparse.ArgumentParser("demucs.separate",
                                      description="Separate the sources for the given tracks")
     parser.add_argument("tracks", nargs='+', type=Path, default=[], help='Path to tracks')
@@ -115,6 +115,11 @@ def main(opts=None):
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
 
+    return parser
+
+
+def main(opts=None):
+    parser = get_parser()
     args = parser.parse_args(opts)
 
     try:
@@ -131,12 +136,6 @@ def main(opts=None):
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
-        if args.segment is not None:
-            for sub in model.models:
-                sub.segment = args.segment
-    else:
-        if args.segment is not None:
-            model.segment = args.segment
 
     model.cpu()
     model.eval()
@@ -162,7 +161,7 @@ def main(opts=None):
         wav = (wav - ref.mean()) / ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
                               split=args.split, overlap=args.overlap, progress=True,
-                              num_workers=args.jobs)[0]
+                              num_workers=args.jobs, segment=args.segment)[0]
         sources = sources * ref.std() + ref.mean()
 
         if args.mp3:
