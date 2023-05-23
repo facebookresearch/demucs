@@ -15,6 +15,7 @@ import torchaudio as ta
 
 from .apply import apply_model, BagOfModels
 from .audio import AudioFile, convert_audio, save_audio
+from .htdemucs import HTDemucs
 from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
 
 
@@ -127,11 +128,14 @@ def main(opts=None):
     except ModelLoadingError as error:
         fatal(error.args[0])
 
-    if args.segment is not None and args.segment < 8:
-        fatal("Segment must greater than 8. ")
-
-    if '..' in args.filename.replace("\\", "/").split("/"):
-        fatal('".." must not appear in filename. ')
+    max_allowed_segment: float = float('inf')
+    if isinstance(model, HTDemucs):
+        max_allowed_segment = float(model.segment)
+    elif isinstance(model, BagOfModels):
+        max_allowed_segment = model.max_allowed_segment
+    if args.segment is not None and args.segment > max_allowed_segment:
+        fatal("Cannot use a Transformer model with a longer segment "
+              f"than it was trained for. Maximum segment is: {max_allowed_segment}")
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
