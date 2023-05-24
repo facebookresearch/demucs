@@ -244,7 +244,13 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             futures.append((future, offset))
             offset += segment_length
         if progress:
-            futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
+            futures = tqdm.tqdm(
+                futures,
+                unit_scale=scale,
+                ncols=80,
+                unit='seconds',
+                bar_format='{desc}: {percentage:3.0f}%|{bar}| {n:.0f}/{total:.0f} [{elapsed}<{remaining},{rate_fmt}{postfix}]'
+                )
         for future, offset in futures:
             chunk_out = future.result()
             chunk_length = chunk_out.shape[-1]
