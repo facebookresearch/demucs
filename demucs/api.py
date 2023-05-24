@@ -373,7 +373,7 @@ class Separator:
             max_allowed_segment = float(model.segment)
         elif isinstance(model, BagOfModels):
             max_allowed_segment = model.max_allowed_segment
-        if args.segment is not None and args.segment > max_allowed_segment:
+        if segment is not None and segment > max_allowed_segment:
             raise ValueError("Cannot use a Transformer model with a longer segment than "
                              f"it was trained for. Maximum segment is: {max_allowed_segment}")
         out: Union[float, th.Tensor]
