@@ -104,8 +104,11 @@ def get_parser():
     parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp"],
                         help="Strategy for avoiding clipping: rescaling entire signal "
                              "if necessary  (rescale) or hard clipping (clamp).")
-    parser.add_argument("--mp3", action="store_true",
-                        help="Convert the output wavs to mp3.")
+    format_group = parser.add_mutually_exclusive_group()
+    format_group.add_argument("--flac", action="store_true",
+                              help="Convert the output wavs to flac.")
+    format_group.add_argument("--mp3", action="store_true",
+                              help="Convert the output wavs to mp3.")
     parser.add_argument("--mp3-bitrate",
                         default=320,
                         type=int,
@@ -128,7 +131,7 @@ def main(opts=None):
     except ModelLoadingError as error:
         fatal(error.args[0])
 
-    max_allowed_segment: float = float('inf')
+    max_allowed_segment = float('inf')
     if isinstance(model, HTDemucs):
         max_allowed_segment = float(model.segment)
     elif isinstance(model, BagOfModels):
@@ -170,6 +173,8 @@ def main(opts=None):
 
         if args.mp3:
             ext = "mp3"
+        elif args.flac:
+            ext = "flac"
         else:
             ext = "wav"
         kwargs = {
