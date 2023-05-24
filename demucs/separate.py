@@ -15,6 +15,7 @@ import torch as th
 from .api import Separator, save_audio
 
 from .apply import BagOfModels
+from .htdemucs import HTDemucs
 from .pretrained import add_model_flags, ModelLoadingError
 
 
