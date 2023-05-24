@@ -369,7 +369,7 @@ class Separator:
             "progress": progress,
         }
         if isinstance(model, BagOfModels):
-            estimates: tp.Union[float, th.Tensor] = 0.
+            estimates: Union[float, th.Tensor] = 0.
             totals = [0.0] * len(model.sources)
             callback_arg["models"] = len(model.models)
             kwargs["callback"] = (
@@ -444,7 +444,7 @@ class Separator:
                 segment = model.segment
             assert segment is not None and segment > 0.
             segment_length = int(model.samplerate * segment)
-            stride = int((1 - overlap) * segment)
+            stride = int((1 - overlap) * segment_length)
             offsets = range(0, length, stride)
             scale = float(format(stride / model.samplerate, ".2f"))
             # We start from a triangle shaped weight, with maximal weight in the middle
@@ -458,7 +458,7 @@ class Separator:
             weight = (weight / weight.max()) ** transition_power
             futures = []
             for offset in offsets:
-                chunk = TensorChunk(wav, offset, segment)
+                chunk = TensorChunk(wav, offset, segment_length)
                 future = pool.submit(
                     self._separate_track,
                     chunk,
@@ -470,16 +470,16 @@ class Separator:
                     else None,
                 )
                 futures.append((future, offset))
-                offset += segment
+                offset += segment_length
             if progress:
                 futures = tqdm.tqdm(futures, unit_scale=scale, unit='seconds', ncols=120)
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
-                out[..., offset: offset + segment] += (weight[:chunk_length] * chunk_out).to(
+                out[..., offset: offset + segment_length] += (weight[:chunk_length] * chunk_out).to(
                     wav.device
                 )
-                sum_weight[offset: offset + segment] += weight[:chunk_length].to(wav.device)
+                sum_weight[offset: offset + segment_length] += weight[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()
