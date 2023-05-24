@@ -14,3 +14,5 @@ Session.vim
 /trash
 /misc
 /mdx
+# mac
+**/.DS_Store
