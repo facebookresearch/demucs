@@ -1,5 +1,5 @@
 # please make sure you have already a pytorch install that is cuda enabled!
-dora-search
+dora-search>=0.1.12
 diffq>=0.2.1
 einops
 flake8

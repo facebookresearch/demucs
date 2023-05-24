@@ -105,6 +105,14 @@ def main(opts=None):
         separator.load_model(model=args.name, repo=args.repo)
     except ModelLoadingError as error:
         fatal(error.args[0])
+    max_allowed_segment: float = float('inf')
+    if isinstance(model, HTDemucs):
+        max_allowed_segment = float(model.segment)
+    elif isinstance(model, BagOfModels):
+        max_allowed_segment = model.max_allowed_segment
+    if args.segment is not None and args.segment > max_allowed_segment:
+        fatal("Cannot use a Transformer model with a longer segment "
+              f"than it was trained for. Maximum segment is: {max_allowed_segment}")
 
     if isinstance(separator.model, BagOfModels):
         print(
