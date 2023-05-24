@@ -94,22 +94,17 @@ def main(opts=None):
     parser = get_parser()
     args = parser.parse_args(opts)
 
-    if args.segment is not None and args.segment < 8:
-        fatal("Segment must greater than 8. ")
-
-    if ".." in args.filename.replace("\\", "/").split("/"):
-        fatal('".." must not appear in filename.')
-
     try:
         separator = Separator()
         separator.load_model(model=args.name, repo=args.repo)
     except ModelLoadingError as error:
         fatal(error.args[0])
+
     max_allowed_segment: float = float('inf')
-    if isinstance(model, HTDemucs):
-        max_allowed_segment = float(model.segment)
-    elif isinstance(model, BagOfModels):
-        max_allowed_segment = model.max_allowed_segment
+    if isinstance(separator.model, HTDemucs):
+        max_allowed_segment = float(separator.model.segment)
+    elif isinstance(separator.model, BagOfModels):
+        max_allowed_segment = separator.model.max_allowed_segment
     if args.segment is not None and args.segment > max_allowed_segment:
         fatal("Cannot use a Transformer model with a longer segment "
               f"than it was trained for. Maximum segment is: {max_allowed_segment}")

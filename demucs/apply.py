@@ -247,7 +247,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
         for future, offset in futures:
             chunk_out = future.result()
-            chunk_length = chunk_out.shape[-1]l.segment = segment_old
+            chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment_length] += (
                 weight[:chunk_length] * chunk_out).to(mix.device)
             sum_weight[offset:offset + segment_length] += weight[:chunk_length].to(mix.device)

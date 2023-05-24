@@ -368,7 +368,7 @@ class Separator:
             "progress": progress,
         }
         if isinstance(model, BagOfModels):
-            estimates = th.Tensor()
+            estimates: tp.Union[float, th.Tensor] = 0.
             totals = [0.0] * len(model.sources)
             callback_arg["models"] = len(model.models)
             kwargs["callback"] = (
@@ -394,13 +394,11 @@ class Separator:
                 for k, inst_weight in enumerate(weight):
                     out[:, k, :, :] *= inst_weight
                     totals[k] += inst_weight
-                if not len(estimates):
-                    estimates = out
-                else:
-                    estimates = estimates + out
+                estimates = estimates + out
                 del out
                 callback_arg["model_idx_in_bag"] += 1
 
+            assert isinstance(estimates, th.Tensor)
             for k in range(estimates.shape[1]):
                 estimates[:, k, :, :] /= totals[k]
             return estimates
@@ -415,8 +413,9 @@ class Separator:
             kwargs["shifts"] = 0
             max_shift = int(0.5 * model.samplerate)
             wav = tensor_chunk(wav)
+            assert isinstance(wav, TensorChunk)
             padded_mix = wav.padded(length + 2 * max_shift)
-            out = th.Tensor()
+            out = 0.
             for shift_idx in range(shifts):
                 offset = random.randint(0, max_shift)
                 shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
@@ -431,11 +430,9 @@ class Separator:
                     **kwargs,
                     callback_arg=callback_arg,
                 )
-                if not len(out):
-                    out = shifted_out[..., max_shift - offset:]
-                else:
-                    out = out + shifted_out[..., max_shift - offset:]
+                out += shifted_out[..., max_shift - offset:]
             out /= shifts
+            assert isinstance(out, th.Tensor)
             model.cpu()
             return out
         elif split:
@@ -444,23 +441,20 @@ class Separator:
             sum_weight = th.zeros(length, device=wav.device)
             if segment is None:
                 segment = model.segment
-            segment = int(model.samplerate * segment)
+            assert segment is not None and segment > 0.
+            segment_length = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment)
             offsets = range(0, length, stride)
             scale = float(format(stride / model.samplerate, ".2f"))
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
-            weight_seg = th.cat(
-                [
-                    th.arange(1, segment // 2 + 1, device=device),
-                    th.arange(segment - segment // 2, 0, -1, device=device),
-                ]
-            )
-            assert len(weight_seg) == segment
+        weight = th.cat([th.arange(1, segment_length // 2 + 1, device=device),
+                         th.arange(segment_length - segment_length // 2, 0, -1, device=device)])
+        assert len(weight) == segment_length
             # If the overlap < 50%, this will translate to linear transition when
             # transition_power is 1.
-            weight_seg = (weight_seg / weight_seg.max()) ** transition_power
+            weight = (weight / weight.max()) ** transition_power
             futures = []
             for offset in offsets:
                 chunk = TensorChunk(wav, offset, segment)
@@ -488,13 +482,18 @@ class Separator:
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()
+            assert isinstance(out, th.Tensor)
             return out
         else:
+            valid_length: int
+            if isinstance(model, HTDemucs) and segment is not None:
+                valid_length = int(segment * model.samplerate)
             if hasattr(model, "valid_length") and callable(model.valid_length):
                 valid_length = model.valid_length(length)
             else:
                 valid_length = length
             wav = tensor_chunk(wav)
+            assert isinstance(wav, TensorChunk)
             padded_mix = wav.padded(valid_length).to(device)
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "start")))
@@ -503,6 +502,7 @@ class Separator:
             if callable(callback):
                 callback(_replace_dict(callback_arg, ("state", "end")))
             model.cpu()
+            assert isinstance(out, th.Tensor)
             return center_trim(out, length)
 
     def separate_audio(
