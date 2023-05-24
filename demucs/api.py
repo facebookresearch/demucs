@@ -33,6 +33,7 @@ from typing import Optional, Callable, List, Any, Hashable, Tuple, Union, Litera
 
 from .apply import BagOfModels, tensor_chunk, TensorChunk
 from .audio import AudioFile, convert_audio, prevent_clip, encode_mp3
+from .htdemucs import HTDemucs
 from .pretrained import get_model
 from .repo import AnyModel
 from .utils import center_trim, DummyPoolExecutor
