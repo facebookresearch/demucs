@@ -68,7 +68,8 @@ class BagOfModels(nn.Module):
     def max_allowed_segment(self) -> float:
         max_allowed_segment = float('inf')
         for model in self.models:
-            max_allowed_segment = min(max_allowed_segment, float(model.segment))
+            if isinstance(model, HTDemucs):
+                max_allowed_segment = min(max_allowed_segment, float(model.segment))
         return max_allowed_segment
 
     def forward(self, x):

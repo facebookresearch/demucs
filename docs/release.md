@@ -19,6 +19,7 @@ model.
 
 Made diffq an optional dependency, with an error message if not installed.
 
+Added output format flac (Free Lossless Audio Codec)
 
 ## V4.0.0, 7th of December 2022
 
