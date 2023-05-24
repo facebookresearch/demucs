@@ -194,14 +194,14 @@ def main(opts=None):
             stem.parent.mkdir(parents=True, exist_ok=True)
             save_audio(sources.pop(model.sources.index(args.stem)), str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
-            other_stem = th.zeros_like(sources[0])
-            for i in sources:
-                other_stem += i
-            stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
-                                              trackext=track.name.rsplit(".", 1)[-1],
-                                              stem="no_"+args.stem, ext=ext)
-            stem.parent.mkdir(parents=True, exist_ok=True)
-            save_audio(other_stem, str(stem), **kwargs)
+            # other_stem = th.zeros_like(sources[0])
+            # for i in sources:
+            #     other_stem += i
+            # stem = out / args.filename.format(track=track.name.rsplit(".", 1)[0],
+            #                                   trackext=track.name.rsplit(".", 1)[-1],
+            #                                   stem="no_"+args.stem, ext=ext)
+            # stem.parent.mkdir(parents=True, exist_ok=True)
+            # save_audio(other_stem, str(stem), **kwargs)
 
 
 if __name__ == "__main__":
