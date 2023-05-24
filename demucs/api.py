@@ -449,9 +449,9 @@ class Separator:
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
-        weight = th.cat([th.arange(1, segment_length // 2 + 1, device=device),
-                         th.arange(segment_length - segment_length // 2, 0, -1, device=device)])
-        assert len(weight) == segment_length
+            weight = th.cat([th.arange(1, segment_length // 2 + 1, device=device),
+                            th.arange(segment_length - segment_length // 2, 0, -1, device=device)])
+            assert len(weight) == segment_length
             # If the overlap < 50%, this will translate to linear transition when
             # transition_power is 1.
             weight = (weight / weight.max()) ** transition_power
