@@ -249,6 +249,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                 unit_scale=scale,
                 ncols=80,
                 unit='seconds',
+                position=0,
                 bar_format='{desc}: {percentage:3.0f}%|{bar}| {n:.0f}/{total:.0f} [{elapsed}<{remaining},{rate_fmt}{postfix}]'
                 )
         for future, offset in futures:
