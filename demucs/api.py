@@ -368,6 +368,7 @@ class Separator:
             "segment": segment,
             "progress": progress,
         }
+        out: Union[float, th.Tensor]
         if isinstance(model, BagOfModels):
             estimates: Union[float, th.Tensor] = 0.
             totals = [0.0] * len(model.sources)
@@ -385,7 +386,7 @@ class Separator:
                 original_model_device = next(iter(sub_model.parameters())).device
                 sub_model.to(device)
 
-                out: Union[float, th.Tensor] = self._separate_track(
+                out = self._separate_track(
                     wav,
                     model=sub_model,
                     **kwargs,
