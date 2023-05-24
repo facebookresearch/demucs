@@ -101,7 +101,7 @@ def main(opts=None):
     except ModelLoadingError as error:
         fatal(error.args[0])
 
-    max_allowed_segment: float = float('inf')
+    max_allowed_segment = float('inf')
     if isinstance(separator.model, HTDemucs):
         max_allowed_segment = float(separator.model.segment)
     elif isinstance(separator.model, BagOfModels):

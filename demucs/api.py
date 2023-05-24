@@ -381,18 +381,18 @@ class Separator:
                 if callable(callback)
                 else None
             )
-            for sub_model, weight in zip(model.models, model.weights):
+            for sub_model, model_weights in zip(model.models, model.weights):
                 original_model_device = next(iter(sub_model.parameters())).device
                 sub_model.to(device)
 
-                out = self._separate_track(
+                out: Union[float, th.Tensor] = self._separate_track(
                     wav,
                     model=sub_model,
                     **kwargs,
                     callback_arg=callback_arg,
                 )
                 sub_model.to(original_model_device)
-                for k, inst_weight in enumerate(weight):
+                for k, inst_weight in enumerate(model_weights):
                     out[:, k, :, :] *= inst_weight
                     totals[k] += inst_weight
                 estimates = estimates + out
