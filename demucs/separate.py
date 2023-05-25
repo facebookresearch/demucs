@@ -137,9 +137,9 @@ def main(opts=None):
         fatal("Cannot use a Transformer model with a longer segment "
               f"than it was trained for. Maximum segment is: {max_allowed_segment}")
 
-    if isinstance(model, BagOfModels):
-        print(f"Selected model is a bag of {len(model.models)} models. "
-              "You will see that many progress bars per track.")
+    # if isinstance(model, BagOfModels):
+    #     print(f"Selected model is a bag of {len(model.models)} models. "
+    #           "You will see that many progress bars per track.")
 
     model.cpu()
     model.eval()
@@ -149,8 +149,8 @@ def main(opts=None):
             'error: stem "{stem}" is not in selected model. STEM must be one of {sources}.'.format(
                 stem=args.stem, sources=', '.join(model.sources)))
     out = args.out / args.name
-    out.mkdir(parents=True, exist_ok=True)
-    print(f"Separated tracks will be stored in {out.resolve()}")
+    # out.mkdir(parents=True, exist_ok=True)
+    # print(f"Separated tracks will be stored in {out.resolve()}")
     for track in args.tracks:
         if not track.exists():
             print(
@@ -158,7 +158,7 @@ def main(opts=None):
                 "please try again after surrounding the entire path with quotes \"\".",
                 file=sys.stderr)
             continue
-        print(f"Separating track {track}")
+        # print(f"Separating track {track}")
         wav = load_track(track, model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
