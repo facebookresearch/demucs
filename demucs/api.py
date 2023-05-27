@@ -368,17 +368,19 @@ class Separator:
             "segment": segment,
             "progress": progress,
         }
-        max_allowed_segment = float('inf')
+        max_allowed_segment = float("inf")
         if isinstance(model, HTDemucs):
             max_allowed_segment = float(model.segment)
         elif isinstance(model, BagOfModels):
             max_allowed_segment = model.max_allowed_segment
         if segment is not None and segment > max_allowed_segment:
-            raise ValueError("Cannot use a Transformer model with a longer segment than "
-                             f"it was trained for. Maximum segment is: {max_allowed_segment}")
+            raise ValueError(
+                "Cannot use a Transformer model with a longer segment than "
+                f"it was trained for. Maximum segment is: {max_allowed_segment}"
+            )
         out: Union[float, th.Tensor]
         if isinstance(model, BagOfModels):
-            estimates: Union[float, th.Tensor] = 0.
+            estimates: Union[float, th.Tensor] = 0.0
             totals = [0.0] * len(model.sources)
             callback_arg["models"] = len(model.models)
             kwargs["callback"] = (
@@ -425,7 +427,7 @@ class Separator:
             wav = tensor_chunk(wav)
             assert isinstance(wav, TensorChunk)
             padded_mix = wav.padded(length + 2 * max_shift)
-            out = 0.
+            out = 0.0
             for shift_idx in range(shifts):
                 offset = random.randint(0, max_shift)
                 shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
@@ -451,7 +453,7 @@ class Separator:
             sum_weight = th.zeros(length, device=wav.device)
             if segment is None:
                 segment = model.segment
-            assert segment is not None and segment > 0.
+            assert segment is not None and segment > 0.0
             segment_length = int(model.samplerate * segment)
             stride = int((1 - overlap) * segment_length)
             offsets = range(0, length, stride)
@@ -459,8 +461,12 @@ class Separator:
             # We start from a triangle shaped weight, with maximal weight in the middle
             # of the segment. Then we normalize and take to the power `transition_power`.
             # Large values of transition power will lead to sharper transitions.
-            weight = th.cat([th.arange(1, segment_length // 2 + 1, device=device),
-                            th.arange(segment_length - segment_length // 2, 0, -1, device=device)])
+            weight = th.cat(
+                [
+                    th.arange(1, segment_length // 2 + 1, device=device),
+                    th.arange(segment_length - segment_length // 2, 0, -1, device=device),
+                ]
+            )
             assert len(weight) == segment_length
             # If the overlap < 50%, this will translate to linear transition when
             # transition_power is 1.
@@ -481,14 +487,14 @@ class Separator:
                 futures.append((future, offset))
                 offset += segment_length
             if progress:
-                futures = tqdm.tqdm(futures, unit_scale=scale, unit='seconds', ncols=120)
+                futures = tqdm.tqdm(futures, unit_scale=scale, unit="seconds", ncols=120)
             for future, offset in futures:
                 chunk_out = future.result()
                 chunk_length = chunk_out.shape[-1]
-                out[..., offset: offset + segment_length] += (weight[:chunk_length] * chunk_out).to(
-                    wav.device
-                )
-                sum_weight[offset: offset + segment_length] += weight[:chunk_length].to(wav.device)
+                out[..., offset : offset + segment_length] += (
+                    weight[:chunk_length] * chunk_out
+                ).to(wav.device)
+                sum_weight[offset : offset + segment_length] += weight[:chunk_length].to(wav.device)
             assert sum_weight.min() > 0
             out /= sum_weight
             model.cpu()
@@ -589,26 +595,26 @@ class Separator:
         Use this function with cautiousness. This function does not provide data verifying.
         """
         ref = wav.mean(0)
-        wav = (wav - ref.mean()) / ref.std()
-        return (
-            self._separate_track(
-                wav[None],
-                model=model,
-                segment=segment,
-                shifts=shifts,
-                split=split,
-                overlap=overlap,
-                transition_power=transition_power,
-                device=device,
-                num_workers=num_workers,
-                pool=pool,
-                callback=callback,
-                callback_arg=_replace_dict(callback_arg, ("audio_length", wav.shape[1])),
-                progress=progress,
-            )
-            * ref.std()
-            + ref.mean()
+        wav -= ref.mean()
+        wav /= ref.std()
+        ret = self._separate_track(
+            wav[None],
+            model=model,
+            segment=segment,
+            shifts=shifts,
+            split=split,
+            overlap=overlap,
+            transition_power=transition_power,
+            device=device,
+            num_workers=num_workers,
+            pool=pool,
+            callback=callback,
+            callback_arg=_replace_dict(callback_arg, ("audio_length", wav.shape[1])),
+            progress=progress,
         )
+        ret *= ref.std()
+        ret += ref.mean()
+        return ret
 
     def separate_loaded_audio(
         self,
@@ -734,13 +740,15 @@ class Separator:
         return self._model
 
 
-def save_audio(wav: th.Tensor,
-               path: Union[str, Path],
-               samplerate: int,
-               bitrate: int = 320,
-               clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
-               bits_per_sample: Literal[16, 24, 32] = 16,
-               as_float: bool = False):
+def save_audio(
+    wav: th.Tensor,
+    path: Union[str, Path],
+    samplerate: int,
+    bitrate: int = 320,
+    clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
+    bits_per_sample: Literal[16, 24, 32] = 16,
+    as_float: bool = False,
+):
     """Save audio file.
 
     Parameters
@@ -766,8 +774,13 @@ def save_audio(wav: th.Tensor,
             encoding = "PCM_F"
         else:
             encoding = "PCM_S"
-        ta.save(str(path), wav, sample_rate=samplerate,
-                encoding=encoding, bits_per_sample=bits_per_sample)
+        ta.save(
+            str(path),
+            wav,
+            sample_rate=samplerate,
+            encoding=encoding,
+            bits_per_sample=bits_per_sample,
+        )
     elif suffix == ".flac":
         ta.save(str(path), wav, sample_rate=samplerate, bits_per_sample=bits_per_sample)
     else:
