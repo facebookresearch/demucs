@@ -32,7 +32,7 @@ def ispectro(z, hop_length=None, length=None, pad=0):
     n_fft = 2 * freqs - 2
     z = z.view(-1, freqs, frames)
     win_length = n_fft // (1 + pad)
-    is_mps = x.device.type == 'mps'
+    is_mps = z.device.type == 'mps'
     if is_mps:
         z = z.cpu()
     x = th.istft(z,
