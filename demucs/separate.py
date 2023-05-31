@@ -165,11 +165,13 @@ def main(opts=None):
         wav = load_track(track, model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
-        wav = (wav - ref.mean()) / ref.std()
+        wav -= ref.mean()
+        wav /= ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
                               split=args.split, overlap=args.overlap, progress=True,
                               num_workers=args.jobs, segment=args.segment)[0]
-        sources = sources * ref.std() + ref.mean()
+        sources *= ref.std()
+        sources += ref.mean()
 
         if args.mp3:
             ext = "mp3"
