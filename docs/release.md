@@ -13,6 +13,8 @@ Added output format flac (Free Lossless Audio Codec)
 
 Will use CPU for complex numbers, when using MPS device (all other computations are performed by mps).
 
+Optimize codes to save memory
+
 ## V4.0.0, 7th of December 2022
 
 Adding hybrid transformer Demucs model.
