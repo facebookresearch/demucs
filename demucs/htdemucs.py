@@ -632,7 +632,7 @@ class HTDemucs(nn.Module):
         x_is_mps = x.device.type == "mps"
         if x_is_mps:
             x = x.cpu()
-        
+
         zout = self._mask(z, x)
         if self.use_train_segment:
             if self.training:
