@@ -70,8 +70,8 @@ class BLSTM(nn.Module):
 def rescale_conv(conv, reference):
     """Rescale initial weight scale. It is unclear why it helps but it certainly does.
     """
-    std = conv.weight.std().detach()
-    scale = (std / reference)**0.5
+    variance = conv.weight.var().detach()
+    scale = (variance / reference) ** 0.5
     conv.weight.data /= scale
     if conv.bias is not None:
         conv.bias.data /= scale
