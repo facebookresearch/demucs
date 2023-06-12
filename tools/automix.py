@@ -78,7 +78,7 @@ def analyse_track(dset, index):
     if cached is None:
         drums = track[0].mean(0)
         if drums.std() > 1e-2 * ref:
-            tempo, events = beat_track(drums.numpy(), units='time', sr=SR)
+            tempo, events = beat_track(y=drums.numpy(), units='time', sr=SR)
         else:
             print("failed drums", drums.std(), ref)
             return None, track
@@ -89,7 +89,7 @@ def analyse_track(dset, index):
         mask = r >= 0.05 * peak
         bass = bass[mask]
         if bass.std() > 1e-2 * ref:
-            kr = torch.from_numpy(chroma_cqt(bass.numpy(), sr=SR))
+            kr = torch.from_numpy(chroma_cqt(y=bass.numpy(), sr=SR))
             hist_kr = (kr.max(dim=0, keepdim=True)[0] == kr).float().mean(1)
         else:
             print("failed bass", bass.std(), ref)

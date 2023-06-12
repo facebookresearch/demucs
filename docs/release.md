@@ -1,5 +1,19 @@
 # Release notes for Demucs
 
+## V4.0.1a1, TBD
+
+**From this version, Python 3.7 is no longer supported. This is not a problem since the latest PyTorch 2.0.0 no longer support it either.**
+
+Various improvements by @CarlGao4. Support for `segment` param inside of HTDemucs
+model.
+
+Made diffq an optional dependency, with an error message if not installed.
+
+Added output format flac (Free Lossless Audio Codec)
+
+Will use CPU for complex numbers, when using MPS device (all other computations are performed by mps).
+
+Optimize codes to save memory
 
 ## V4.0.0, 7th of December 2022
 

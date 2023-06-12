@@ -285,7 +285,7 @@ class Demucs(nn.Module):
             normalize (bool): normalizes the input audio on the fly, and scales back
                 the output by the same amount.
             resample (bool): upsample x2 the input and downsample /2 the output.
-            rescale (int): rescale initial weights of convolutions
+            rescale (float): rescale initial weights of convolutions
                 to get their standard deviation closer to `rescale`.
             samplerate (int): stored as meta information for easing
                 future evaluations of the model.

@@ -4,7 +4,7 @@
 
 Parts of the code are untested on Windows (in particular, training a new model). If you don't have much experience with Anaconda, python or the shell, here are more detailed instructions. Note that **Demucs is not supported on 32bits systems** (as Pytorch is not available there).
 
-- First install Anaconda with **Python 3.7** or more recent, which you can find [here][install].
+- First install Anaconda with **Python 3.8** or more recent, which you can find [here][install].
 - Start the [Anaconda prompt][prompt].
 
 Then, all commands that follow must be run from this prompt.

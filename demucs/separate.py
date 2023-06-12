@@ -15,6 +15,7 @@ import torchaudio as ta
 
 from .apply import apply_model, BagOfModels
 from .audio import AudioFile, convert_audio, save_audio
+from .htdemucs import HTDemucs
 from .pretrained import get_model_from_args, add_model_flags, ModelLoadingError
 
 
@@ -49,7 +50,7 @@ def load_track(track, audio_channels, samplerate):
     return wav
 
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser("demucs.separate",
                                      description="Separate the sources for the given tracks")
     parser.add_argument("tracks", nargs='+', type=Path, default=[], help='Path to tracks')
@@ -103,8 +104,11 @@ def main():
     parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp"],
                         help="Strategy for avoiding clipping: rescaling entire signal "
                              "if necessary  (rescale) or hard clipping (clamp).")
-    parser.add_argument("--mp3", action="store_true",
-                        help="Convert the output wavs to mp3.")
+    format_group = parser.add_mutually_exclusive_group()
+    format_group.add_argument("--flac", action="store_true",
+                              help="Convert the output wavs to flac.")
+    format_group.add_argument("--mp3", action="store_true",
+                              help="Convert the output wavs to mp3.")
     parser.add_argument("--mp3-bitrate",
                         default=320,
                         type=int,
@@ -115,28 +119,30 @@ def main():
                         help="Number of jobs. This can increase memory usage but will "
                              "be much faster when multiple cores are available.")
 
-    args = parser.parse_args()
+    return parser
+
+
+def main(opts=None):
+    parser = get_parser()
+    args = parser.parse_args(opts)
 
     try:
         model = get_model_from_args(args)
     except ModelLoadingError as error:
         fatal(error.args[0])
 
-    if args.segment is not None and args.segment < 8:
-        fatal("Segment must greater than 8. ")
-
-    if '..' in args.filename.replace("\\", "/").split("/"):
-        fatal('".." must not appear in filename. ')
+    max_allowed_segment = float('inf')
+    if isinstance(model, HTDemucs):
+        max_allowed_segment = float(model.segment)
+    elif isinstance(model, BagOfModels):
+        max_allowed_segment = model.max_allowed_segment
+    if args.segment is not None and args.segment > max_allowed_segment:
+        fatal("Cannot use a Transformer model with a longer segment "
+              f"than it was trained for. Maximum segment is: {max_allowed_segment}")
 
     if isinstance(model, BagOfModels):
         print(f"Selected model is a bag of {len(model.models)} models. "
               "You will see that many progress bars per track.")
-        if args.segment is not None:
-            for sub in model.models:
-                sub.segment = args.segment
-    else:
-        if args.segment is not None:
-            model.segment = args.segment
 
     model.cpu()
     model.eval()
@@ -159,14 +165,18 @@ def main():
         wav = load_track(track, model.audio_channels, model.samplerate)
 
         ref = wav.mean(0)
-        wav = (wav - ref.mean()) / ref.std()
+        wav -= ref.mean()
+        wav /= ref.std()
         sources = apply_model(model, wav[None], device=args.device, shifts=args.shifts,
                               split=args.split, overlap=args.overlap, progress=True,
-                              num_workers=args.jobs)[0]
-        sources = sources * ref.std() + ref.mean()
+                              num_workers=args.jobs, segment=args.segment)[0]
+        sources *= ref.std()
+        sources += ref.mean()
 
         if args.mp3:
             ext = "mp3"
+        elif args.flac:
+            ext = "flac"
         else:
             ext = "wav"
         kwargs = {
