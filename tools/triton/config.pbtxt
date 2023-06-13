@@ -1,4 +1,4 @@
-name: "pytorch"
+name: "htdemucs"
 backend: "python"
 
 input [
