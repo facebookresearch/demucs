@@ -103,7 +103,14 @@ class TritonPythonModel:
 
             out = apply_model(
                 self.model,
-                wav.as_numpy())
+                wav,
+                device="cuda",
+                shifts=0,
+                split=True,
+                overlap=0.25,
+                progress=True,
+                num_workers=0,
+            )
 
             # Create output tensors. You need pb_utils.Tensor
             # objects to create pb_utils.InferenceResponse.
