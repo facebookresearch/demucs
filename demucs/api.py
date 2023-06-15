@@ -244,7 +244,8 @@ class Separator:
         Use this function with cautiousness. This function does not provide data verifying.
         """
         ref = wav.mean(0)
-        wav = (wav - ref.mean()) / ref.std()
+        wav -= ref.mean()
+        wav /= ref.std()
         out = apply_model(
                 self._model,
                 wav[None],
@@ -259,7 +260,9 @@ class Separator:
                     self._callback_arg, ("audio_length", wav.shape[1])  # type: ignore[attr-defined]
                 ),
                 progress=self._progress,  # type: ignore[attr-defined]
-            ) * ref.std() + ref.mean()
+            )
+        out *= ref.std()
+        out += ref.mean()
         return (wav, dict(zip(self._model.sources, out[0])))
 
     def separate_audio_file(self, file: Path):
@@ -294,13 +297,15 @@ class Separator:
         return self._model
 
 
-def save_audio(wav: th.Tensor,
-               path: Union[str, Path],
-               samplerate: int,
-               bitrate: int = 320,
-               clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
-               bits_per_sample: Literal[16, 24, 32] = 16,
-               as_float: bool = False):
+def save_audio(
+    wav: th.Tensor,
+    path: Union[str, Path],
+    samplerate: int,
+    bitrate: int = 320,
+    clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
+    bits_per_sample: Literal[16, 24, 32] = 16,
+    as_float: bool = False,
+):
     """Save audio file.
 
     Parameters
@@ -326,8 +331,13 @@ def save_audio(wav: th.Tensor,
             encoding = "PCM_F"
         else:
             encoding = "PCM_S"
-        ta.save(str(path), wav, sample_rate=samplerate,
-                encoding=encoding, bits_per_sample=bits_per_sample)
+        ta.save(
+            str(path),
+            wav,
+            sample_rate=samplerate,
+            encoding=encoding,
+            bits_per_sample=bits_per_sample,
+        )
     elif suffix == ".flac":
         ta.save(str(path), wav, sample_rate=samplerate, bits_per_sample=bits_per_sample)
     else:

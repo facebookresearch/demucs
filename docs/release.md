@@ -25,6 +25,8 @@ Made diffq an optional dependency, with an error message if not installed.
 
 Added output format flac (Free Lossless Audio Codec)
 
+Optimize codes to save memory
+
 ## V4.0.0, 7th of December 2022
 
 Adding hybrid transformer Demucs model.
