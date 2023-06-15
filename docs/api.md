@@ -10,56 +10,32 @@ Notes: Type hints have been added to all API functions. It is recommended to che
 import demucs.api
 ```
 
-2. Then initialize the `Separator`. Parameters which will be served as default values for methods can be passed. The initialize option will do nothing except registering the class unless you pass `True` to keyword argument `setup` (see the third example below). The setup operation will load model and audio.
+2. Then initialize the `Separator`. Parameters which will be served as default values for methods can be passed. Model should be specified.
 
 ```python
-# Initialize with no parameters:
+# Initialize with default parameters:
 separator = demucs.api.Separator()
 
-# Initialize with parameters:
-separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12)
+# Use another model and segment:
+separator = demucs.api.Separator(model="mdx_extra", segment=12)
 
-# Initialize with parameters and automatically load the model and audios
-# Then you can skip to step 5
-separator = demucs.api.Separator("test.mp3", model="mdx_extra", segment=12, setup=True)
+# You can also use other parameters defined
 ```
 
-3. Load a model
+3. Separate it!
 
 ```python
-# If running without parameter, the arguments used to initialize will be used
-separator.load_model()
+# Separating an audio file
+origin, separated = separator.separate_audio_file("file.mp3")
 
-# Or select a model and receive it
-# If you'd like to use remote models, remove the `repo` parameter
-model = separator.load_model(model="htdemucs_ft", repo=pathlib.Path("./pretrained"))
+# Separating a loaded audio
+origin, separated = separator.separate_tensor(audio)
+
+# If you encounter an error like CUDA out of memory, you can use this to change parameters like `segment`:
+separator.update_parameter(segment=smaller_segment)
 ```
 
-4. Load tracks (into the separator if you like, which is recommended)
-
-```python
-# Load audios
-audios = ["1.mp3", "2.ogg", "3.flac"]
-separator.load_audios_to_model(*audios)
-
-# Load the audios that is specified when calling Separator():
-separator.load_audios_setup()
-
-# Add a loaded track to the model
-# e.g. loaded_track = torch.from_numpy(soundfile.read("file.mp3", always_2d=True)[0].transpose())
-# The track should have already been resampled and have the exact amount of channels since the
-# funcion includes no validation of data
-separator.add_track("Anything you'd like to call it", loaded_track)
-```
-
-5. Separate it!
-
-```python
-# Separating loaded audios with argument specified in command line
-separated = separator.separate_loaded_audio()
-```
-
-6. Save audio
+4. Save audio
 
 ```python
 # Remember to create the destination folder before calling `save_audio`
@@ -79,23 +55,39 @@ The base separator class
 
 ##### Parameters
 
-tracks: Tracks to be separated
-
 model: Pretrained model name or signature. Default is htdemucs.
 
 repo: Folder containing all pre-trained models for use.
 
-device: Device to use, default is cuda if available else cpu.
+segment: Length (in seconds) of each segment (only available if `split` is `True`). If not specified, will use the command line option.
 
-shifts: Number of random shifts for equivariant stabilization.
+shifts: If > 0, will shift in time `wav` by a random amount between 0 and 0.5 sec and apply the oppositve shift to the output. This is repeated `shifts` time and all predictions are averaged. This effectively makes the model time equivariant and improves SDR by up to 0.2 points. If not specified, will use the command line option.
 
-overlap: Overlap between the splits.
+split: If True, the input will be broken down into small chunks (length set by `segment`) and predictions will be performed individually on each and concatenated. Useful for model with large memory footprint like Tasnet. If not specified, will use the command line option.
 
-split: Split the whole audio into chunks before separating.
+overlap: The overlap between the splits. If not specified, will use the command line option.
 
-segment: The length (seconds) of each chunk.
+device (torch.device, str, or None): If provided, device on which to execute the computation, otherwise `wav.device` is assumed. When `device` is different from `wav.device`, only local computations will be on `device`, while the entire tracks will be stored on `wav.device`. If not specified, will use the command line option.
 
-jobs: Number of jobs.
+jobs: Number of jobs. This can increase memory usage but will be much faster when multiple cores are available. If not specified, will use the command line option.
+
+callback: A function will be called when the separation of a chunk starts or finished. The argument passed to the function will be a dict. For more information, please see the Callback section.
+
+callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
+
+progress: If true, show a progress bar.
+
+##### Notes for callback
+
+The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used.
+
+Progress information contains several keys (These keys will always exist):
+- `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
+- `shift_idx`: The index of shifts. Starts from 0.
+- `segment_offset`: The offset of current segment. If the number is 441000, it doesn't mean that it is at the 441000 second of the audio, but the "frame" of the tensor.
+- `state`: Could be `"start"` or `"end"`.
+- `audio_length`: Length of the audio (in "frame" of the tensor).
+- `models`: Count of submodels in the model.
 
 #### `property samplerate`
 
@@ -109,121 +101,43 @@ A read-only property saving audio channels of the model requires. Will raise a w
 
 A read-only property saving the model.
 
-#### `method load_model()`
+#### `method update_parameter()`
 
-Load a model to the class and return the model. This could only be called once.
-
-To manually add a loaded model to the class, simply assign the `Separator._model` variable.
+Update the parameters of separation.
 
 ##### Parameters
 
-model: If not specified, will use the model specified in the command line. 
+segment: Length (in seconds) of each segment (only available if `split` is `True`). If not specified, will use the command line option.
 
-repo: If not specified, will use the model specified in the command line.
+shifts: If > 0, will shift in time `wav` by a random amount between 0 and 0.5 sec and apply the oppositve shift to the output. This is repeated `shifts` time and all predictions are averaged. This effectively makes the model time equivariant and improves SDR by up to 0.2 points. If not specified, will use the command line option.
 
-##### Returns
+split: If True, the input will be broken down into small chunks (length set by `segment`) and predictions will be performed individually on each and concatenated. Useful for model with large memory footprint like Tasnet. If not specified, will use the command line option.
 
-Model (Demucs | HDemucs | HTDemucs | BagOfModels)
+overlap: The overlap between the splits. If not specified, will use the command line option.
 
-#### `method load_audios()`
+device (torch.device, str, or None): If provided, device on which to execute the computation, otherwise `wav.device` is assumed. When `device` is different from `wav.device`, only local computations will be on `device`, while the entire tracks will be stored on `wav.device`. If not specified, will use the command line option.
 
-Load several audios and return the iterator of the audios. This function returns an iterator, so the audio will not be decoded and read into memory until the iterator reached the spcefic item.
+jobs: Number of jobs. This can increase memory usage but will be much faster when multiple cores are available. If not specified, will use the command line option.
 
-If you want to just read one audio, you can use `next(iter(Separator.load_audios(path)))`
+callback: A function will be called when the separation of a chunk starts or finished. The argument passed to the function will be a dict. For more information, please see the Callback section.
 
-If you want to load several audio at once, please use `list(Separator.load_audios(path))`
+callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
 
-##### Parameters
+progress: If true, show a progress bar.
 
-tracks: Pathlike objects, containing the path of the audio to be loaded.
+##### Notes for callback
 
-audio_channels: The targeted audio channels. If not specified, will use the value of the loaded model. If no model is loaded, 2 is the default value.
+The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used.
 
-samplerate: The targeted audio channels. If not specified, will use the value of the loaded model. If no model is loaded, 44100 is the default value.
+Progress information contains several keys (These keys will always exist):
+- `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
+- `shift_idx`: The index of shifts. Starts from 0.
+- `segment_offset`: The offset of current segment. If the number is 441000, it doesn't mean that it is at the 441000 second of the audio, but the "frame" of the tensor.
+- `state`: Could be `"start"` or `"end"`.
+- `audio_length`: Length of the audio (in "frame" of the tensor).
+- `models`: Count of submodels in the model.
 
-ignore_errors: If true, any exception encountered will be ignored and the audio failed to be loaded will become `None`.
-
-##### Returns
-
-A generator (iterator) of tuple[filename, wave]. If `ignore_errors` is True (default), the wave of that file will be `None`.
-
-#### `method load_audios_to_model()`
-
-Load several audios to the Separator that can be used in `Separator.separate_loaded_audio`.
-
-##### Parameters
-
-tracks: Pathlike objects, containing the path of the audio to be loaded.
-
-##### Returns
-
-None
-
-##### Notes
-
-When an error encountered, this function will only warn and continue loading other audios. The audio failed to load will not be added into the Separator. To get a list of audios failed to be loaded, you can use the following codes:
-
-```python
-import warnings
-with warnings.catch_warnings(record=True) as w:
-    Separator.load_audios_to_model(track)
-    failures = list(i.message.separate('"')[1] for i in w)
-```
-
-#### `method load_audios_setup()`
-
-Load audios specied in the command line to the Separator that can be used in `Separator.separate_loaded_audio`.
-
-##### Parameters
-
-None
-
-##### Returns
-
-None
-
-##### Notes
-
-When an error encountered, this function will only warn and continue loading other audios. The audio failed to load will not be added into the Separator. To get a list of audios failed to be loaded, you can use the following codes:
-
-```python
-import warnings
-with warnings.catch_warnings(record=True) as w:
-    Separator.load_audios_setup()
-    failures = list(i.message.separate('"')[1] for i in w)
-```
-
-#### `method clear_filelist()`
-
-Remove all the loaded audios in the Separator.
-
-##### Parameters
-
-None
-
-##### Returns
-
-None
-
-#### `method add_track()`
-
-Add a loaded track into the separator.
-
-##### Parameters
-
-filename: A string for you to remember what the each audio is. (You can call it "identifier")
-
-wav: Waveform of the audio. Should have 2 dimensions, the first is each audio channel, while the second is the waveform of each channel. e.g. `tuple(wav.shape) == (2, 884000)` means the audio has 2 channels.
-
-##### Returns
-
-None
-
-##### Notes
-
-Use this function with cautiousness. This function does not provide data verifying.
-
-#### `method separate_audio()`
+#### `method separate_tensor()`
 
 Separate an audio.
 
@@ -231,98 +145,26 @@ Separate an audio.
 
 wav: Waveform of the audio. Should have 2 dimensions, the first is each audio channel, while the second is the waveform of each channel. e.g. `tuple(wav.shape) == (2, 884000)` means the audio has 2 channels.
 
-model: Model to be used. If not specified, will use the model loaded to the Separator.
-
-segment: Length (in seconds) of each segment (only available if `split` is `True`). If not specified, will use the command line option.
-
-shifts: If > 0, will shift in time `wav` by a random amount between 0 and 0.5 sec and apply the oppositve shift to the output. This is repeated `shifts` time and all predictions are averaged. This effectively makes the model time equivariant and improves SDR by up to 0.2 points. If not specified, will use the command line option.
-
-split: If True, the input will be broken down into small chunks (length set by `segment`) and predictions will be performed individually on each and concatenated. Useful for model with large memory footprint like Tasnet. If not specified, will use the command line option.
-
-overlap: The overlap between the splits. If not specified, will use the command line option.
-
-device (torch.device, str, or None): If provided, device on which to execute the computation, otherwise `wav.device` is assumed. When `device` is different from `wav.device`, only local computations will be on `device`, while the entire tracks will be stored on `wav.device`. If not specified, will use the command line option.
-
-num_workers: Number of jobs. This can increase memory usage but will be much faster when multiple cores are available. If not specified, will use the command line option.
-
-callback: A function will be called when the separation of a chunk starts or finished. The argument passed to the function will be a dict. For more information, please see the Callback section.
-
-callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
-
-progress: If true, show a progress bar.
-
 ##### Returns
 
-Separated stems.
-
-##### Callback
-
-The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used.
-
-Progress information contains several keys (These keys will always exist):
-- `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
-- `shift_idx`: The index of shifts. Starts from 0.
-- `segment_offset`: The offset of current segment. If the number is 441000, it doesn't mean that it is at the 441000 second of the audio, but the "frame" of the tensor.
-- `state`: Could be `"start"` or `"end"`.
-- `audio_length`: Length of the audio (in "frame" of the tensor).
-- `models`: Count of submodels in the model.
+A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves.
 
 ##### Notes
 
 Use this function with cautiousness. This function does not provide data verifying.
 
-#### `method separate_loaded_audio()`
+#### `method separate_audio_file()`
 
-Separate the audio loaded into the Separator.
+Separate an audio file. The method will automatically read the file.
 
 ##### Parameters
 
-segment: Length (in seconds) of each segment (only available if `split` is `True`). If not specified, will use the command line option.
-
-shifts: If > 0, will shift in time `wav` by a random amount between 0 and 0.5 sec and apply the oppositve shift to the output. This is repeated `shifts` time and all predictions are averaged. This effectively makes the model time equivariant and improves SDR by up to 0.2 points. If not specified, will use the command line option.
-
-split: If True, the input will be broken down into small chunks (length set by `segment`) and predictions will be performed individually on each and concatenated. Useful for model with large memory footprint like Tasnet. If not specified, will use the command line option.
-
-overlap: The overlap between the splits. If not specified, will use the command line option.
-
-device (torch.device, str, or None): If provided, device on which to execute the computation, otherwise `wav.device` is assumed. When `device` is different from `wav.device`, only local computations will be on `device`, while the entire tracks will be stored on `wav.device`. If not specified, will use the command line option.
-
-num_workers: Number of jobs. This can increase memory usage but will be much faster when multiple cores are available. If not specified, will use the command line option.
-
-callback: A function will be called when the separation of a chunk starts or finished. The argument passed to the function will be a dict. For more information, please see the Callback section.
-
-callback_arg: A dict containing private parameters to be passed to callback function. For more information, please see the Callback section.
-
-progress: If true, show a progress bar.
+wav: Path of the file to be separated.
 
 ##### Returns
 
-A generator (iterator) of tuple[filename, dict[stem_name, waveform]].
+A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves.
 
-##### Callback
-
-The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used.
-
-Progress information contains several keys (These keys will always exist):
-- `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
-- `shift_idx`: The index of shifts. Starts from 0.
-- `segment_offset`: The offset of current segment. If the number is 441000, it doesn't mean that it is at the 441000 second of the audio, but the "frame" of the tensor.
-- `state`: Could be `"start"` or `"end"`.
-- `audio_length`: Length of the audio (in "frame" of the tensor).
-- `models`: Count of submodels in the model.
-- `file`: File name (or what you may call "identifier") of the waveform that is being separated
-
-##### Notes
-
-The returns of the function is an iterator, so the separation process will not start until the iterator reaches the specific item.
-
-To separate the first audio in the loaded list, use `next(iter(Separator.separate_loaded_audio()))`.
-
-To separate all the audio at once (which may consume lots of memory), use `list(Separator.separate_loaded_audio())`.
-
-The function will not remove the separated tracks from the Separator. So run `Separator.clear_filelist()` if you like to remove them.
-
-To get the separated tracks, just retrieve `Separator._out` variable. It will be cleared each time you run this function.
 
 ### `function save_audio()`
 
@@ -347,3 +189,15 @@ as_float: If it is True and the suffix of `path` is `.wav`, then `bits_per_sampl
 ##### Returns
 
 None
+
+### `function list_models()`
+
+List the available models. Please remember that not all the returned models can be successfully loaded.
+
+##### Parameters
+
+repo: The repo whose models are to be listed.
+
+##### Returns
+
+A dict with two keys ("single" for single models and "bag" for bag of models). The values are lists whose components are strs.

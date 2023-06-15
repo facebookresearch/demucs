@@ -45,6 +45,8 @@ def _parse_remote_files(remote_file_list) -> tp.Dict[str, str]:
         line = line.strip()
         if line.startswith('#'):
             continue
+        elif len(line) == 0:
+            continue
         elif line.startswith('root:'):
             root = line.split(':', 1)[1].strip()
         else:

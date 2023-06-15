@@ -166,7 +166,7 @@ def convert_audio_channels(wav, channels=2):
     return wav
 
 
-def convert_audio(wav, from_samplerate, to_samplerate, channels):
+def convert_audio(wav, from_samplerate, to_samplerate, channels) -> torch.Tensor:
     """Convert audio from a given samplerate to a target one and target number of channels."""
     wav = convert_audio_channels(wav, channels)
     return julius.resample_frac(wav, from_samplerate, to_samplerate)

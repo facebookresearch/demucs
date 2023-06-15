@@ -6,7 +6,6 @@
 
 import argparse
 import sys
-import warnings
 from pathlib import Path
 
 from dora.log import fatal
@@ -65,12 +64,16 @@ def get_parser():
     parser.add_argument("--two-stems",
                         dest="stem", metavar="STEM",
                         help="Only separate audio into {STEM} and no_{STEM}. ")
+    parser.add_argument("--other-method", dest="other_method", choices=["none", "add", "minus"],
+                        default="add", help='Decide how to get "no_{STEM}". "none" will not save '
+                        '"no_{STEM}". "add" will add all the other stems. "minus" will use the '
+                        "original track minus the selected stem.")
     depth_group = parser.add_mutually_exclusive_group()
     depth_group.add_argument("--int24", action="store_true",
                              help="Save wav output as 24 bits wav.")
     depth_group.add_argument("--float32", action="store_true",
                              help="Save wav output as float32 (2x bigger).")
-    parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp"],
+    parser.add_argument("--clip-mode", default="rescale", choices=["rescale", "clamp", "none"],
                         help="Strategy for avoiding clipping: rescaling entire signal "
                              "if necessary  (rescale) or hard clipping (clamp).")
     format_group = parser.add_mutually_exclusive_group()
@@ -96,8 +99,15 @@ def main(opts=None):
     args = parser.parse_args(opts)
 
     try:
-        separator = Separator()
-        separator.load_model(model=args.name, repo=args.repo)
+        separator = Separator(model=args.name,
+                              repo=args.repo,
+                              device=args.device,
+                              shifts=args.shifts,
+                              split=args.split,
+                              overlap=args.overlap,
+                              progress=True,
+                              jobs=args.jobs,
+                              segment=args.segment)
     except ModelLoadingError as error:
         fatal(error.args[0])
 
@@ -133,26 +143,8 @@ def main(opts=None):
                   file=sys.stderr)
             continue
         print(f"Separating track {track}")
-        separator.clear_filelist()
-        with warnings.catch_warnings(record=True) as w:
-            separator.load_audios_to_model(track)
-            if len(w):
-                print(f"Failed to load {track}. Skipped.", file=sys.stderr)
-                continue
 
-        res = next(
-            iter(
-                separator.separate_loaded_audio(
-                    device=args.device,
-                    shifts=args.shifts,
-                    split=args.split,
-                    overlap=args.overlap,
-                    progress=True,
-                    num_workers=args.jobs,
-                    segment=args.segment,
-                )
-            )
-        )[1]
+        origin, res = separator.separate_audio_file(track)
 
         if args.mp3:
             ext = "mp3"
@@ -182,6 +174,16 @@ def main(opts=None):
             stem = out / args.filename.format(
                 track=track.name.rsplit(".", 1)[0],
                 trackext=track.name.rsplit(".", 1)[-1],
+                stem="minus_" + args.stem,
+                ext=ext,
+            )
+            if args.other_method == "minus":
+                stem.parent.mkdir(parents=True, exist_ok=True)
+                save_audio(origin - sources[separator.model.sources.index(args.stem)],
+                           str(stem), **kwargs)
+            stem = out / args.filename.format(
+                track=track.name.rsplit(".", 1)[0],
+                trackext=track.name.rsplit(".", 1)[-1],
                 stem=args.stem,
                 ext=ext,
             )
@@ -189,17 +191,18 @@ def main(opts=None):
             save_audio(sources.pop(separator.model.sources.index(args.stem)),
                        str(stem), **kwargs)
             # Warning : after poping the stem, selected stem is no longer in the list 'sources'
-            other_stem = th.zeros_like(sources[0])
-            for i in sources:
-                other_stem += i
-            stem = out / args.filename.format(
-                track=track.name.rsplit(".", 1)[0],
-                trackext=track.name.rsplit(".", 1)[-1],
-                stem="no_" + args.stem,
-                ext=ext,
-            )
-            stem.parent.mkdir(parents=True, exist_ok=True)
-            save_audio(other_stem, str(stem), **kwargs)
+            if args.other_method == "add":
+                other_stem = th.zeros_like(sources[0])
+                for i in sources:
+                    other_stem += i
+                stem = out / args.filename.format(
+                    track=track.name.rsplit(".", 1)[0],
+                    trackext=track.name.rsplit(".", 1)[-1],
+                    stem="no_" + args.stem,
+                    ext=ext,
+                )
+                stem.parent.mkdir(parents=True, exist_ok=True)
+                save_audio(other_stem, str(stem), **kwargs)
 
 
 if __name__ == "__main__":
