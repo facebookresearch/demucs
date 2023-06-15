@@ -691,7 +691,7 @@ class HDemucs(nn.Module):
         length = x.shape[-1]
 
         z = self._spec(mix)
-        mag = self._magnitude(z)
+        mag = self._magnitude(z).to(mix.device)
         x = mag
 
         B, C, Fq, T = x.shape
@@ -772,8 +772,20 @@ class HDemucs(nn.Module):
         x = x.view(B, S, -1, Fq, T)
         x = x * std[:, None] + mean[:, None]
 
+        # to cpu as mps doesnt support complex numbers
+        # demucs issue #435 ##432
+        # NOTE: in this case z already is on cpu
+        # TODO: remove this when mps supports complex numbers
+        x_is_mps = x.device.type == "mps"
+        if x_is_mps:
+            x = x.cpu()
+
         zout = self._mask(z, x)
         x = self._ispec(zout, length)
+
+        # back to mps device
+        if x_is_mps:
+            x = x.to('mps')
 
         if self.hybrid:
             xt = xt.view(B, S, -1, length)
