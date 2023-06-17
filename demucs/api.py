@@ -263,6 +263,8 @@ class Separator:
             )
         out *= ref.std()
         out += ref.mean()
+        wav *= ref.std()
+        wav += ref.mean()
         return (wav, dict(zip(self._model.sources, out[0])))
 
     def separate_audio_file(self, file: Path):

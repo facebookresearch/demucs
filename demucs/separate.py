@@ -170,7 +170,6 @@ def main(opts=None):
                 stem.parent.mkdir(parents=True, exist_ok=True)
                 save_audio(source, str(stem), **kwargs)
         else:
-            sources = list(res.values())
             stem = out / args.filename.format(
                 track=track.name.rsplit(".", 1)[0],
                 trackext=track.name.rsplit(".", 1)[-1],
@@ -179,8 +178,7 @@ def main(opts=None):
             )
             if args.other_method == "minus":
                 stem.parent.mkdir(parents=True, exist_ok=True)
-                save_audio(origin - sources[separator.model.sources.index(args.stem)],
-                           str(stem), **kwargs)
+                save_audio(origin - res[args.stem], str(stem), **kwargs)
             stem = out / args.filename.format(
                 track=track.name.rsplit(".", 1)[0],
                 trackext=track.name.rsplit(".", 1)[-1],
@@ -188,12 +186,11 @@ def main(opts=None):
                 ext=ext,
             )
             stem.parent.mkdir(parents=True, exist_ok=True)
-            save_audio(sources.pop(separator.model.sources.index(args.stem)),
-                       str(stem), **kwargs)
-            # Warning : after poping the stem, selected stem is no longer in the list 'sources'
+            save_audio(res.pop(args.stem), str(stem), **kwargs)
+            # Warning : after poping the stem, selected stem is no longer in the dict 'res'
             if args.other_method == "add":
-                other_stem = th.zeros_like(sources[0])
-                for i in sources:
+                other_stem = th.zeros_like(next(iter(res.values())))
+                for i in res.values():
                     other_stem += i
                 stem = out / args.filename.format(
                     track=track.name.rsplit(".", 1)[0],
