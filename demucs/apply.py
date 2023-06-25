@@ -8,7 +8,9 @@ Code to apply a model to a mix. It will handle chunking with overlaps and
 inteprolation between chunks, as well as the "shift trick".
 """
 from concurrent.futures import ThreadPoolExecutor
+import copy
 import random
+from threading import Lock
 import typing as tp
 
 import torch as th
@@ -133,6 +135,8 @@ def tensor_chunk(tensor_or_chunk):
 def _replace_dict(_dict: tp.Optional[dict], *subs: tp.Tuple[tp.Hashable, tp.Any]) -> dict:
     if _dict is None:
         _dict = {}
+    else:
+        _dict = copy.copy(_dict)
     for key, value in subs:
         _dict[key] = value
     return _dict
@@ -144,8 +148,9 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                 overlap: float = 0.25, transition_power: float = 1.,
                 progress: bool = False, device=None,
                 num_workers: int = 0, segment: tp.Optional[float] = None,
-                pool=None, callback: tp.Optional[tp.Callable[[dict], None]] = None,
-                callback_arg: tp.Optional[dict] = None) -> th.Tensor:
+                pool=None, lock=None,
+                callback: tp.Optional[tp.Callable[[dict], tp.Literal[None, "break"]]] = None,
+                callback_arg: tp.Optional[dict] = None) -> tp.Optional[th.Tensor]:
     """
     Apply model to a given mixture.
 
@@ -175,6 +180,8 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             pool = ThreadPoolExecutor(num_workers)
         else:
             pool = DummyPoolExecutor()
+    if lock is None:
+        lock = Lock()
     callback_arg = _replace_dict(
         callback_arg, *{"model_idx_in_bag": 0, "shift_idx": 0, "segment_offset": 0}.items()
     )
@@ -187,8 +194,10 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         'device': device,
         'pool': pool,
         'segment': segment,
+        'lock': lock,
     }
     out: tp.Union[float, th.Tensor]
+    res: tp.Union[float, th.Tensor, None]
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
@@ -209,7 +218,10 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             original_model_device = next(iter(sub_model.parameters())).device
             sub_model.to(device)
 
-            out = apply_model(sub_model, mix, **kwargs, callback_arg=callback_arg)
+            res = apply_model(sub_model, mix, **kwargs, callback_arg=callback_arg)
+            if res is None:
+                return res
+            out = res
             sub_model.to(original_model_device)
             for k, inst_weight in enumerate(model_weights):
                 out[:, k, :, :] *= inst_weight
@@ -244,7 +256,10 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                     if callable(callback)
                     else None
                 )
-            shifted_out = apply_model(model, shifted, **kwargs, callback_arg=callback_arg)
+            res = apply_model(model, shifted, **kwargs, callback_arg=callback_arg)
+            if res is None:
+                return res
+            shifted_out = res
             out += shifted_out[..., max_shift - offset:]
         out /= shifts
         assert isinstance(out, th.Tensor)
@@ -281,7 +296,10 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         if progress:
             futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
         for future, offset in futures:
-            chunk_out = future.result()
+            chunk_out = future.result()  # type: tp.Union[None, th.Tensor]
+            if chunk_out is None:
+                pool.shutdown(wait=False, cancel_futures=True)
+                return chunk_out
             chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment_length] += (
                 weight[:chunk_length] * chunk_out).to(mix.device)
@@ -302,10 +320,18 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         assert isinstance(mix, TensorChunk)
         padded_mix = mix.padded(valid_length).to(device)
         if callable(callback):
-            callback(_replace_dict(callback_arg, ("state", "start")))
+            lock.acquire()
+            if callback(_replace_dict(callback_arg, ("state", "start"))) == "break":
+                lock.release()
+                return None
+            lock.release()
         with th.no_grad():
             out = model(padded_mix)
         if callable(callback):
-            callback(_replace_dict(callback_arg, ("state", "end")))
+            lock.acquire()
+            if callback(_replace_dict(callback_arg, ("state", "end"))) == "break":
+                lock.release()
+                return None
+            lock.release()
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)

@@ -43,6 +43,13 @@ class LoadModelError(Exception):
     pass
 
 
+class _NotProvided:
+    pass
+
+
+NotProvided = _NotProvided()
+
+
 class Separator:
     def __init__(
         self,
@@ -55,7 +62,7 @@ class Separator:
         segment: Optional[int] = None,
         jobs: int = 0,
         progress: bool = False,
-        callback: Optional[Callable[[dict], None]] = None,
+        callback: Optional[Callable[[dict], Literal[None, "break"]]] = None,
         callback_arg: Optional[dict] = None,
     ):
         """
@@ -96,6 +103,8 @@ class Separator:
         The function will be called with only one positional parameter whose type is `dict`. The
         `callback_arg` will be combined with information of current separation progress. The
         progress information will override the values in `callback_arg` if same key has been used.
+        If the function returns `"break"`, the separation process will be aborted and
+        `KeyboardInterrupt` will be raised.
 
         Progress information contains several keys (These keys will always exist):
         - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
@@ -113,23 +122,19 @@ class Separator:
                               segment=segment, jobs=jobs, progress=progress, callback=callback,
                               callback_arg=callback_arg)
 
-    def _set_attr(self, attr, value):
-        if value is not None:
-            setattr(self, attr, value)
-        elif not hasattr(self, attr):
-            setattr(self, attr, None)
-
     def update_parameter(
         self,
-        device: Optional[str] = None,
-        shifts: Optional[int] = None,
-        overlap: Optional[float] = None,
-        split: Optional[bool] = None,
-        segment: Optional[int] = None,
-        jobs: Optional[int] = None,
-        progress: Optional[bool] = None,
-        callback: Optional[Callable[[dict], None]] = None,
-        callback_arg: Optional[dict] = None,
+        device: Union[str, _NotProvided] = NotProvided,
+        shifts: Union[int, _NotProvided] = NotProvided,
+        overlap: Union[float, _NotProvided] = NotProvided,
+        split: Union[bool, _NotProvided] = NotProvided,
+        segment: Optional[Union[int, _NotProvided]] = NotProvided,
+        jobs: Union[int, _NotProvided] = NotProvided,
+        progress: Union[bool, _NotProvided] = NotProvided,
+        callback: Optional[
+            Union[Callable[[dict], Literal[None, "break"]], _NotProvided]
+        ] = NotProvided,
+        callback_arg: Optional[Union[dict, _NotProvided]] = NotProvided,
     ):
         """
         Update the parameters of separation.
@@ -166,6 +171,8 @@ class Separator:
         The function will be called with only one positional parameter whose type is `dict`. The
         `callback_arg` will be combined with information of current separation progress. The
         progress information will override the values in `callback_arg` if same key has been used.
+        If the function returns `"break"`, the separation process will be aborted and
+        `KeyboardInterrupt` will be raised.
 
         Progress information contains several keys (These keys will always exist):
         - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
@@ -176,15 +183,24 @@ class Separator:
         - `audio_length`: Length of the audio (in "frame" of the tensor).
         - `models`: Count of submodels in the model.
         """
-        self._set_attr("_device", device)
-        self._set_attr("_shifts", shifts)
-        self._set_attr("_overlap", overlap)
-        self._set_attr("_split", split)
-        self._set_attr("_segment", segment)
-        self._set_attr("_jobs", jobs)
-        self._set_attr("_progress", progress)
-        self._set_attr("_callback", callback if callable(callback) else None)
-        self._set_attr("_callback_arg", callback_arg)
+        if not isinstance(device, _NotProvided):
+            self._device = device
+        if not isinstance(shifts, _NotProvided):
+            self._shifts = shifts
+        if not isinstance(overlap, _NotProvided):
+            self._overlap = overlap
+        if not isinstance(split, _NotProvided):
+            self._split = split
+        if not isinstance(segment, _NotProvided):
+            self._segment = segment
+        if not isinstance(jobs, _NotProvided):
+            self._jobs = jobs
+        if not isinstance(progress, _NotProvided):
+            self._progress = progress
+        if not isinstance(callback, _NotProvided) and (callback is None or callable(callback)):
+            self._callback = callback
+        if not isinstance(callback_arg, _NotProvided):
+            self._callback_arg = callback_arg
 
     def _load_model(self):
         self._model = get_model(name=self._name, repo=self._repo)
@@ -224,7 +240,7 @@ class Separator:
             )
         return wav
 
-    def separate_tensor(self, wav: th.Tensor) -> Tuple[th.Tensor, Dict[str, th.Tensor]]:
+    def separate_tensor(self, wav: th.Tensor, sr: int) -> Tuple[th.Tensor, Dict[str, th.Tensor]]:
         """
         Separate a loaded tensor.
 
@@ -233,34 +249,41 @@ class Separator:
         wav: Waveform of the audio. Should have 2 dimensions, the first is each audio channel, \
             while the second is the waveform of each channel. Type should be float32. \
             e.g. `tuple(wav.shape) == (2, 884000)` means the audio has 2 channels.
+        sr: Sample rate of the original audio, the wave will be resampled if it doesn't match the \
+            model.
 
         Returns
         -------
         A tuple, whose first element is the original wave and second element is a dict, whose keys
-        are the name of stems and values are separated waves.
+        are the name of stems and values are separated waves. The original wave will has already
+        been resampled.
 
         Notes
         -----
         Use this function with cautiousness. This function does not provide data verifying.
         """
+        if sr != self.samplerate:
+            wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
         ref = wav.mean(0)
         wav -= ref.mean()
         wav /= ref.std()
         out = apply_model(
                 self._model,
                 wav[None],
-                segment=self._segment,  # type: ignore[attr-defined]
-                shifts=self._shifts,  # type: ignore[attr-defined]
-                split=self._split,  # type: ignore[attr-defined]
-                overlap=self._overlap,  # type: ignore[attr-defined]
-                device=self._device,  # type: ignore[attr-defined]
-                num_workers=self._jobs,  # type: ignore[attr-defined]
-                callback=self._callback,  # type: ignore[attr-defined]
+                segment=self._segment,
+                shifts=self._shifts,
+                split=self._split,
+                overlap=self._overlap,
+                device=self._device,
+                num_workers=self._jobs,
+                callback=self._callback,
                 callback_arg=_replace_dict(
-                    self._callback_arg, ("audio_length", wav.shape[1])  # type: ignore[attr-defined]
+                    self._callback_arg, ("audio_length", wav.shape[1])
                 ),
-                progress=self._progress,  # type: ignore[attr-defined]
+                progress=self._progress,
             )
+        if out is None:
+            raise KeyboardInterrupt
         out *= ref.std()
         out += ref.mean()
         wav *= ref.std()
@@ -284,7 +307,7 @@ class Separator:
         -----
         Use this function with cautiousness. This function does not provide data verifying.
         """
-        return self.separate_tensor(self._load_audio(file))
+        return self.separate_tensor(self._load_audio(file), self.samplerate)
 
     @property
     def samplerate(self):
