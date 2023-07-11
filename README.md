@@ -170,7 +170,10 @@ Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](
 ### Other providers
 
 Audiostrip is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
+
 [MVSep](https://mvsep.com/) also provides free online separation, select `Demucs3 model B` for the best quality.
+
+[Neutone](https://neutone.space/) provides a realtime Demucs model in their free VST/AU plugin that can be used in your favorite DAW.
 
 
 ## Separating tracks
