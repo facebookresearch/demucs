@@ -369,7 +369,7 @@ def save_audio(
         raise ValueError(f"Invalid suffix for path: {suffix}")
 
 
-def list_models(repo: Optional[Path] = None, remote_list: Optional[Path] = None) -> Dict[str, List[str]]:
+def list_models(repo: Optional[Path] = None) -> Dict[str, List[str]]:
     """
     List the available models. Please remember that not all the returned models can be
     successfully loaded.
@@ -385,11 +385,9 @@ def list_models(repo: Optional[Path] = None, remote_list: Optional[Path] = None)
     """
     model_repo: ModelOnlyRepo
     if repo is None:
-        if remote_list is None:
-            remote_list = REMOTE_ROOT
-        models = _parse_remote_files(remote_list / 'files.txt')
+        models = _parse_remote_files(REMOTE_ROOT / 'files.txt')
         model_repo = RemoteRepo(models)
-        bag_repo = BagOnlyRepo(remote_list, model_repo)
+        bag_repo = BagOnlyRepo(REMOTE_ROOT, model_repo)
     else:
         if not repo.is_dir():
             fatal(f"{repo} must exist and be a directory.")
