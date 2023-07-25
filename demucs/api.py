@@ -369,7 +369,7 @@ def save_audio(
         raise ValueError(f"Invalid suffix for path: {suffix}")
 
 
-def list_models(repo: Optional[Path] = None) -> Dict[str, Dict[str, str]]:
+def list_models(repo: Optional[Path] = None) -> Dict[str, Dict[str, Union[str, Path]]]:
     """
     List the available models. Please remember that not all the returned models can be
     successfully loaded.
