@@ -27,7 +27,7 @@ import torchaudio as ta
 
 from dora.log import fatal
 from pathlib import Path
-from typing import Optional, Callable, Dict, Tuple, Union, Literal, List
+from typing import Optional, Callable, Dict, Tuple, Union, Literal
 
 from .apply import apply_model, _replace_dict
 from .audio import AudioFile, convert_audio, prevent_clip, encode_mp3
@@ -369,7 +369,7 @@ def save_audio(
         raise ValueError(f"Invalid suffix for path: {suffix}")
 
 
-def list_models(repo: Optional[Path] = None) -> Dict[str, List[str]]:
+def list_models(repo: Optional[Path] = None) -> Dict[str, Dict[str, str]]:
     """
     List the available models. Please remember that not all the returned models can be
     successfully loaded.

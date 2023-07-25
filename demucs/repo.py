@@ -49,7 +49,7 @@ class ModelOnlyRepo:
     def get_model(self, sig: str) -> Model:
         raise NotImplementedError()
 
-    def list_model(self) -> tp.List[str]:
+    def list_model(self) -> tp.Dict[str, str]:
         raise NotImplementedError()
 
 
@@ -69,8 +69,8 @@ class RemoteRepo(ModelOnlyRepo):
             url, map_location='cpu', check_hash=True)  # type: ignore
         return load_model(pkg)
 
-    def list_model(self) -> tp.List[str]:
-        return list(self._models.keys())
+    def list_model(self) -> tp.Dict[str, str]:
+        return self._models
 
 
 class LocalRepo(ModelOnlyRepo):
@@ -106,8 +106,8 @@ class LocalRepo(ModelOnlyRepo):
             check_checksum(file, self._checksums[sig])
         return load_model(file)
 
-    def list_model(self) -> tp.List[str]:
-        return list(self._models.keys())
+    def list_model(self) -> tp.Dict[str, str]:
+        return self._models
 
 
 class BagOnlyRepo:
@@ -141,8 +141,8 @@ class BagOnlyRepo:
         segment = bag.get('segment')
         return BagOfModels(models, weights, segment)
 
-    def list_model(self) -> tp.List[str]:
-        return list(self._bags.keys())
+    def list_model(self) -> tp.Dict[str, str]:
+        return self._bags
 
 
 class AnyModelRepo:
@@ -159,5 +159,8 @@ class AnyModelRepo:
         else:
             return self.bag_repo.get_model(name_or_sig)
 
-    def list_model(self) -> tp.List[str]:
-        return self.model_repo.list_model() + self.bag_repo.list_model()
+    def list_model(self) -> tp.Dict[str, str]:
+        models = self.model_repo.list_model()
+        for key, value in self.bag_repo.list_model().items():
+            models[key] = value
+        return models
