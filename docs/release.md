@@ -15,6 +15,8 @@ Will use CPU for complex numbers, when using MPS device (all other computations 
 
 Optimize codes to save memory
 
+Allow changing preset of MP3
+
 ## V4.0.0, 7th of December 2022
 
 Adding hybrid transformer Demucs model.
