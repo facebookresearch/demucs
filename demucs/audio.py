@@ -196,7 +196,7 @@ def as_dtype_pcm(wav, dtype):
         return i16_pcm(wav)
 
 
-def encode_mp3(wav, path, samplerate=44100, bitrate=320, verbose=False):
+def encode_mp3(wav, path, samplerate=44100, bitrate=320, quality=2, verbose=False):
     """Save given audio as mp3. This should work on all OSes."""
     C, T = wav.shape
     wav = i16_pcm(wav)
@@ -204,7 +204,7 @@ def encode_mp3(wav, path, samplerate=44100, bitrate=320, verbose=False):
     encoder.set_bit_rate(bitrate)
     encoder.set_in_sample_rate(samplerate)
     encoder.set_channels(C)
-    encoder.set_quality(2)  # 2-highest, 7-fastest
+    encoder.set_quality(quality)  # 2-highest, 7-fastest
     if not verbose:
         encoder.silence()
     wav = wav.data.cpu()
@@ -239,16 +239,18 @@ def save_audio(wav: torch.Tensor,
                bitrate: int = 320,
                clip: tp.Literal["rescale", "clamp", "tanh", "none"] = 'rescale',
                bits_per_sample: tp.Literal[16, 24, 32] = 16,
-               as_float: bool = False):
+               as_float: bool = False,
+               preset: tp.Literal[2, 3, 4, 5, 6, 7] = 2):
     """Save audio file, automatically preventing clipping if necessary
     based on the given `clip` strategy. If the path ends in `.mp3`, this
-    will save as mp3 with the given `bitrate`.
+    will save as mp3 with the given `bitrate`. Use `preset` to set mp3 quality:
+    2 for highest quality, 7 for fastest speed
     """
     wav = prevent_clip(wav, mode=clip)
     path = Path(path)
     suffix = path.suffix.lower()
     if suffix == ".mp3":
-        encode_mp3(wav, path, samplerate, bitrate, verbose=True)
+        encode_mp3(wav, path, samplerate, bitrate, preset, verbose=True)
     elif suffix == ".wav":
         if as_float:
             bits_per_sample = 32
