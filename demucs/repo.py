@@ -70,7 +70,7 @@ class RemoteRepo(ModelOnlyRepo):
         return load_model(pkg)
 
     def list_model(self) -> tp.Dict[str, tp.Union[str, Path]]:
-        return self._models
+        return self._models  # type: ignore
 
 
 class LocalRepo(ModelOnlyRepo):

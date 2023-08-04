@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Optional, Callable, Dict, Tuple, Union, Literal
 
 from .apply import apply_model, _replace_dict
-from .audio import AudioFile, convert_audio, prevent_clip, encode_mp3
+from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model, _parse_remote_files, REMOTE_ROOT
 from .repo import RemoteRepo, LocalRepo, ModelOnlyRepo, BagOnlyRepo
 
@@ -240,7 +240,9 @@ class Separator:
             )
         return wav
 
-    def separate_tensor(self, wav: th.Tensor, sr: int) -> Tuple[th.Tensor, Dict[str, th.Tensor]]:
+    def separate_tensor(
+        self, wav: th.Tensor, sr: Optional[int] = None
+    ) -> Tuple[th.Tensor, Dict[str, th.Tensor]]:
         """
         Separate a loaded tensor.
 
@@ -262,7 +264,7 @@ class Separator:
         -----
         Use this function with cautiousness. This function does not provide data verifying.
         """
-        if sr != self.samplerate:
+        if sr is not None and sr != self.samplerate:
             wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
         ref = wav.mean(0)
         wav -= ref.mean()
@@ -320,53 +322,6 @@ class Separator:
     @property
     def model(self):
         return self._model
-
-
-def save_audio(
-    wav: th.Tensor,
-    path: Union[str, Path],
-    samplerate: int,
-    bitrate: int = 320,
-    clip: Literal["rescale", "clamp", "tanh", "none"] = "rescale",
-    bits_per_sample: Literal[16, 24, 32] = 16,
-    as_float: bool = False,
-):
-    """Save audio file.
-
-    Parameters
-    ----------
-    wav: Audio to be saved.
-    path: The file path to be saved. Ending must be one of `.mp3` and `.wav`.
-    samplerate: File sample rate.
-    bitrate: If the suffix of `path` is `.mp3`, it will be used to specify the bitrate of mp3.
-    clip: Clipping preventing strategy.
-    bits_per_sample: If the suffix of `path` is `.wav`, it will be used to specify the bit depth\
-        of wav.
-    as_float: If it is True and the suffix of `path` is `.wav`, then `bits_per_sample` will be set\
-        to 32 and will write the wave file with float format.
-    """
-    wav = prevent_clip(wav, mode=clip)
-    path = Path(path)
-    suffix = path.suffix.lower()
-    if suffix == ".mp3":
-        encode_mp3(wav, path, samplerate, bitrate, verbose=True)
-    elif suffix == ".wav":
-        if as_float:
-            bits_per_sample = 32
-            encoding = "PCM_F"
-        else:
-            encoding = "PCM_S"
-        ta.save(
-            str(path),
-            wav,
-            sample_rate=samplerate,
-            encoding=encoding,
-            bits_per_sample=bits_per_sample,
-        )
-    elif suffix == ".flac":
-        ta.save(str(path), wav, sample_rate=samplerate, bits_per_sample=bits_per_sample)
-    else:
-        raise ValueError(f"Invalid suffix for path: {suffix}")
 
 
 def list_models(repo: Optional[Path] = None) -> Dict[str, Dict[str, Union[str, Path]]]:
