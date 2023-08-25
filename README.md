@@ -189,7 +189,7 @@ python3 -m demucs --mp3 --mp3-bitrate BITRATE PATH_TO_AUDIO_FILE_1  # output fil
 demucs "my music/my favorite track.mp3"
 # You can select different models with `-n` mdx_q is the quantized model, smaller but maybe a bit less accurate.
 demucs -n mdx_q myfile.mp3
-# If you only want to separate vocals out of an audio, use `--two-stems=vocal` (You can also set to drums or bass)
+# If you only want to separate vocals out of an audio, use `--two-stems=vocals` (You can also set to drums or bass)
 demucs --two-stems=vocals myfile.mp3
 ```
 
