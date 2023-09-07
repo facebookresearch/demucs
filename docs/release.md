@@ -1,6 +1,6 @@
 # Release notes for Demucs
 
-## V4.0.1a1, TBD
+## V4.0.1, 7th of September 2023
 
 **From this version, Python 3.7 is no longer supported. This is not a problem since the latest PyTorch 2.0.0 no longer support it either.**
 
