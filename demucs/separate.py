@@ -113,6 +113,9 @@ def get_parser():
                         default=320,
                         type=int,
                         help="Bitrate of converted mp3.")
+    parser.add_argument("--mp3-preset", choices=range(2, 8), type=int, default=2,
+                        help="Encoder preset of MP3, 2 for highest quality, 7 for "
+                        "fastest speed. Default is 2")
     parser.add_argument("-j", "--jobs",
                         default=0,
                         type=int,
@@ -182,6 +185,7 @@ def main(opts=None):
         kwargs = {
             'samplerate': model.samplerate,
             'bitrate': args.mp3_bitrate,
+            'preset': args.mp3_preset,
             'clip': args.clip_mode,
             'as_float': args.float32,
             'bits_per_sample': 24 if args.int24 else 16,

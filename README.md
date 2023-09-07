@@ -159,7 +159,7 @@ but it will allow you to use Demucs without installing anything.
 
 ### Web Demo
 
-Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/demucs)
+Integrated to [Hugging Face Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/akhaliq/demucs)
 
 ### Graphical Interface
 
@@ -170,7 +170,10 @@ Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](
 ### Other providers
 
 Audiostrip is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
+
 [MVSep](https://mvsep.com/) also provides free online separation, select `Demucs3 model B` for the best quality.
+
+[Neutone](https://neutone.space/) provides a realtime Demucs model in their free VST/AU plugin that can be used in your favorite DAW.
 
 
 ## Separating tracks
@@ -181,11 +184,12 @@ In order to try Demucs, you can just run from any folder (as long as you properl
 demucs PATH_TO_AUDIO_FILE_1 [PATH_TO_AUDIO_FILE_2 ...]   # for Demucs
 # If you used `pip install --user` you might need to replace demucs with python3 -m demucs
 python3 -m demucs --mp3 --mp3-bitrate BITRATE PATH_TO_AUDIO_FILE_1  # output files saved as MP3
+        # use --mp3-preset to change encoder preset, 2 for best quality, 7 for fastest
 # If your filename contain spaces don't forget to quote it !!!
 demucs "my music/my favorite track.mp3"
 # You can select different models with `-n` mdx_q is the quantized model, smaller but maybe a bit less accurate.
 demucs -n mdx_q myfile.mp3
-# If you only want to separate vocals out of an audio, use `--two-stems=vocal` (You can also set to drums or bass)
+# If you only want to separate vocals out of an audio, use `--two-stems=vocals` (You can also set to drums or bass)
 demucs --two-stems=vocals myfile.mp3
 ```
 
