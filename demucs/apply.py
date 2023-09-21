@@ -149,7 +149,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                 progress: bool = False, device=None,
                 num_workers: int = 0, segment: tp.Optional[float] = None,
                 pool=None, lock=None,
-                callback: tp.Optional[tp.Callable[[dict], tp.Literal[None, "break"]]] = None,
+                callback: tp.Optional[tp.Callable[[dict], None]] = None,
                 callback_arg: tp.Optional[dict] = None) -> tp.Optional[th.Tensor]:
     """
     Apply model to a given mixture.
@@ -319,19 +319,21 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         mix = tensor_chunk(mix)
         assert isinstance(mix, TensorChunk)
         padded_mix = mix.padded(valid_length).to(device)
-        if callable(callback):
-            lock.acquire()
-            if callback(_replace_dict(callback_arg, ("state", "start"))) == "break":
-                lock.release()
-                return None
-            lock.release()
+        with lock:
+            try:
+                callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
+            except KeyboardInterrupt:
+                raise
+            except Exception:
+                pass
         with th.no_grad():
             out = model(padded_mix)
-        if callable(callback):
-            lock.acquire()
-            if callback(_replace_dict(callback_arg, ("state", "end"))) == "break":
-                lock.release()
-                return None
-            lock.release()
+        with lock:
+            try:
+                callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
+            except KeyboardInterrupt:
+                raise
+            except Exception:
+                pass
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)

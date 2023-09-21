@@ -62,7 +62,7 @@ class Separator:
         segment: Optional[int] = None,
         jobs: int = 0,
         progress: bool = False,
-        callback: Optional[Callable[[dict], Literal[None, "break"]]] = None,
+        callback: Optional[Callable[[dict], None]] = None,
         callback_arg: Optional[dict] = None,
     ):
         """
@@ -103,8 +103,7 @@ class Separator:
         The function will be called with only one positional parameter whose type is `dict`. The
         `callback_arg` will be combined with information of current separation progress. The
         progress information will override the values in `callback_arg` if same key has been used.
-        If the function returns `"break"`, the separation process will be aborted and
-        `KeyboardInterrupt` will be raised.
+        To abort the separation, raise `KeyboardInterrupt`.
 
         Progress information contains several keys (These keys will always exist):
         - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
@@ -132,7 +131,7 @@ class Separator:
         jobs: Union[int, _NotProvided] = NotProvided,
         progress: Union[bool, _NotProvided] = NotProvided,
         callback: Optional[
-            Union[Callable[[dict], Literal[None, "break"]], _NotProvided]
+            Union[Callable[[dict], None], _NotProvided]
         ] = NotProvided,
         callback_arg: Optional[Union[dict, _NotProvided]] = NotProvided,
     ):
@@ -171,8 +170,7 @@ class Separator:
         The function will be called with only one positional parameter whose type is `dict`. The
         `callback_arg` will be combined with information of current separation progress. The
         progress information will override the values in `callback_arg` if same key has been used.
-        If the function returns `"break"`, the separation process will be aborted and
-        `KeyboardInterrupt` will be raised.
+        To abort the separation, raise `KeyboardInterrupt`.
 
         Progress information contains several keys (These keys will always exist):
         - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
