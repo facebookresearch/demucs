@@ -120,19 +120,24 @@ def random_subset(dataset, max_samples: int, seed: int = 42):
 
 class DummyPoolExecutor:
     class DummyResult:
-        def __init__(self, func, *args, **kwargs):
+        def __init__(self, func, _dict, *args, **kwargs):
             self.func = func
+            self._dict = _dict
             self.args = args
             self.kwargs = kwargs
 
         def result(self):
-            return self.func(*self.args, **self.kwargs)
+            if self._dict["run"]:
+                return self.func(*self.args, **self.kwargs)
 
     def __init__(self, workers=0):
-        pass
+        self._dict = {"run": True}
 
     def submit(self, func, *args, **kwargs):
-        return DummyPoolExecutor.DummyResult(func, *args, **kwargs)
+        return DummyPoolExecutor.DummyResult(func, self._dict, *args, **kwargs)
+
+    def shutdown(self, *_, **__):
+        self._dict["run"] = False
 
     def __enter__(self):
         return self

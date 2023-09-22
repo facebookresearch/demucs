@@ -261,6 +261,8 @@ import shlex
 demucs.separate.main(shlex.split('--mp3 --two-stems vocals -n mdx_extra "track with space.mp3"'))
 ```
 
+To use more complicated APIs, see [API docs](docs/api.md)
+
 ## Training Demucs
 
 If you want to train (Hybrid) Demucs, please follow the [training doc](docs/training.md).

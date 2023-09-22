@@ -32,7 +32,7 @@ def demucs_unittest():
 def add_model_flags(parser):
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument("-s", "--sig", help="Locally trained XP signature.")
-    group.add_argument("-n", "--name", default=None,
+    group.add_argument("-n", "--name", default="htdemucs",
                        help="Pretrained model name or signature. Default is htdemucs.")
     parser.add_argument("--repo", type=Path,
                         help="Folder containing all pre-trained models for use with -n.")
@@ -44,6 +44,8 @@ def _parse_remote_files(remote_file_list) -> tp.Dict[str, str]:
     for line in remote_file_list.read_text().split('\n'):
         line = line.strip()
         if line.startswith('#'):
+            continue
+        elif len(line) == 0:
             continue
         elif line.startswith('root:'):
             root = line.split(':', 1)[1].strip()
