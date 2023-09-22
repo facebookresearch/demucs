@@ -11,7 +11,7 @@ from pathlib import Path
 from dora.log import fatal
 import torch as th
 
-from .api import Separator, save_audio
+from .api import Separator, save_audio, list_models
 
 from .apply import BagOfModels
 from .htdemucs import HTDemucs
@@ -21,8 +21,10 @@ from .pretrained import add_model_flags, ModelLoadingError
 def get_parser():
     parser = argparse.ArgumentParser("demucs.separate",
                                      description="Separate the sources for the given tracks")
-    parser.add_argument("tracks", nargs='+', type=Path, default=[], help='Path to tracks')
+    parser.add_argument("tracks", nargs='*', type=Path, default=[], help='Path to tracks')
     add_model_flags(parser)
+    parser.add_argument("--list-models", action="store_true", help="List available models "
+                        "from current repo and exit")
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-o",
                         "--out",
@@ -100,6 +102,16 @@ def get_parser():
 def main(opts=None):
     parser = get_parser()
     args = parser.parse_args(opts)
+    if args.list_models:
+        models = list_models(args.repo)
+        print("Bag of models:", end="\n    ")
+        print("\n    ".join(models["bag"]))
+        print("Single models:", end="\n    ")
+        print("\n    ".join(models["single"]))
+        sys.exit(0)
+    if len(args.tracks) == 0:
+        print("error: the following arguments are required: tracks", file=sys.stderr)
+        sys.exit(1)
 
     try:
         separator = Separator(model=args.name,

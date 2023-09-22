@@ -20,6 +20,7 @@ test_eval:
 	python3 -m demucs -n demucs_unittest --int24 --clip-mode clamp test.mp3
 	python3 -m demucs -n demucs_unittest --segment 8 test.mp3
 	python3 -m demucs.api -n demucs_unittest --segment 8 test.mp3
+	python3 -m demucs --list-models
 
 tests/musdb:
 	test -e tests || mkdir tests
