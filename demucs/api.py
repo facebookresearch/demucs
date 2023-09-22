@@ -255,7 +255,7 @@ class Separator:
         Returns
         -------
         A tuple, whose first element is the original wave and second element is a dict, whose keys
-        are the name of stems and values are separated waves. The original wave will has already
+        are the name of stems and values are separated waves. The original wave will have already
         been resampled.
 
         Notes
@@ -301,11 +301,8 @@ class Separator:
         Returns
         -------
         A tuple, whose first element is the original wave and second element is a dict, whose keys
-        are the name of stems and values are separated waves.
-
-        Notes
-        -----
-        Use this function with cautiousness. This function does not provide data verifying.
+        are the name of stems and values are separated waves. The original wave will have already
+        been resampled.
         """
         return self.separate_tensor(self._load_audio(file), self.samplerate)
 

@@ -145,9 +145,11 @@ Separate an audio.
 
 wav: Waveform of the audio. Should have 2 dimensions, the first is each audio channel, while the second is the waveform of each channel. e.g. `tuple(wav.shape) == (2, 884000)` means the audio has 2 channels.
 
+sr: Sample rate of the original audio, the wave will be resampled if it doesn't match the model.
+
 ##### Returns
 
-A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves.
+A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves. The original wave will have already been resampled.
 
 ##### Notes
 
@@ -163,8 +165,7 @@ wav: Path of the file to be separated.
 
 ##### Returns
 
-A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves.
-
+A tuple, whose first element is the original wave and second element is a dict, whose keys are the name of stems and values are separated waves. The original wave will have already been resampled.
 
 ### `function save_audio()`
 
