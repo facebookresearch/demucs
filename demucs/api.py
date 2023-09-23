@@ -195,7 +195,7 @@ class Separator:
             self._jobs = jobs
         if not isinstance(progress, _NotProvided):
             self._progress = progress
-        if not isinstance(callback, _NotProvided) and (callback is None or callable(callback)):
+        if not isinstance(callback, _NotProvided):
             self._callback = callback
         if not isinstance(callback_arg, _NotProvided):
             self._callback_arg = callback_arg

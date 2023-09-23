@@ -14,7 +14,7 @@ Added `--other-method`: method to get `no_{STEM}`, add up all the other stems (a
 
 Added type `HTDemucs` to type alias `AnyModel`.
 
-## V4.0.1a1, TBD
+## V4.0.1, 8th of September 2023
 
 **From this version, Python 3.7 is no longer supported. This is not a problem since the latest PyTorch 2.0.0 no longer support it either.**
 

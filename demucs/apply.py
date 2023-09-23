@@ -10,7 +10,9 @@ inteprolation between chunks, as well as the "shift trick".
 from concurrent.futures import ThreadPoolExecutor
 import copy
 import random
+import sys
 from threading import Lock
+import traceback
 import typing as tp
 
 import torch as th
@@ -323,17 +325,17 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             try:
                 callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
             except KeyboardInterrupt:
-                raise
+                return None
             except Exception:
-                pass
+                traceback.print_exc(file=sys.stderr)
         with th.no_grad():
             out = model(padded_mix)
         with lock:
             try:
                 callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
             except KeyboardInterrupt:
-                raise
+                return None
             except Exception:
-                pass
+                traceback.print_exc(file=sys.stderr)
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)

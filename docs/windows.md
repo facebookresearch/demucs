@@ -20,7 +20,7 @@ Start the Anaconda prompt, and run the following
 bash
 ```
 conda install -c conda-forge ffmpeg
-python.exe -m pip install -U demucs PySoundFile
+python.exe -m pip install -U demucs SoundFile
 ```
 
 ### Upgrade
