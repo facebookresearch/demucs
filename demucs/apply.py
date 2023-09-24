@@ -207,16 +207,11 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         estimates: tp.Union[float, th.Tensor] = 0.
         totals = [0.] * len(model.sources)
         callback_arg["models"] = len(model.models)
-        kwargs["callback"] = (
-            (
-                lambda d, i=callback_arg["model_idx_in_bag"]: callback(
-                    _replace_dict(d, ("model_idx_in_bag", i))
-                )
-            )
-            if callable(callback)
-            else None
-        )
         for sub_model, model_weights in zip(model.models, model.weights):
+            kwargs["callback"] = ((
+                    lambda d, i=callback_arg["model_idx_in_bag"]: callback(
+                        _replace_dict(d, ("model_idx_in_bag", i))))
+            )
             original_model_device = next(iter(sub_model.parameters())).device
             sub_model.to(device)
 
@@ -255,8 +250,6 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
             kwargs["callback"] = (
                     (lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i))))
-                    if callable(callback)
-                    else None
                 )
             res = apply_model(model, shifted, **kwargs, callback_arg=callback_arg)
             if res is None:
@@ -291,8 +284,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             chunk = TensorChunk(mix, offset, segment_length)
             future = pool.submit(apply_model, model, chunk, **kwargs, callback_arg=callback_arg,
                                  callback=(lambda d, i=offset:
-                                           callback(_replace_dict(d, ("segment_offset", i))))
-                                 if callable(callback) else None)
+                                           callback(_replace_dict(d, ("segment_offset", i)))))
             futures.append((future, offset))
             offset += segment_length
         if progress:
