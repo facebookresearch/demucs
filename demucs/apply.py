@@ -200,6 +200,8 @@ def apply_model(model: tp.Union[BagOfModels, Model],
     }
     out: tp.Union[float, th.Tensor]
     res: tp.Union[float, th.Tensor, None]
+    if callback is None:
+        callback = lambda _: None
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
