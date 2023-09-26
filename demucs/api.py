@@ -29,7 +29,7 @@ from dora.log import fatal
 from pathlib import Path
 from typing import Optional, Callable, Dict, Tuple, Union
 
-from .apply import apply_model, _replace_dict
+from .apply import apply_model, _replace_dict, BagOfModels
 from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model, _parse_remote_files, REMOTE_ROOT
 from .repo import RemoteRepo, LocalRepo, ModelOnlyRepo, BagOnlyRepo
@@ -265,6 +265,24 @@ class Separator:
         if sr is not None and sr != self.samplerate:
             wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
         if wav.max() == wav.min():
+            try:
+                self._callback(  # type: ignore
+                    _replace_dict(
+                        self._callback_arg,
+                        ("state", "end"),
+                        ("model_idx_in_bag", (len(self._model.models) - 1)
+                         if isinstance(self._model, BagOfModels) else 0),
+                        ("shift_idx", self._shifts - 1),
+                        ("segment_offset", wav.shape[1]),
+                        ("audio_length", wav.shape[1]),
+                        ("models", len(self._model.models) if isinstance(self._model, BagOfModels)
+                         else 1)
+                    )
+                )
+            except KeyboardInterrupt:
+                raise
+            except Exception:
+                pass
             return wav, {name: (wav / len(self._model.sources)) for name in self._model.sources}
         ref = wav.mean(0)
         wav -= ref.mean()
