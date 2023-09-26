@@ -264,6 +264,8 @@ class Separator:
         """
         if sr is not None and sr != self.samplerate:
             wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
+        if wav.max() == wav.min():
+            return wav, {name: (wav / len(self._model.sources)) for name in self._model.sources}
         ref = wav.mean(0)
         wav -= ref.mean()
         wav /= ref.std()

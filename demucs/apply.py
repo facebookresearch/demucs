@@ -200,8 +200,6 @@ def apply_model(model: tp.Union[BagOfModels, Model],
     }
     out: tp.Union[float, th.Tensor]
     res: tp.Union[float, th.Tensor, None]
-    if callback is None:
-        callback = lambda _: None
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
@@ -212,7 +210,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         for sub_model, model_weights in zip(model.models, model.weights):
             kwargs["callback"] = ((
                     lambda d, i=callback_arg["model_idx_in_bag"]: callback(
-                        _replace_dict(d, ("model_idx_in_bag", i))))
+                        _replace_dict(d, ("model_idx_in_bag", i))) if callback else None)
             )
             original_model_device = next(iter(sub_model.parameters())).device
             sub_model.to(device)
@@ -251,7 +249,8 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             offset = random.randint(0, max_shift)
             shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
             kwargs["callback"] = (
-                    (lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i))))
+                    (lambda d, i=shift_idx: callback(_replace_dict(d, ("shift_idx", i)))
+                     if callback else None)
                 )
             res = apply_model(model, shifted, **kwargs, callback_arg=callback_arg)
             if res is None:
@@ -286,7 +285,8 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             chunk = TensorChunk(mix, offset, segment_length)
             future = pool.submit(apply_model, model, chunk, **kwargs, callback_arg=callback_arg,
                                  callback=(lambda d, i=offset:
-                                           callback(_replace_dict(d, ("segment_offset", i)))))
+                                           callback(_replace_dict(d, ("segment_offset", i)))
+                                           if callback else None))
             futures.append((future, offset))
             offset += segment_length
         if progress:
