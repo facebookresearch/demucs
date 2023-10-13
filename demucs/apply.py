@@ -317,19 +317,21 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         padded_mix = mix.padded(valid_length).to(device)
         with lock:
             try:
-                callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
+                if callback is not None:
+                    callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
             except KeyboardInterrupt:
                 return None
             except Exception:
-                traceback.print_exc(file=sys.stderr)
+                raise
         with th.no_grad():
             out = model(padded_mix)
         with lock:
             try:
-                callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
+                if callback is not None:
+                    callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
             except KeyboardInterrupt:
                 return None
             except Exception:
-                traceback.print_exc(file=sys.stderr)
+                raise
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)
