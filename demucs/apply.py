@@ -319,8 +319,6 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                     callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
             except KeyboardInterrupt:
                 return None
-            except Exception:
-                raise
         with th.no_grad():
             out = model(padded_mix)
         with lock:
@@ -329,7 +327,5 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                     callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
             except KeyboardInterrupt:
                 return None
-            except Exception:
-                raise
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)
