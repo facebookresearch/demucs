@@ -167,6 +167,8 @@ Integrated to [Hugging Face Spaces](https://huggingface.co/spaces) with [Gradio]
 
 @Anjok07 is providing a self contained GUI in [UVR (Ultimate Vocal Remover)](https://github.com/facebookresearch/demucs/issues/334) that supports Demucs.
 
+@will2dye4 has released an alternate GUI called [unmixer](https://github.com/will2dye4/unmixer). This GUI includes a Track Explorer for interacting with the separated tracks and exporting custom mixes. Unfortunately, Windows is not currently supported.
+
 ### Other providers
 
 Audiostrip is providing free online separation with Demucs on their website [https://audiostrip.co.uk/](https://audiostrip.co.uk/).
