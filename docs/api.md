@@ -5,11 +5,13 @@
 Notes: Type hints have been added to all API functions. It is recommended to check them before passing parameters to a function as some arguments only support limited types (e.g. parameter `repo` of method `load_model` only support type `pathlib.Path`).
 
 1. The first step is to import api module:
+
 ```python
 import demucs.api
 ```
 
-1. Then initialize the `Separator`. Parameters which will be served as default values for methods can be passed. Model should be specified.
+2. Then initialize the `Separator`. Parameters which will be served as default values for methods can be passed. Model should be specified.
+
 ```python
 # Initialize with default parameters:
 separator = demucs.api.Separator()
@@ -20,7 +22,8 @@ separator = demucs.api.Separator(model="mdx_extra", segment=12)
 # You can also use other parameters defined
 ```
 
-1. Separate it!
+3. Separate it!
+
 ```python
 # Separating an audio file
 origin, separated = separator.separate_audio_file("file.mp3")
@@ -32,7 +35,8 @@ origin, separated = separator.separate_tensor(audio)
 separator.update_parameter(segment=smaller_segment)
 ```
 
-1. Save audio
+4. Save audio
+
 ```python
 # Remember to create the destination folder before calling `save_audio`
 # Or you are likely to recieve `FileNotFoundError`
