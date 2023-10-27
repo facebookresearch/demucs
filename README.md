@@ -7,7 +7,7 @@
 
 This is the 4th release of Demucs (v4), featuring Hybrid Transformer based source separation.
 **For the classic Hybrid Demucs (v3):** [Go this commit][demucs_v3].
-If you are experiencing issues and want the old Demucs back, please fill an issue, and then you can get back to the v3 with
+If you are experiencing issues and want the old Demucs back, please file an issue, and then you can get back to Demucs v3 with
 `git checkout v3`. You can also go [Demucs v2][demucs_v2].
 
 
@@ -15,7 +15,7 @@ Demucs is a state-of-the-art music source separation model, currently capable of
 drums, bass, and vocals from the rest of the accompaniment.
 Demucs is based on a U-Net convolutional architecture inspired by [Wave-U-Net][waveunet].
 The v4 version features [Hybrid Transformer Demucs][htdemucs], a hybrid spectrogram/waveform separation model using Transformers.
-It is based on [Hybrid Demucs][hybrid_paper] (also provided in this repo) with the innermost layers are
+It is based on [Hybrid Demucs][hybrid_paper] (also provided in this repo), with the innermost layers
 replaced by a cross-domain Transformer Encoder. This Transformer uses self-attention within each domain,
 and cross-attention across domains.
 The model achieves a SDR of 9.00 dB on the MUSDB HQ test set. Moreover, when using sparse attention
@@ -123,7 +123,7 @@ python3 -m pip install -U git+https://github.com/facebookresearch/demucs#egg=dem
 
 Advanced OS support are provided on the following page, **you must read the page for your OS before posting an issues**:
 - **If you are using Windows:** [Windows support](docs/windows.md).
-- **If you are using MAC OS X:** [Mac OS X support](docs/mac.md).
+- **If you are using macOS:** [macOS support](docs/mac.md).
 - **If you are using Linux:** [Linux support](docs/linux.md).
 
 ### For machine learning scientists
@@ -194,16 +194,18 @@ demucs --two-stems=vocals myfile.mp3
 ```
 
 
-If you have a GPU, but you run out of memory, please use `--segment SEGMENT` to reduce length of each split. `SEGMENT` should be changed to a integer. Personally recommend not less than 10 (the bigger the number is, the more memory is required, but quality may increase). Create an environment variable `PYTORCH_NO_CUDA_MEMORY_CACHING=1` is also helpful. If this still cannot help, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
+If you have a GPU, but you run out of memory, please use `--segment SEGMENT` to reduce length of each split. `SEGMENT` should be changed to a integer describing the length of each segment in seconds.
+A segment length of at least 10 is recommended (the bigger the number is, the more memory is required, but quality may increase). Note that the Hybrid Transformer models only support a maximum segment length of 7.8 seconds.
+Create an environment variable `PYTORCH_NO_CUDA_MEMORY_CACHING=1` is also helpful. If this still does not help, please add `-d cpu` to the command line. See the section hereafter for more details on the memory requirements for GPU acceleration.
 
 Separated tracks are stored in the `separated/MODEL_NAME/TRACK_NAME` folder. There you will find four stereo wav files sampled at 44.1 kHz: `drums.wav`, `bass.wav`,
 `other.wav`, `vocals.wav` (or `.mp3` if you used the `--mp3` option).
 
-All audio formats supported by `torchaudio` can be processed (i.e. wav, mp3, flac, ogg/vorbis on Linux/Mac OS X etc.). On Windows, `torchaudio` has limited support, so we rely on `ffmpeg`, which should support pretty much anything.
+All audio formats supported by `torchaudio` can be processed (i.e. wav, mp3, flac, ogg/vorbis on Linux/macOS, etc.). On Windows, `torchaudio` has limited support, so we rely on `ffmpeg`, which should support pretty much anything.
 Audio is resampled on the fly if necessary.
-The output will be a wave file encoded as int16.
+The output will be a wav file encoded as int16.
 You can save as float32 wav files with `--float32`, or 24 bits integer wav with `--int24`.
-You can pass `--mp3` to save as mp3 instead, and set the bitrate with `--mp3-bitrate` (default is 320kbps).
+You can pass `--mp3` to save as mp3 instead, and set the bitrate (in kbps) with `--mp3-bitrate` (default is 320).
 
 It can happen that the output would need clipping, in particular due to some separation artifacts.
 Demucs will automatically rescale each output stem so as to avoid clipping. This can however break
@@ -226,8 +228,8 @@ The list of pre-trained models is:
     but quality can be slightly worse.
 - `SIG`: where `SIG` is a single model from the [model zoo](docs/training.md#model-zoo).
 
-The `--two-stems=vocals` option allows to separate vocals from the rest (e.g. karaoke mode).
-`vocals` can be changed into any source in the selected model.
+The `--two-stems=vocals` option allows separating vocals from the rest of the accompaniment (i.e., karaoke mode).
+`vocals` can be changed to any source in the selected model.
 This will mix the files after separating the mix fully, so this won't be faster or use less memory.
 
 The `--shifts=SHIFTS` performs multiple predictions with random shifts (a.k.a the *shift trick*) of the input and average them. This makes prediction `SHIFTS` times
@@ -248,7 +250,7 @@ If you do not have enough memory on your GPU, simply add `-d cpu` to the command
 
 ## Calling from another Python program
 
-The main function provides a `opt` parameter as a simple API. You can just pass the parsed command line as this parameter: 
+The main function provides an `opt` parameter as a simple API. You can just pass the parsed command line as this parameter: 
 ```python
 # Assume that your command is `demucs --mp3 --two-stems vocals -n mdx_extra "track with space.mp3"`
 # The following codes are same as the command above:
