@@ -29,7 +29,7 @@ from dora.log import fatal
 from pathlib import Path
 from typing import Optional, Callable, Dict, Tuple, Union
 
-from .apply import apply_model, _replace_dict, BagOfModels
+from .apply import apply_model, _replace_dict
 from .audio import AudioFile, convert_audio, save_audio
 from .pretrained import get_model, _parse_remote_files, REMOTE_ROOT
 from .repo import RemoteRepo, LocalRepo, ModelOnlyRepo, BagOnlyRepo

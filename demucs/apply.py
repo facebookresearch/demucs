@@ -150,7 +150,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                 num_workers: int = 0, segment: tp.Optional[float] = None,
                 pool=None, lock=None,
                 callback: tp.Optional[tp.Callable[[dict], None]] = None,
-                callback_arg: tp.Optional[dict] = None) -> tp.Optional[th.Tensor]:
+                callback_arg: tp.Optional[dict] = None) -> th.Tensor:
     """
     Apply model to a given mixture.
 
@@ -197,7 +197,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         'lock': lock,
     }
     out: tp.Union[float, th.Tensor]
-    res: tp.Union[float, th.Tensor, None]
+    res: tp.Union[float, th.Tensor]
     if isinstance(model, BagOfModels):
         # Special treatment for bag of model.
         # We explicitely apply multiple times `apply_model` so that the random shifts
@@ -214,8 +214,6 @@ def apply_model(model: tp.Union[BagOfModels, Model],
             sub_model.to(device)
 
             res = apply_model(sub_model, mix, **kwargs, callback_arg=callback_arg)
-            if res is None:
-                return res
             out = res
             sub_model.to(original_model_device)
             for k, inst_weight in enumerate(model_weights):
@@ -251,8 +249,6 @@ def apply_model(model: tp.Union[BagOfModels, Model],
                      if callback else None)
                 )
             res = apply_model(model, shifted, **kwargs, callback_arg=callback_arg)
-            if res is None:
-                return res
             shifted_out = res
             out += shifted_out[..., max_shift - offset:]
         out /= shifts
@@ -290,10 +286,7 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         if progress:
             futures = tqdm.tqdm(futures, unit_scale=scale, ncols=120, unit='seconds')
         for future, offset in futures:
-            chunk_out = future.result()  # type: tp.Union[None, th.Tensor]
-            if chunk_out is None:
-                pool.shutdown(wait=False, cancel_futures=True)
-                return chunk_out
+            chunk_out = future.result()  # type: th.Tensor
             chunk_length = chunk_out.shape[-1]
             out[..., offset:offset + segment_length] += (
                 weight[:chunk_length] * chunk_out).to(mix.device)
@@ -314,18 +307,20 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         assert isinstance(mix, TensorChunk)
         padded_mix = mix.padded(valid_length).to(device)
         with lock:
-            try:
-                if callback is not None:
+            if callback is not None:
+                try:
                     callback(_replace_dict(callback_arg, ("state", "start")))  # type: ignore
-            except KeyboardInterrupt:
-                return None
+                except Exception:
+                    pool.shutdown(wait=True, cancel_futures=True)
+                    raise
         with th.no_grad():
             out = model(padded_mix)
         with lock:
-            try:
-                if callback is not None:
+            if callback is not None:
+                try:
                     callback(_replace_dict(callback_arg, ("state", "end")))  # type: ignore
-            except KeyboardInterrupt:
-                return None
+                except Exception:
+                    pool.shutdown(wait=True, cancel_futures=True)
+                    raise
         assert isinstance(out, th.Tensor)
         return center_trim(out, length)
