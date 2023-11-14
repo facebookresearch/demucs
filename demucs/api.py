@@ -264,24 +264,9 @@ class Separator:
         """
         if sr is not None and sr != self.samplerate:
             wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
-        if wav.max() == wav.min():
-            self._callback(  # type: ignore
-                _replace_dict(
-                    self._callback_arg,
-                    ("state", "end"),
-                    ("model_idx_in_bag", (len(self._model.models) - 1)
-                        if isinstance(self._model, BagOfModels) else 0),
-                    ("shift_idx", self._shifts - 1),
-                    ("segment_offset", wav.shape[1]),
-                    ("audio_length", wav.shape[1]),
-                    ("models", len(self._model.models) if isinstance(self._model, BagOfModels)
-                        else 1)
-                )
-            )
-            return wav, {name: (wav / len(self._model.sources)) for name in self._model.sources}
         ref = wav.mean(0)
         wav -= ref.mean()
-        wav /= ref.std()
+        wav /= ref.std() + 1e-8
         out = apply_model(
                 self._model,
                 wav[None],
@@ -299,9 +284,9 @@ class Separator:
             )
         if out is None:
             raise KeyboardInterrupt
-        out *= ref.std()
+        out *= ref.std() + 1e-8
         out += ref.mean()
-        wav *= ref.std()
+        wav *= ref.std() + 1e-8
         wav += ref.mean()
         return (wav, dict(zip(self._model.sources, out[0])))
 
