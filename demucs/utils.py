@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from collections import defaultdict
+from concurrent.futures import CancelledError
 from contextlib import contextmanager
 import math
 import os
@@ -129,6 +130,8 @@ class DummyPoolExecutor:
         def result(self):
             if self._dict["run"]:
                 return self.func(*self.args, **self.kwargs)
+            else:
+                raise CancelledError()
 
     def __init__(self, workers=0):
         self._dict = {"run": True}

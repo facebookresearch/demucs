@@ -195,7 +195,7 @@ class Separator:
             self._jobs = jobs
         if not isinstance(progress, _NotProvided):
             self._progress = progress
-        if not isinstance(callback, _NotProvided) and (callback is None or callable(callback)):
+        if not isinstance(callback, _NotProvided):
             self._callback = callback
         if not isinstance(callback_arg, _NotProvided):
             self._callback_arg = callback_arg
@@ -266,7 +266,7 @@ class Separator:
             wav = convert_audio(wav, sr, self._samplerate, self._audio_channels)
         ref = wav.mean(0)
         wav -= ref.mean()
-        wav /= ref.std()
+        wav /= ref.std() + 1e-8
         out = apply_model(
                 self._model,
                 wav[None],
@@ -284,9 +284,9 @@ class Separator:
             )
         if out is None:
             raise KeyboardInterrupt
-        out *= ref.std()
+        out *= ref.std() + 1e-8
         out += ref.mean()
-        wav *= ref.std()
+        wav *= ref.std() + 1e-8
         wav += ref.mean()
         return (wav, dict(zip(self._model.sources, out[0])))
 

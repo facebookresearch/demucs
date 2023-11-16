@@ -79,7 +79,7 @@ progress: If true, show a progress bar.
 
 ##### Notes for callback
 
-The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used. To abort the separation, raise `KeyboardInterrupt`.
+The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used. To abort the separation, raise an exception in `callback` which should be handled by yourself if you want your codes continue to function.
 
 Progress information contains several keys (These keys will always exist):
 - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
@@ -127,7 +127,7 @@ progress: If true, show a progress bar.
 
 ##### Notes for callback
 
-The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used. To abort the separation, raise `KeyboardInterrupt`.
+The function will be called with only one positional parameter whose type is `dict`. The `callback_arg` will be combined with information of current separation progress. The progress information will override the values in `callback_arg` if same key has been used. To abort the separation, raise an exception in `callback` which should be handled by yourself if you want your codes continue to function.
 
 Progress information contains several keys (These keys will always exist):
 - `model_idx_in_bag`: The index of the submodel in `BagOfModels`. Starts from 0.
