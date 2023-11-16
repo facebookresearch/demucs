@@ -47,7 +47,7 @@ for file, sources in separated:
 
 ## API References
 
-The types of each parameter and return value is not listed in this document. To know the exact type of them, please read the type hints in api.py (most modern code editors support infering types based on type hints).
+The types of each parameter and return value is not listed in this document. To know the exact type of them, please read the type hints in api.py (most modern code editors support inferring types based on type hints).
 
 ### `class Separator`
 
