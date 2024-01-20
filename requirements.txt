@@ -12,7 +12,7 @@ mypy
 openunmix
 pyyaml
 submitit
-torch>=1.8.1
+torch==1.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 torchaudio>=0.8,<2.1
 tqdm
 treetable
